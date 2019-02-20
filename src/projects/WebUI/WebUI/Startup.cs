@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Authentication.WeChat;
 
 namespace WebUI
 {
@@ -65,6 +66,26 @@ namespace WebUI
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            var auth = services.AddAuthentication();
+            
+            auth.AddWeChat(wechatOptions =>
+                {
+                    wechatOptions.AppId = Configuration["Authentication:WeChat:AppId"];
+                    wechatOptions.AppSecret = Configuration["Authentication:WeChat:AppSecret"];
+                }
+            );
+
+            auth.AddMicrosoftAccount( microsoftOption =>
+            {   
+                microsoftOption.ClientId = Configuration["Authentication:Microsoft:ClientId"];
+                microsoftOption.ClientSecret = Configuration["Authentication:Microsoft:ClientSecret"];
+
+            }
+            );
+
+            services.AddDistributedMemoryCache();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
