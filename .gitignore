@@ -8,6 +8,7 @@
 **/id_rsa
 **/id_rsa.pub
 **/deploy/*
+**configAzure.json
 
 # Configuration
 src/user.yaml
