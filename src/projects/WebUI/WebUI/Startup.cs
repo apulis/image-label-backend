@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using WebUI.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using Microsoft.Data.Sqlite;
 
 namespace WebUI
 {
@@ -27,6 +29,31 @@ namespace WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSession();
+
+            var dbFile = Configuration["Data:FileName"];
+            var dbPath = Configuration["Data:Path"];
+            if (!Directory.Exists(dbPath))
+            {
+                Directory.CreateDirectory(dbPath);
+            }
+            var databaseFile = Path.Join(dbPath, dbFile);
+            var connectionStringBuilder = new SqliteConnectionStringBuilder { DataSource = databaseFile };
+            var connectionString = connectionStringBuilder.ToString();
+            var connection = new SqliteConnection(connectionString);
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlite(connection, b =>
+                    b.MigrationsAssembly("WebUI")));
+            var optionsBuilderUsers = new DbContextOptionsBuilder<ApplicationDbContext>();
+            optionsBuilderUsers.UseSqlite(connection);
+            var appDatabase = new ApplicationDbContext(optionsBuilderUsers.Options);
+
+
+            appDatabase.Database.EnsureCreated();
+            // appDatabase.Database.Migrate();
+
+            
+
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
@@ -34,9 +61,6 @@ namespace WebUI
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 

@@ -9,6 +9,7 @@
 **/id_rsa.pub
 **/deploy/*
 **configAzure.json
+**WebUI.db
 
 # Configuration
 src/user.yaml
@@ -38,7 +39,7 @@ src/projects/WebUI/WebUI/storage/*
 #ASP.NET core
 **/.vs/*
 
-**/wwwroot/*
+# **/wwwroot/*
 **/bin/Release/*
 **/bin/Debug/*
 **/obj/*

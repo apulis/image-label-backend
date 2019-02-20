@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using WebUI.Data;
 
 namespace WebUI
 {
@@ -24,6 +25,8 @@ namespace WebUI
                 .AddJsonFile("hosting.json", optional: true)
                 .AddCommandLine(args)
                 .Build();
+
+            
 
             return WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(config)
