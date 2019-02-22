@@ -43,7 +43,7 @@ src/projects/WebUI/WebUI/storage/*
 **/bin/Release/*
 **/bin/Debug/*
 **/obj/*
-**/Properties/*
+# **/Properties/*
 **/node_modules/*
 **/bower_components/*
 **/.bowerrc
