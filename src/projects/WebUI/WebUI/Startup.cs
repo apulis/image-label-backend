@@ -63,11 +63,14 @@ namespace WebUI
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.Configure<ForwardedHeadersOptions>(options =>
+            
+            /*services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders =
                     ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            });
+                options.RequireHeaderSymmetry = false;
+            }); */
+
 
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -115,6 +118,18 @@ namespace WebUI
             }
 
             app.UseHttpsRedirection();
+
+            // https://stackoverflow.com/questions/43860128/asp-net-core-google-authentication/43878365
+            var forwardedHeadersOptions = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+                RequireHeaderSymmetry = false
+            };
+            forwardedHeadersOptions.KnownNetworks.Clear();
+            forwardedHeadersOptions.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(forwardedHeadersOptions);
+
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
