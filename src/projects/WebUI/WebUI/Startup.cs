@@ -65,7 +65,8 @@ namespace WebUI
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {
-                options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             });
 
             services.AddDefaultIdentity<IdentityUser>()
@@ -89,6 +90,11 @@ namespace WebUI
 
             }
             );
+
+            auth.AddGoogle(googleOptions => {
+                googleOptions.ClientId = Configuration["Authentication:Google:ClientId"];
+                googleOptions.ClientSecret = Configuration["Authentication:Google:ClientId"];
+            });
 
             services.AddDistributedMemoryCache();
 
