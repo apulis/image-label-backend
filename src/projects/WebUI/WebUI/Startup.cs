@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Authentication.WeChat;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace WebUI
 {
@@ -60,6 +61,11 @@ namespace WebUI
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
             });
 
             services.AddDefaultIdentity<IdentityUser>()
