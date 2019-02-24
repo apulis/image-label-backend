@@ -51,8 +51,8 @@ namespace WebUI
             var appDatabase = new ApplicationDbContext(optionsBuilderUsers.Options);
 
 
-            appDatabase.Database.EnsureCreated();
-            // appDatabase.Database.Migrate();
+            // appDatabase.Database.EnsureCreated();
+            appDatabase.Database.Migrate();
 
             
 

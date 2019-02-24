@@ -12,7 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace WebUI.Areas.Identity.Pages.Account
 {
-    [AllowAnonymous]
+    // Block Access 
+    // [AllowAnonymous]
     public class RegisterModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;
