@@ -8,6 +8,7 @@ using WebUI.Models;
 
 namespace WebUI.Controllers
 {
+   
     public class HomeController : Controller
     {
         public IActionResult Index()
