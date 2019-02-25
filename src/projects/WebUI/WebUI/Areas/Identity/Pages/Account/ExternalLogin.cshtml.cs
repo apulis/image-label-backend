@@ -97,7 +97,7 @@ namespace WebUI.Areas.Identity.Pages.Account
                     {
                         Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                     };
-                    // HttpContext.Session.SetString("Key", "Try");
+                    HttpContext.Session.SetString("Key", "Try");
                 }
 
                 // return Page();
