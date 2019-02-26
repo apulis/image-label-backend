@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using WebUI.Data;
+using WebUI.Models;
+using WebUI.Utils;
 
 namespace WebUI
 {
@@ -26,7 +28,9 @@ namespace WebUI
                 .AddCommandLine(args)
                 .Build();
 
-            
+            Config.App = new Config(WebUIConfig.AppInfoConfigFile);
+
+
 
             return WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(config)

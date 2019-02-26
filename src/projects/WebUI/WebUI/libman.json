@@ -21,6 +21,17 @@
     {
       "library": "angular-ui-select@0.20.0",
       "destination": "wwwroot/lib/angular-ui-select/"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "danialfarid-angular-file-upload@12.2.13",
+      "destination": "wwwroot/lib/danialfarid-angular-file-upload/"
     }
-  ]
+  ,
+{
+  "provider": "cdnjs",
+  "library": "layer@2.3",
+  "destination": "wwwroot/lib/layer/"
+}
+]
 }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using WebUI.Models;
 
 namespace WebUI.Areas.Identity.Pages.Account
 {
@@ -80,7 +81,7 @@ namespace WebUI.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
-                return LocalRedirect(returnUrl);
+                return await OnPostConfirmationAsync(info, false, returnUrl);
             }
             if (result.IsLockedOut)
             {
@@ -90,46 +91,82 @@ namespace WebUI.Areas.Identity.Pages.Account
             {
                 // If the user does not have an account, then ask the user to create an account.
                 ReturnUrl = returnUrl;
-                LoginProvider = info.LoginProvider;
-                if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
-                {
-                    Input = new InputModel
-                    {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
-                    };
-                    HttpContext.Session.SetString("Key", "Try");
-                }
+                
 
                 // return Page();
-                return await OnPostConfirmationAsync(ReturnUrl);
+                return await OnPostConfirmationAsync(info, true, ReturnUrl);
             }
         }
 
-        public async Task<IActionResult> OnPostConfirmationAsync(string returnUrl = null)
+        private async Task<IActionResult> postLoginAuthorization(string returnUrl = null)
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        public async Task<IActionResult> OnPostConfirmationAsync(ExternalLoginInfo info, bool bCreate, string returnUrl = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
-            // Get the information about the user from the external login provider
-            var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
                 ErrorMessage = "Error loading external login information during confirmation.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
+            LoginProvider = info.LoginProvider;
+            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            {
+                Input = new InputModel
+                {
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                };
+            }
+            // Get the information about the user from the external login provider
+
+            var result = new IdentityResult();
             if (ModelState.IsValid)
             {
                 var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
-                var result = await _userManager.CreateAsync(user);
-                if (result.Succeeded)
+                
+                if (!String.IsNullOrEmpty(Input.Email))
                 {
-                    result = await _userManager.AddLoginAsync(user, info);
-                    if (result.Succeeded)
+                    // Find roles 
+                    var role = await RoleManager.Current.FindRole(user);
+                    if (String.IsNullOrEmpty(role))
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-                        return LocalRedirect(returnUrl);
+                        ModelState.AddModelError("Authorization", "The user is unauthorized");
                     }
+                    else { 
+
+                        if ( bCreate )
+                        {
+                            _logger.LogInformation($"Create user: {user}");
+                            result = await _userManager.CreateAsync(user);
+                            if ( result.Succeeded )
+                            {
+                                _logger.LogInformation($"Add Login: {user}: {info}");
+                                result = await _userManager.AddLoginAsync(user, info);
+                                if (result.Succeeded)
+                                {
+                                    _logger.LogInformation($"Add Login succeed ");
+                                    await _signInManager.SignInAsync(user, isPersistent: false);
+                                }
+                                else
+                                {
+                                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                                }
+                                
+                            }
+                            await _userManager.AddToRoleAsync(user, role);
+                        }
+
+
+                        return Redirect(returnUrl);
+                    }
+                } else
+                {
+                    ModelState.AddModelError("Identity", "Unable to parse the identity of this user.");
                 }
+                 
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
@@ -138,7 +175,15 @@ namespace WebUI.Areas.Identity.Pages.Account
 
             LoginProvider = info.LoginProvider;
             ReturnUrl = returnUrl;
-            return Page();
+            if ( ModelState.IsValid )
+            {
+                return Redirect(returnUrl);
+            } else
+            {
+                return Page(); 
+            }
+            
+
         }
     }
 }
