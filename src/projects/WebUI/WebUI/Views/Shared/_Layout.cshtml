@@ -15,6 +15,29 @@
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
+
+    <script src="~/lib/angular.js/angular.js" asp-append-version="true"></script>
+    <script src="~/lib/angular.js/angular-animate.min.js"></script>
+    <script src="~/lib/angular.js/angular-aria.min.js"></script>
+    <script src="~/lib/angular.js/angular-messages.min.js"></script>
+
+    <script src="~/lib/angular-ui-select/select.min.js"></script>
+    <link href="~/lib/angular-ui-select/select.min.css" rel="stylesheet" media="screen">
+
+    <!-- Angular Material Library -->
+    <script src="~/lib/angular-material/angular-material.min.js"></script>
+    <link rel="stylesheet" href="~/lib/angular-material/angular-material.min.css">
+
+    <script src="~/lib/danialfarid-angular-file-upload/ng-file-upload-shim.min.js" asp-append-version="true"></script>
+    <script src="~/lib/danialfarid-angular-file-upload/ng-file-upload.min.js" asp-append-version="true"></script>
+
+    <script src="~/lib/layui-v2.4.5/layui/layui.all.js" charset="utf-8"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <!-- X-Editable https://vitalets.github.io/angular-xeditable/ -->
+    <link src="https://cdnjs.cloudflare.com/ajax/libs/angular-xeditable/0.8.0/css/xeditable.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-xeditable/0.8.0/js/xeditable.min.js"></script>
+
 </head>
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -77,14 +100,6 @@
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
 
-    <script src="~/lib/angular.js/angular.js" asp-append-version="true"></script>
-    <script src="~/lib/danialfarid-angular-file-upload/ng-file-upload-shim.min.js" asp-append-version="true"></script>
-    <script src="~/lib/danialfarid-angular-file-upload/ng-file-upload.min.js" asp-append-version="true"></script>
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <!-- X-Editable https://vitalets.github.io/angular-xeditable/ -->
-    <link src="https://cdnjs.cloudflare.com/ajax/libs/angular-xeditable/0.8.0/css/xeditable.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-xeditable/0.8.0/js/xeditable.min.js"></script>
 
     @RenderSection("Scripts", required: false)
 </body>
