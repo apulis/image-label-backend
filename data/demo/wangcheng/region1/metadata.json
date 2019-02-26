@@ -1,0 +1,8 @@
+{
+    "name": "wangcheng region 1", 
+    "images": [
+        [{ "image": "wangcheng_1000_21000.png",
+            "seg": "seg_wangcheng_1000_21000.png"
+        }]
+    ]
+}
