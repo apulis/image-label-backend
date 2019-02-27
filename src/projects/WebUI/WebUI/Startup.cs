@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using WebUI.Models;
 using WebUI.Utils;
 using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace WebUI
 {
@@ -144,8 +145,9 @@ namespace WebUI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
+            loggerFactory.AddFile("/var/log/webui/remotesensing-{Date}.log");
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
