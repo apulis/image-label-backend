@@ -92,8 +92,8 @@ namespace WebUI
             })
                 .AddRazorPagesOptions(options =>
                 {
-                    options.Conventions.AuthorizePage("/Manage");
-                    options.Conventions.AuthorizeFolder("/Private");
+                    options.Conventions.AuthorizePage("/api");
+                    options.Conventions.AuthorizeFolder("/api");
                     options.Conventions.AllowAnonymousToPage("/Private/PublicPage");
                     options.Conventions.AllowAnonymousToFolder("/Private/PublicPages");
                 })

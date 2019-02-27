@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebUI.Controllers
 {
+    [Authorize(Roles = "Admin,User")]
     public class RemoteSensingController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -38,6 +40,7 @@ namespace WebUI.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Upload()
         {
             await GetRole();
