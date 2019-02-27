@@ -23,4 +23,8 @@
     <Folder Include="Utils\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\lib\remote-sensing\remote-sensing.js" />
+  </ItemGroup>
+
 </Project>

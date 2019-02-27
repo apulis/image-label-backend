@@ -1,8 +1,8 @@
 ﻿@{
-    ViewData["Title"] = "Upload";
+    ViewData["Title"] = "Browse";
 }
 
-<div class="container body-content" ng-app="fileUpload" ng-controller="MyCtrl" >
+<div class="container body-content" ng-app="fileUpload" ng-controller="MyCtrl">
 
     <div class="modal-content">
 
@@ -28,7 +28,7 @@
             </i>
             <img class="img-responsive" ng-show="myForm.file.$valid" ngf-thumbnail="picFile" class="thumb"> <button ng-click="picFile = null" ng-show="picFile">Remove</button>
             <br>
-            
+
             <span ng-show="picFile.result">Upload Successful</span>
             <h2 ng-if="errorMsg">
                 Error:
@@ -38,7 +38,7 @@
             <br>
 
             <h2>
-               
+
                 <ul>
                     <li ng-repeat="oneinfo in info">{{oneinfo}}</li>
                 </ul>
@@ -57,15 +57,6 @@
             </a>
         </div>
     </div>
-        <!--
-    <div layout="row">
-        <md-input-container flex="50">
-            <label>Job template</label>
-            <md-select name="curtemplateValue" ng-model="curtemplateValue" ng-change="showTemplate()">
-                <md-option ng-value="{{g.Value}}" ng-repeat="g in joblist">{{ g.Text }}</md-option>
-            </md-select>
-        </md-input-container>
-    </div>-->
 
 
 </div>
