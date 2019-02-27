@@ -133,15 +133,15 @@ namespace WebUI.Areas.Identity.Pages.Account
                     var role = await RoleManager.Current.FindRole(user);
                     if (String.IsNullOrEmpty(role))
                     {
-                        ModelState.AddModelError("Authorization", "The user is unauthorized");
+                        ModelState.AddModelError(Constants.JsontagAuthorization, "The user is unauthorized");
                     }
-                    else { 
+                    else {
 
-                        if ( bCreate )
+                        if (bCreate)
                         {
                             _logger.LogInformation($"Create user: {user}");
                             result = await _userManager.CreateAsync(user);
-                            if ( result.Succeeded )
+                            if (result.Succeeded)
                             {
                                 _logger.LogInformation($"Add Login: {user}: {info}");
                                 result = await _userManager.AddLoginAsync(user, info);
@@ -154,11 +154,11 @@ namespace WebUI.Areas.Identity.Pages.Account
                                 {
                                     _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
                                 }
-                                
+
                             }
                             await _userManager.AddToRoleAsync(user, role);
                         }
-
+                        HttpContext.Session.SetString(Constants.JsontagRole, role);
 
                         return Redirect(returnUrl);
                     }

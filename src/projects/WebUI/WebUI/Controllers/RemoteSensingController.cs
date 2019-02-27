@@ -36,14 +36,18 @@ namespace WebUI.Controllers
 
         public async Task<IActionResult> Index()
         {
-            await GetRole();
             return View();
         }
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Upload()
         {
-            await GetRole();
+            return View();
+        }
+
+        
+        public async Task<IActionResult> Browse()
+        {
             return View();
         }
 

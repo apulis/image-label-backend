@@ -14,7 +14,7 @@ namespace WebUI.Models
         public static RoleManager Current = new RoleManager(); 
         public async Task<string> FindRole( IdentityUser user)
         {
-            var configAuthorization = Config.App.GetJToken("Authorization") as JObject;
+            var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
             if ( !Object.ReferenceEquals(configAuthorization, null) )
             {
                 foreach( var pair in configAuthorization)

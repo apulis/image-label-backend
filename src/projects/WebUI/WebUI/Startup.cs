@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using WebUI.Models;
+using WebUI.Utils;
+using Newtonsoft.Json.Linq;
 
 namespace WebUI
 {
@@ -192,13 +194,18 @@ namespace WebUI
             
             IdentityResult roleResult;
 
-            foreach (var roleName in Constants.RoleNames )
+            var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
+            if (!Object.ReferenceEquals(configAuthorization, null))
             {
-                var roleExist = await RoleManager.RoleExistsAsync(roleName);
-                if (!roleExist)
+                foreach (var pair in configAuthorization)
                 {
-                    //create the roles and seed them to the database: Question 1
-                    roleResult = await RoleManager.CreateAsync(new IdentityRole(roleName));
+                    var roleName = pair.Key; 
+                    var roleExist = await RoleManager.RoleExistsAsync(roleName);
+                    if (!roleExist)
+                    {
+                        //create the roles and seed them to the database: Question 1
+                        roleResult = await RoleManager.CreateAsync(new IdentityRole(roleName));
+                    }
                 }
             }
         }
