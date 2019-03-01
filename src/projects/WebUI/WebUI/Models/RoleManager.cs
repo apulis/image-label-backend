@@ -25,11 +25,14 @@ namespace WebUI.Models
                     {
                         if ( String.Compare(onepeople.ToString(), user.Email, true)==0)
                         {
+                            Console.WriteLine($"{user.Email} is authorized as {pair.Key}");
                             return pair.Key; 
                         }
                     }
                 }
             }
+            Console.WriteLine($"{user.Email} is unauthorized.");
+
             return null; 
         }
     }
