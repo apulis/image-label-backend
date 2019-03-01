@@ -8,7 +8,7 @@
 **/id_rsa
 **/id_rsa.pub
 **/deploy/*
-**configAzure.json
+# **configAzure.json
 **WebUI.db
 
 # Configuration
