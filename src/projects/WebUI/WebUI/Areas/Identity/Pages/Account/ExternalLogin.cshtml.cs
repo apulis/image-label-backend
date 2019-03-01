@@ -152,10 +152,11 @@ namespace WebUI.Areas.Identity.Pages.Account
                                 }
                                 else
                                 {
-                                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                                    _logger.LogInformation($"User created an account using {LoginProvider} provider.");
                                 }
 
                             }
+                            _logger.LogInformation($"Add role \"{role}\" to {user}");
                             await _userManager.AddToRoleAsync(user, role);
                         }
                         HttpContext.Session.SetString(Constants.JsontagRole, role);

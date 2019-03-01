@@ -17,7 +17,7 @@ namespace WebUI.Models
             var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
             if ( !Object.ReferenceEquals(configAuthorization, null) )
             {
-                Console.WriteLine($"Check Authorization of {user.Email} against {configAuthorization}");
+                // Console.WriteLine($"Check Authorization of {user.Email} against {configAuthorization}");
                 foreach( var pair in configAuthorization)
                 {
                     var peopleArray = pair.Value as JArray;
@@ -25,13 +25,13 @@ namespace WebUI.Models
                     {
                         if ( String.Compare(onepeople.ToString(), user.Email, true)==0)
                         {
-                            Console.WriteLine($"{user.Email} is authorized as {pair.Key}");
+                            // Console.WriteLine($"{user.Email} is authorized as {pair.Key}");
                             return pair.Key; 
                         }
                     }
                 }
             }
-            Console.WriteLine($"{user.Email} is unauthorized.");
+            // Console.WriteLine($"{user.Email} is unauthorized.");
 
             return null; 
         }

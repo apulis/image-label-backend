@@ -213,6 +213,7 @@ namespace WebUI
                     {
                         //create the roles and seed them to the database: Question 1
                         roleResult = await RoleManager.CreateAsync(new IdentityRole(roleName));
+                        Console.WriteLine($"Create role \"{roleName}\"");
                     }
                 }
             }
