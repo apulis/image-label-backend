@@ -22,6 +22,7 @@ using WebUI.Models;
 using WebUI.Utils;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
+using WebUI.Azure;
 
 namespace WebUI
 {
@@ -148,6 +149,11 @@ namespace WebUI
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddFile("/var/log/webui/remotesensing-{Date}.log");
+            var loggerStorage = loggerFactory.CreateLogger<CloudProvider>();
+            // Setting up Cloud Configuration, all other setup should be arranged afterwards. 
+            LocalSetting.Setup(loggerStorage);
+
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

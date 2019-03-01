@@ -9,7 +9,7 @@ using WebUI.Models;
 
 namespace WebUI.Azure
 {
-    class CloudStorage
+    public class CloudStorage
     {
 
         /// <summary>

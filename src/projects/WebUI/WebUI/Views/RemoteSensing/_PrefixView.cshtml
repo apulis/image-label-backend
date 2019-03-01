@@ -1,7 +1,27 @@
 ﻿<div layout="row">
 
-    <md-input-container class="md-block">
-        <label> Current Prefix </label>
-        <input ng-model="current.prefix" required md-no-asterisk>
+    <div>
+        <md-input-container class="md-block">
+            <label>Current Prefix</label>
+            <textarea ng-model="current.prefix" rows="1"></textarea>
+        </md-input-container>
+
+    </div>
+    <div pull-right>
+        <a class="btn btn-danger" ng-click="selectPrefix()">
+            Select
+        </a>
+        <a class="btn btn-success" ng-click="changeCurrent()">
+            Change
+        </a>
+    </div>
+</div>
+
+<div layout="row" ng-if="status.selectPrefix">
+    <md-input-container flex="50">
+        <label>Prefix Selection</label>
+        <md-select name="curtemplateValue" ng-model="curtemplateValue" ng-change="showTemplate()">
+            <md-option ng-value="{{g.Value}}" ng-repeat="g in joblist">{{ g.Text }}</md-option>
+        </md-select>
     </md-input-container>
 </div>

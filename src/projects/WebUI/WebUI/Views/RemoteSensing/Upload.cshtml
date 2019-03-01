@@ -2,49 +2,53 @@
     ViewData["Title"] = "Upload";
 }
 
-<div class="container body-content" ng-app="fileUpload" ng-controller="MyCtrl" >
+<div class="container body-content" ng-app="fileUpload" ng-controller="MyCtrl" 
+     ng-cloak style="width:90%">
 
     <div class="modal-content">
 
-        </br>
-        </br>
+        <br/>
+        <br/>
         <div class="modal-header">
             <h2 class="modal-title" id="submitModalLabel">Upload Image</h2>
         </div>
 
-        <partial name="_PrefixView" />
+        <div class="modal-body">
+
+            <partial name="_PrefixView" />
 
 
-        <form name="form">
 
-            <input type="file" ngf-select ng-model="picFile" name="file"
-                   accept="image/*" ngf-max-size="1000MB" required
-                   ngf-model-invalid="errorFile">
-            <i ng-show="myForm.file.$error.required">*required</i><br>
-            <i ng-show="myForm.file.$error.maxSize">
-                File too large
-                {{errorFile.size / 100000000|number:1000}}MB: max 1000M
-            </i>
-            <img class="img-responsive" ng-show="myForm.file.$valid" ngf-thumbnail="picFile" class="thumb"> <button ng-click="picFile = null" ng-show="picFile">Remove</button>
-            <br>
-            
-            <span ng-show="picFile.result">Upload Successful</span>
-            <h2 ng-if="errorMsg">
-                Error:
-                <span class="err" ng-show="errorMsg">{{errorMsg}}</span>
-            </h2>
-            </fieldset>
-            <br>
+            <form name="form">
 
-            <h2>
-               
-                <ul>
-                    <li ng-repeat="oneinfo in info">{{oneinfo}}</li>
-                </ul>
-            </h2>
+                <input type="file" ngf-select ng-model="picFile" name="file"
+                       accept="image/*" ngf-max-size="1000MB" required
+                       ngf-model-invalid="errorFile">
+                <i ng-show="myForm.file.$error.required">*required</i><br>
+                <i ng-show="myForm.file.$error.maxSize">
+                    File too large
+                    {{errorFile.size / 100000000|number:1000}}MB: max 1000M
+                </i>
+                <img class="img-responsive" ng-show="myForm.file.$valid" ngf-thumbnail="picFile" class="thumb"> <button ng-click="picFile = null" ng-show="picFile">Remove</button>
+                <br>
 
-        </form>
+                <span ng-show="picFile.result">Upload Successful</span>
+                <h2 ng-if="errorMsg">
+                    Error:
+                    <span class="err" ng-show="errorMsg">{{errorMsg}}</span>
+                </h2>
+                <fieldset/>
+                <br/>
 
+                <h2>
+
+                    <ul>
+                        <li ng-repeat="oneinfo in info">{{oneinfo}}</li>
+                    </ul>
+                </h2>
+
+            </form>
+        </div>
 
         <div class="modal-footer">
             <a class="btn pull-right btn-danger" ng-click="submitJob()">

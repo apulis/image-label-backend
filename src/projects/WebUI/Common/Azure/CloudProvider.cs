@@ -324,16 +324,22 @@ namespace WebUI.Azure
             Current.Location = JsonUtils.GetString("region", config);
             Current.Cluster = JsonUtils.GetString("cluster", config);
             Current.FQDN = JsonUtils.GetString("fqdn", config);
-            using (var file = new StreamReader(LocalSetting.LocalFQDN))
-            {
-                String line = null; 
-                while((line = file.ReadLine()) != null) {
-                    if ( !String.IsNullOrEmpty(line) && !line.StartsWith('#') )
-                    {
-                        Current.FQDN = line;
-                        break;
+            if ( File.Exists(LocalSetting.LocalFQDN))
+            { 
+                using (var file = new StreamReader(LocalSetting.LocalFQDN))
+                {
+                    String line = null; 
+                    while((line = file.ReadLine()) != null) {
+                        if ( !String.IsNullOrEmpty(line) && !line.StartsWith('#') )
+                        {
+                            Current.FQDN = line;
+                            break;
+                        }
                     }
                 }
+            } else
+            {
+                Current.FQDN = "localhost";
             }
             Current.StorageProvider = JsonUtils.GetString(Constant.JsontagStorageProvider, config);
             CloudProviderSetting.Current.Setup(logger);
