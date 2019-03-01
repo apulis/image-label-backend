@@ -29,6 +29,7 @@ namespace WebUI
                 .Build();
 
             Config.App = new Config(WebUIConfig.AppInfoConfigFile);
+            Console.WriteLine($"configApp = {Config.App.Obj}");
 
 
 

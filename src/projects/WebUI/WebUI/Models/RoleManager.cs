@@ -17,6 +17,7 @@ namespace WebUI.Models
             var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
             if ( !Object.ReferenceEquals(configAuthorization, null) )
             {
+                Console.WriteLine($"Check Authorization of {user.Email} against {configAuthorization}");
                 foreach( var pair in configAuthorization)
                 {
                     var peopleArray = pair.Value as JArray;
