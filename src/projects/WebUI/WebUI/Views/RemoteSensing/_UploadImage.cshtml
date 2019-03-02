@@ -1,0 +1,34 @@
+﻿<div class="demo-select-all-checkboxes" flex="100" ng-repeat="(item,desc) in current.operation" ng-if="current.prefix">
+    <md-checkbox ng-checked="status(item, selection.operation)" ng-click="toggle(item, selection.operation)">
+        {{ desc }}
+    </md-checkbox>
+</div>
+
+<form name="form" ng-if="current.prefix">
+    <input type="file" ngf-select ng-model="picFile" name="file"
+           accept="image/*" ngf-max-size="1000MB" required
+           ngf-model-invalid="errorFile">
+    <i ng-show="myForm.file.$error.required">*required</i><br>
+    <i ng-show="myForm.file.$error.maxSize">
+        File too large
+        {{errorFile.size / 100000000|number:1000}}MB: max 1000M
+    </i>
+    <img class="img-responsive" ng-show="myForm.file.$valid" ngf-thumbnail="picFile" class="thumb"> <button ng-click="picFile = null" ng-show="picFile">Remove</button>
+    <br>
+    <button type="button" class="btn btn-success"
+            ng-click="uploadPic(picFile)">
+        Submit
+    </button>
+    <button type="button" class="btn btn-danger"
+            ng-click="clearResult()">
+        Clear
+    </button>
+    <span ng-show="picFile.result">Upload Successful</span>
+    <h2 ng-if="errorMsg">
+        Error:
+        <span class="err" ng-show="errorMsg">{{errorMsg}}</span>
+    </h2>
+
+</form>
+
+

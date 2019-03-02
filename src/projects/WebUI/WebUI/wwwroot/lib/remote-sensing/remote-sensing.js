@@ -7,7 +7,8 @@ app.run(function (editableOptions) {
 app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upload", function ($scope, $filter, $http, $log, $timeout, Upload) {
 
     $scope.status = { selectPrefix: false };
-    $scope.selection = { row: 0, col: 0, tag: "image" };
+    $scope.selection = {
+        row: 0, col: 0, tag: "image", operation: {} };
     $scope.metadata = {};
 
     $scope.hasObject = function (obj) {
@@ -19,7 +20,27 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
                 return true;
         }
         return false;
-    }
+    };
+
+    $scope.toggle = function (item, dic) {
+        if (dic.hasOwnProperty(item)) {
+            dic[item] = !dic[item];
+        } else {
+            dic[item] = true;
+        };
+    };
+
+    $scope.status = function (item, dic) {
+        if (dic.hasOwnProperty(item)) {
+            return dic[item];
+        } else {
+            return false; 
+        }
+    };
+
+    $scope.clearResult = function () {
+        delete $scope.errorMsg;
+    };
 
     $scope.getCurrent = function ( onCompletion ) {
        $http.get('/api/Image/GetCurrent').then(function (response) {
@@ -128,9 +149,16 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
     };
 
     $scope.uploadPic = function (file) {
+        var postdata = {
+            file: file,
+            prefix: $scope.current.prefix,
+            row: $scope.selection.row,
+            col: $scope.selection.col,
+            operation: $scope.selection.operation
+        };
         file.upload = Upload.upload({
-            url: '../Recog/Recog/RecogImage',
-            data: { file: file },
+            url: 'api/Recog/UploadImage',
+            data: postdata,
         });
 
         // upload on file select or drop

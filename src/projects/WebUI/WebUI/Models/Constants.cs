@@ -18,6 +18,13 @@ namespace WebUI.Models
         public const String MapEntry = "map";
         public const String PrefixEntry = "prefix";
         public const String CDNEntry = "cdn";
+        public const String OperationEntry = "operation";
+
+        public const String OperationSegmentation = "seg";
+        
         public static string[] AllCurrentTags = { MapEntry, PrefixEntry };
+        public static Dictionary<string,string> AllOperations = 
+            new Dictionary<string, string>{ { OperationSegmentation, "Segmentation" }
+            };
     }
 }

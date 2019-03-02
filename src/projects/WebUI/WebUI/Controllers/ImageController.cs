@@ -93,6 +93,7 @@ namespace WebUI.Controllers
                     retJson[Constants.CDNEntry] = cdnpath;
                 }
             }
+            retJson[Constants.OperationEntry] = JObject.FromObject(Constants.AllOperations);
             _logger.LogDebug($"GetCurrent == {retJson}");
             return Content(retJson.ToString(), "application/json");
         }
