@@ -213,9 +213,15 @@ namespace WebUI
                     {
                         //create the roles and seed them to the database: Question 1
                         roleResult = await RoleManager.CreateAsync(new IdentityRole(roleName));
-                        Console.WriteLine($"Create role \"{roleName}\"");
+                        Console.WriteLine($"Create role \"{roleName}\". ");
+                    } else
+                    {
+                        Console.WriteLine($"Role \"{roleName}\" exists. ");
                     }
                 }
+            } else
+            {
+                Console.WriteLine($"Empty {Constants.JsontagAuthorization} block in configuration. ");
             }
         }
     }
