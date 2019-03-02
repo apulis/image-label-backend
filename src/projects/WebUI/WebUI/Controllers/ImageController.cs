@@ -83,6 +83,16 @@ namespace WebUI.Controllers
                 }
                 retJson[tag] = tagValue;
             }
+            var dirPath = GetDirectory(null);
+            var uris = dirPath.StorageUri();
+            if ( uris.Length > 0 )
+            {
+                var cdnpath = uris[0].ToString();
+                if (String.IsNullOrEmpty(cdnpath))
+                {
+                    retJson[Constants.CDNEntry] = cdnpath;
+                }
+            }
             _logger.LogDebug($"GetCurrent == {retJson}");
             return Content(retJson.ToString(), "application/json");
         }
@@ -133,11 +143,9 @@ namespace WebUI.Controllers
             var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
             var dirPath = GetDirectory(prefix);
             var lst = await SearchFor(dirPath, Constant.MetadataJson);
-
-            var cdnpath = dirPath.StorageUri()[0];
-            _logger.LogInformation($"CDN path === {cdnpath}, lst = {lst}");
-            // postdata["prefix"] = "#Prefix#"; // Test Feedback. 
-            return Content(postdata.ToString(), "application/json");
+            var retJson = new JObject();
+            retJson[Constants.PrefixEntry] = new JArray(lst); 
+            return Content(retJson.ToString(), "application/json");
         }
     }
 }

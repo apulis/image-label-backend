@@ -103,7 +103,7 @@ namespace WebUI.Azure
             var continueToken = NewBlobContinuationToken();
             var maxResults = 5000;
             var baseName = Name; 
-            if ( !baseName.EndsWith("/"))
+            if ( !String.IsNullOrEmpty(baseName) && !baseName.EndsWith("/"))
                 baseName += "/";
             // Find all images. 
             

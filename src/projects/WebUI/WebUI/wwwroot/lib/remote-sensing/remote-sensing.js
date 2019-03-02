@@ -32,8 +32,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         var postInfo = $http.post('/api/Image/SelectPrefix', post);
 
         var successFunc = function (response) {
-            $scope.onSuccess("changeCurrent", response, data => {
-                $scope.prefixSelections = data;
+            $scope.onSuccess("selectPrefix", response, data => {
+                $scope.prefixSelections = data.prefix;
                 $scope.status.selectPrefix = true;
             });
         };

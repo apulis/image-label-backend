@@ -21,7 +21,7 @@ namespace WebUI.Azure
         public Dictionary<String, bool> locations = new Dictionary<String, bool>(StringComparer.OrdinalIgnoreCase);
         public List<String> locationLst = new List<String>();
         public ILogger _logger;
-        public List<String> urlEndPoints = new List<String>(); 
+        public List<String> urlEndPoints = new List<String>();
 
         public AzureCloudProvider( String configFile, ILogger logger )
         {
@@ -51,9 +51,11 @@ namespace WebUI.Azure
             return locations.Count > 0; 
         }
 
-        public String GetBlobEndpoint()
+        public String GetBlobEndpoint(string location = null )
         {
-            var location = GetLocations()[0];
+            if ( String.IsNullOrEmpty(location))
+                location = GetLocations()[0];
+
             var tokenCluster = JsonUtils.GetJToken("azure_cluster", config);
             var tokenCDN = JsonUtils.GetJToken("cdn", tokenCluster);
             var tokenLocation = JsonUtils.GetJToken(location, tokenCDN);
@@ -127,6 +129,17 @@ namespace WebUI.Azure
             return Array.ConvertAll( urls, x => CloudProvider.urlCombine(x, path));
         }
 
+        private string getEndpointSuffix( string endpoint )
+        {
+            if ( endpoint.EndsWith('/') )
+            {
+                endpoint = endpoint.Substring(0, endpoint.Length - 1); // Strip ending '/'
+            }
+            var chunks = endpoint.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            var nchunks = chunks.Length;
+            return chunks[nchunks - 3] + "." + chunks[nchunks - 2] + "." + chunks[nchunks - 1];
+        }
+
         private CloudStorageAccount GetStorageAccount( string storage, string location )
         {
             var storageAccountName = GetStorageAccountName(storage, location);
@@ -140,7 +153,10 @@ namespace WebUI.Azure
             // Console.WriteLine($"Storage account = {storageAccountName}, key = {accessKey}");
             var authCredentials = new Microsoft.WindowsAzure.Storage.Auth.StorageCredentials(
                 storageAccountName, accessKey);
-            CloudStorageAccount storageAccount = new CloudStorageAccount(authCredentials, true);
+            var blobEndpoint = GetBlobEndpoint(location);
+            var endpointSuffix = getEndpointSuffix(blobEndpoint);
+
+            CloudStorageAccount storageAccount = new CloudStorageAccount(authCredentials, endpointSuffix, true);
             return storageAccount;
         }
 
@@ -152,6 +168,7 @@ namespace WebUI.Azure
                 return null;
             }
             var blobClient = storageAccount.CreateCloudBlobClient();
+            
             return new AzureBlobContainer( this, blobClient.GetContainerReference(path) );
         }
 
