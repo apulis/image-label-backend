@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebUI.Controllers
 {
     [Authorize(Roles = "Admin,User")]
+    // [Authorize(Roles = "User")]
     public class RemoteSensingController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
