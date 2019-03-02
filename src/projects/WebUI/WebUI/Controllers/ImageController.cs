@@ -88,7 +88,7 @@ namespace WebUI.Controllers
             if ( uris.Length > 0 )
             {
                 var cdnpath = uris[0].ToString();
-                if (String.IsNullOrEmpty(cdnpath))
+                if (!String.IsNullOrEmpty(cdnpath))
                 {
                     retJson[Constants.CDNEntry] = cdnpath;
                 }
@@ -144,7 +144,8 @@ namespace WebUI.Controllers
             var dirPath = GetDirectory(prefix);
             var lst = await SearchFor(dirPath, Constant.MetadataJson);
             var retJson = new JObject();
-            retJson[Constants.PrefixEntry] = new JArray(lst); 
+            retJson[Constants.PrefixEntry] = new JArray(lst);
+            _logger.LogDebug($"SelectPrefix: {retJson}");
             return Content(retJson.ToString(), "application/json");
         }
     }

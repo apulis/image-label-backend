@@ -1,0 +1,19 @@
+﻿<div layout="row" ng-if="metadata.images">
+    <md-input-container ng-if="metadata.images.length > 0">
+        <label>Row</label>
+        <input ng-model="selection.row" required type="number" name="selection.row" step="1" min="0" max="metadata.images.length+1" md-no-asterisk ng-change="showImage()">
+    </md-input-container>
+
+    <md-input-container ng-if="selection.col < metadata.images[selection.row].length && metadata.images[selection.row].length > 0 ">
+        <label>Col</label>
+        <input ng-model="selection.col" required type="number" name="selection.col" step="1" min="0" max="metadata.images[selection.row].length+1" md-no-asterisk ng-change="showImage()">
+    </md-input-container>
+
+    <md-input-container ng-if="selection.row < metadata.images.length && selection.col < metadata.images[selection.row].length && hasObject(metadata.images[selection.row][selection.col])">
+        <label>Tag</label>
+        <md-select name="selection.tag" ng-model="selection.tag" ng-change="showImage()">
+            <md-option ng-value="k" ng-repeat="(k,v) in metadata.images[selection.row][selection.col]">{{k}}</md-option>
+        </md-select>
+    </md-input-container>
+</div>
+
