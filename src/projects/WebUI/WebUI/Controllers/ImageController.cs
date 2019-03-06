@@ -15,7 +15,7 @@ using WebUI.Models;
 
 namespace WebUI.Controllers
 {
-    [Authorize(Roles = "Admin,User")]
+    // [Authorize(Roles = "Admin,User")]
     [Route("api/[controller]")]
     [ApiController]
     public class ImageController : ControllerBase
