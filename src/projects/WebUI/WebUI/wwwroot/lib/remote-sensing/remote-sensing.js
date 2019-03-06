@@ -8,7 +8,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
 
     $scope.status = { selectPrefix: false };
     $scope.selection = {
-        row: 0, col: 0, tag: "image", operation: {} };
+        row: 0, col: 0, tag: "image", operation: {}
+    };
     $scope.metadata = {};
 
     $scope.hasObject = function (obj) {
@@ -34,7 +35,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         if (dic.hasOwnProperty(item)) {
             return dic[item];
         } else {
-            return false; 
+            return false;
         }
     };
 
@@ -42,14 +43,14 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         delete $scope.errorMsg;
     };
 
-    $scope.getCurrent = function ( onCompletion ) {
-       $http.get('/api/Image/GetCurrent').then(function (response) {
+    $scope.getCurrent = function (onCompletion) {
+        $http.get('/api/Image/GetCurrent').then(function (response) {
             var current = response.data;
-            $scope.current = response.data; 
-           $log.log($scope.current);
-           if (onCompletion != null) {
-               onCompletion();
-           };
+            $scope.current = response.data;
+            $log.log($scope.current);
+            if (onCompletion != null) {
+                onCompletion();
+            };
         });
     }
 
@@ -85,9 +86,20 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         // $scope.status.selectPrefix = false;
     }
 
-    $scope.formImageUrl = function ( file ) {
-        var metadataUrl = [$scope.current.cdn, $scope.current.prefix, file ].join('/')
+    $scope.formImageUrl = function (file) {
+        var metadataUrl = [$scope.current.cdn, $scope.current.prefix, file].join('/')
         return metadataUrl;
+    }
+
+    $scope.form_image_name = function (file, tag) {
+        var prefix = file.split(".")[0];
+        if (tag == "overlay") {
+            return "overlay_" + file;
+        } else if (tag == "seg") {
+            return "seg_" + prefix + ".png";
+        } else {
+            return file; 
+        }
     }
 
     $scope.downloadImageMetadata = function (onCompletion) {
@@ -119,10 +131,60 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
             selectcol = imagerow.length - 1;
         }
         var oneimage = imagerow[selectcol];
-        var imageSelected = oneimage[$scope.selection.tag];
+        var imgname = oneimage["image"];
+        var onemeta = {};
+        onemeta["latitude"] = oneimage["lat"];
+        onemeta["longitude"] = oneimage["lon"];
+        var imageSelected = $scope.form_image_name(imgname, $scope.selection.tag);
         var imageUrl = $scope.formImageUrl(imageSelected);
         $scope.currentImage = imageUrl;
+        $scope.onemeta = JSON.stringify(onemeta); 
     }
+
+    $scope.canUp = function () {
+        return $scope.selection.row > 0;
+    }
+
+    $scope.moveUp = function () {
+        if ( $scope.canUp() ) {
+            $scope.selection.row -= 1;
+        }
+        $scope.showImage();
+    }
+
+    $scope.canDown = function () {
+        return $scope.selection.row < $scope.metadata.images.length - 1;
+    }
+
+    $scope.moveDown = function () {
+        if ( $scope.canDown() ) {
+            $scope.selection.row += 1;
+        }
+        $scope.showImage();
+    }
+
+    $scope.canLeft = function () {
+        return $scope.selection.col > 0;
+    }
+
+    $scope.moveLeft = function () {
+        if ($scope.canLeft()) {
+            $scope.selection.col -= 1;
+        }
+        $scope.showImage();
+    }
+
+    $scope.canRight = function () {
+        return $scope.selection.col < $scope.metadata.images[$scope.selection.row].length - 1;
+    }
+
+    $scope.moveRight = function () {
+        if ($scope.canRight()) {
+            $scope.selection.col += 1;
+        }
+        $scope.showImage();
+    }
+
 
     $scope.changeCurrent = function () {
         $log.log($scope.current);
