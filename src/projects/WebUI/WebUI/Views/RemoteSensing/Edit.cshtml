@@ -1,0 +1,261 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<button id="clearId">Clear</button>
+<div>
+    <canvas id="canvasOutput" width="1000" height="1000"></canvas>
+</div>
+<script type="text/javascript">
+
+    //seg数据
+    var imageData;
+    //设置不同区块线条颜色
+    var block_line_map = {};
+    //遍历颜色,获得对应的区块表
+    var blockMap = new Array();
+    //设置canvas状态队列，用于undo和redo
+    var canvasStatus = new Array();
+    //设置当前操作队列位置
+    var nowposition;
+    //两张图片都加载完成标志
+    var onloadFlag = false;
+
+    //canvas
+    var c = document.getElementById("canvasOutput");
+    var cxt = c.getContext("2d");
+
+
+    //加载seg
+    var img_seg_b = new Image();
+    img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/seg_wangcheng_1000_21000.png";
+    img_seg_b.setAttribute('crossOrigin', 'anonymous');
+    img_seg_b.onload = function () {
+        //off screen绘制seg数据
+        var ofcn = document.createElement('canvas');
+        var ofc = ofcn.getContext('2d');
+        ofcn.width = img_seg_b.width;
+        ofcn.height = img_seg_b.height;
+        ofc.drawImage(img_seg_b, 0, 0);
+        //获得seg数据
+        imageData = ofc.getImageData(0, 0, img_seg_b.width, img_seg_b.height);
+        //处理seg图像
+        segContours(imageData);
+
+        //保留初始Status
+        var initialData = getCopyImageData(imageData);
+        //初始状态设置操作位置为0
+        nowposition = 0;
+        canvasStatus.push(initialData);
+
+        //初始化画布,此时seg图片已经加载完成了
+        //判断两张图片是否都加载完成
+        if (onloadFlag) {
+            clearCanvas();
+        } else {
+            onloadFlag = true;
+        }
+    };
+
+    var img = new Image();
+    img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/wangcheng_1000_21000.png";
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = function () {
+
+        c.onclick = function (e) {
+
+            refreshCanvas(canvasStatus[0]);
+
+            //获得最近保存的status
+            var tempData = getCopyImageData(canvasStatus[0]);
+
+            //var myColor = ofc.getImageData(e.offsetX, e.offsetY, 1, 1);
+            //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
+            //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*img.height;
+            var loc = e.offsetX * 4 + e.offsetY * 4 * img.height;
+            //透明度
+            var o = tempData.data[loc + 3];
+            //获得当前区域号
+            var nowblock;
+            if (o == 0) {
+                //如果透明度为0，那么鼠标的位置在区域内部，直接获得当前的区域
+                nowblock = tempData.data[loc];
+            } else {
+                //如果透明度不为0，那么需要从block_line_map中获得区域与线条的映射
+                //将当前线条颜色与表中的对比
+                /*  var r = imageData.data[loc];
+                var g = imageData.data[loc+1];
+                var b = imageData.data[loc+2];
+                for(var key in block_line_map){
+                  if(block_line_map[key][0] == r && block_line_map[key][1] == g && block_line_map[key][2] == b) {
+                        nowblock = key;
+                        break;
+                  }
+                } */
+                //点到线条上就没有反应
+                return;
+            }
+            //console.log("block:" + nowblock);
+            //将改区域号的所有颜色都改变
+            //首先改变区域内部的颜色
+            for (var i = 0; i < tempData.data.length; i = i + 4) {
+                if (tempData.data[i] == nowblock) {
+                    tempData.data[i] = 25;
+                    tempData.data[i + 1] = 25;
+                    tempData.data[i + 2] = 25;
+                    tempData.data[i + 3] = 175;
+                }
+            }
+            //canvasStatus[0]
+
+            refreshCanvas(tempData);
+        }
+
+        $("#clearId").click(function () {
+            //清空画布
+            refreshCanvas(canvasStatus[0]);
+        });
+        //初始化画布,此时背景图片已经加载完成了
+        //判断两张图片是否都加载完成
+        if (onloadFlag) {
+            clearCanvas();
+        } else {
+            onloadFlag = true;
+        }
+
+
+    };
+    //处理seg图像，将边缘提取出来，内部变成透明，用于覆盖到背景图像上
+    function segContours(imageData) {
+
+        //获得图像颜色的数据表
+        //imageData.data数据为一维，水平读取图像
+        for (var i = 0; i < img_seg_b.width; i++) { //先声明一维,一维长度为img.width
+            blockMap[i] = new Array(i);
+            for (var j = 0; j < img_seg_b.height; j++) { //再声明二维,二维长度为img.height
+
+                //根据颜色的数据表生成边缘和区块
+                //首先区分边缘节点，如果一个节点是边缘节点，那么其相邻（上、下、左、右）必定有一个不同颜色的像素
+
+                //当前节点始位置：i * 4 + j * 4 * img_seg_b.width
+                var current_pos = i * 4 + j * 4 * img_seg_b.width;
+                //当前节点上方位置：i * 4 + (j - 1) * 4 * img_seg_b.width
+                var up_pos = i * 4 + (j - 1) * 4 * img_seg_b.width;
+                //当前节点下方位置：i * 4 + (j + 1) * 4 * img_seg_b.width
+                var down_pos = i * 4 + (j + 1) * 4 * img_seg_b.width;
+                //当前节点左方位置：(i - 1) * 4 + j * 4 * img_seg_b.width
+                var left_pos = (i - 1) * 4 + j * 4 * img_seg_b.width;
+                //当前节点右方位置：(i + 1) * 4 + j * 4 * img_seg_b.width
+                var right_pos = (i + 1) * 4 + j * 4 * img_seg_b.width;
+
+                //判断是否是区域内部节点,跟相邻节点对比
+                //与上方节点进行比较
+                var isnew = true;
+                if (j != 0) {
+                    if (imageData.data[current_pos] != imageData.data[up_pos]) {
+                        isnew = false;
+                    }
+                }
+
+                //与下方节点进行比较
+                var isnew = true;
+                if (j != img_seg_b.height - 1) {
+                    if (imageData.data[current_pos] != imageData.data[down_pos]) {
+                        isnew = false;
+                    }
+                }
+
+                //与左方节点进行比较
+                var isnew = true;
+                if (i != 0) {
+                    if (imageData.data[current_pos] != imageData.data[left_pos]) {
+                        isnew = false;
+                    }
+                }
+
+                //与右方节点进行比较
+                var isnew = true;
+                if (i != img_seg_b.width - 1) {
+                    if (imageData.data[current_pos] != imageData.data[right_pos]) {
+                        isnew = false;
+                    }
+                }
+
+                //更加标志判断
+                if (isnew) {
+                    //如果是内部节点，则将区块标志标记为0
+                    blockMap[i][j] = 0;
+                } else {
+                    //如果是轮廓节点，则保留原标记
+                    blockMap[i][j] = imageData.data[current_pos];
+                    //判断该边缘是否已经设置了颜色
+                    var keys = Object.keys(block_line_map);
+                    var result = keys.indexOf(imageData.data[current_pos]);
+
+
+                    if (result == -1) {
+                        //如果没有设置颜色，则设置一个随机的颜色
+                        var r = Math.floor(Math.random() * 128 + 128);
+                        var g = Math.floor(Math.random() * 256);
+                        var b = Math.floor(Math.random() * 256);
+                        block_line_map[imageData.data[current_pos]] = [r, g, b, 255];
+                    }
+                }
+            }
+        }
+
+        //将轮廓表映射回颜色表
+        for (var i = 0; i < blockMap.length; i++) {
+            for (var j = 0; j < blockMap[i].length; j++) {
+                //判断是轮廓节点
+                //i,j→i * 4 + j * 4 * blockMap[i].length;
+                var current_pos = i * 4 + j * 4 * blockMap[i].length;
+                if (blockMap[i][j] == 0) {
+                    //如果不是轮廓节点，将节点透明
+                    for (var k = 0; k < 4; k++) {
+                        imageData.data[current_pos + 3] = 0;
+                    }
+                } else {
+                    //如果是轮廓节点，则取出轮廓节点对应的颜色数据
+                    var cc = block_line_map[blockMap[i][j]];
+                    for (var k = 0; k < 4; k++) {
+                        imageData.data[current_pos + k] = cc[k];
+                    }
+                }
+            }
+        }
+
+    }
+
+    function getCopyImageData(imageData) {
+        var c = document.createElement('canvas')
+        c.width = imageData.width;
+        c.height = imageData.height;
+        var ct = c.getContext("2d");
+        var copyData = ct.createImageData(imageData.width, imageData.height);
+        for (var i = 0; i < imageData.data.length; i++) {
+            copyData.data[i] = imageData.data[i];
+        }
+
+        return copyData;
+    }
+
+    function refreshCanvas(status) {
+
+        //画背景
+        cxt.drawImage(img, 0, 0);
+
+        //off screen绘制seg数据
+        var ofcn = document.createElement('canvas');
+        var ofc = ofcn.getContext('2d');
+        ofcn.width = cxt.canvas.width;
+        ofcn.height = cxt.canvas.height;
+
+        ofc.putImageData(status, 0, 0);
+        cxt.drawImage(ofc.canvas, 0, 0);
+    }
+
+    function clearCanvas() {
+        //off screen绘制
+        refreshCanvas(canvasStatus[0]);
+    }
+</script>

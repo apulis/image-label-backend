@@ -52,5 +52,11 @@ namespace WebUI.Controllers
             return View();
         }
 
+        [AllowAnonymous]
+        public async Task<IActionResult> Edit()
+        {
+            return View();
+        }
+
     }
 }
