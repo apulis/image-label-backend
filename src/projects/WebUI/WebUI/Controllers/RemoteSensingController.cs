@@ -35,25 +35,30 @@ namespace WebUI.Controllers
 
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             return View();
         }
 
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Upload()
+        public IActionResult Upload()
         {
             return View();
         }
 
         
-        public async Task<IActionResult> Browse()
+        public IActionResult Browse()
         {
             return View();
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Edit()
+        public IActionResult Edit()
+        {
+            return View();
+        }
+
+        public IActionResult MapBrowse()
         {
             return View();
         }

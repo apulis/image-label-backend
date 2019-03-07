@@ -66,7 +66,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         alert('post request failed, check server?');
     }
 
-    $scope.selectPrefix = function () {
+    $scope.selectPrefixOld = function ( onCompletion ) {
         var post = $scope.current;
         var postInfo = $http.post('/api/Image/SelectPrefix', post);
 
@@ -76,9 +76,24 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
                 $scope.prefixSelections = data.prefix;
                 $scope.status.selectPrefix = true;
             });
+            if (onCompletion != null) {
+                onCompletion();
+            };
         };
 
         postInfo.then(successFunc, $scope.onError);
+    }
+
+    $scope.selectPrefix = function (onCompletion) {
+        var indexUrl = $scope.formUrl("index", "index.json");
+        $http.get(indexUrl).then(function (response) {
+            $scope.selectedPrefix = response.data.prefix;
+            $scope.prefixSelections = response.data.prefix;
+            $scope.status.selectPrefix = true;
+            if (onCompletion != null) {
+                onCompletion();
+            };
+        });
     }
 
     $scope.doneSelectPrefix = function () {
@@ -90,6 +105,12 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         var metadataUrl = [$scope.current.cdn, $scope.current.prefix, file].join('/')
         return metadataUrl;
     }
+
+    $scope.formUrl = function (prefix, file) {
+        var metadataUrl = [$scope.current.cdn, prefix, file].join('/')
+        return metadataUrl;
+    }
+
 
     $scope.form_image_name = function (file, tag) {
         var prefix = file.split(".")[0];
@@ -236,7 +257,117 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         });
     };
 
-    $scope.getCurrent($scope.downloadImageMetadata )
+    $scope.launchMap = function (lat, lon, level) {
+        
+        var map = new Microsoft.Maps.Map('#myMap', {
+            credentials: "ArVGTwXaB6QlXN1XMCGlIgjnXcOGRUhHUw6_gIgU2k62v9D8YS8Imk_97jPzxW73",
+            center: new Microsoft.Maps.Location(lat, lon),
+            mapTypeId: Microsoft.Maps.MapTypeId.aerial,
+            zoom: level
+        });
 
+        $scope.map = map; 
+        //Create some shapes to convert into GeoJSON.
+        var polygon = new Microsoft.Maps.Polygon([
+            [new Microsoft.Maps.Location(41, -104.05),
+            new Microsoft.Maps.Location(45, -104.05),
+            new Microsoft.Maps.Location(45, -111.05),
+            new Microsoft.Maps.Location(41, -111.05),
+            new Microsoft.Maps.Location(41, -104.05)]]);
+
+        var pin = new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location(43, -107.55));
+
+        //Create an array of shapes.
+        var shapes = [polygon, pin];
+
+        //Add the shapes to the map so we can see them (optional).
+        map.entities.push(shapes);
+
+        Microsoft.Maps.loadModule('Microsoft.Maps.GeoJson', function () {
+            //Convert the array of shapes into a GeoJSON object.
+            // var geoJson = Microsoft.Maps.GeoJson.write(shapes);
+
+            //Display the GeoJson in a new Window.
+            // var myWindow = window.open('', '_blank', 'scrollbars=yes, resizable=yes, width=400, height=100');
+            // myWindow.document.write(JSON.stringify(geoJson));
+        });
+    };
+
+    $scope.doneSelectPrefixBrowseContour = function () {
+        $scope.mapkey = "contour";
+        $scope.mapext = ".json";
+        $scope.doneSelectPrefixBrowseMap();
+    };
+
+    $scope.doneSelectPrefixBrowseMap = function () {
+        $scope.downloadImageMetadata($scope.downloadAdditionalMetadata);
+    };
+
+    $scope.downloadAdditionalMetadata = function () {
+         
+        var onemeta = {};
+        onemeta["minlat"] = $scope.metadata.minlat;
+        onemeta["maxlat"] = $scope.metadata.maxlat;
+        onemeta["minlon"] = $scope.metadata.minlon;
+        onemeta["maxlon"] = $scope.metadata.maxlon;
+        onemeta["level"] = $scope.metadata.level; 
+        var lat = ($scope.metadata.minlat + $scope.metadata.maxlat) / 2.0; 
+        var lon = ($scope.metadata.minlon + $scope.metadata.maxlon) / 2.0; 
+        var level = $scope.metadata.level; 
+        $scope.launchMap(lat, lon, level);
+        $scope.onemeta = JSON.stringify(onemeta);
+        $scope.totalToLoad = 0;
+        $scope.totalLoaded = 0;
+        $scope.dataBounds == null;
+        $scope.map.entities.clear(); 
+        var imgarr = $scope.metadata.images;
+        for (tiley = 0; tiley < imgarr.length; tiley++) {
+            for (tilex = 0; tilex < imgarr[tiley].length; tilex++) {
+                $scope.totalToLoad += 1; 
+                try {
+                    var oneimage = imgarr[tiley][tilex];
+                    var imgname = oneimage.image;
+                    var basename = imgname.split(".")[0];
+                    var geojson_url = $scope.formImageUrl($scope.mapkey + "_" + basename + $scope.mapext);
+                    $http.get(geojson_url).then(function (response) {
+                        $scope.totalLoaded += 1; 
+                        var onegeojson = response.data;
+
+                        var shapes = [];
+                        // Interpret geojson
+                        // var polygons = onegeojson.
+
+
+                        // var geoJsonText = JSON.stringify(onegeojson);
+                        var shapes = Microsoft.Maps.GeoJson.read(onegeojson, {
+                            polygonOptions: {
+                                fillColor: 'rgba(0,0,30,0.0)',
+                                strokeColor: 'blue',
+                                strokeThickness: 1
+                            }
+                        });
+                        $scope.map.entities.push(shapes);
+                        var geoJson = Microsoft.Maps.GeoJson.write(shapes);
+
+                        var bounds = Microsoft.Maps.LocationRect.fromShapes(shapes);
+                        if ($scope.dataBounds) {
+                            $scope.dataBounds = Microsoft.Maps.LocationRect.merge($scope.dataBounds, bounds);
+                        } else {
+                            $scope.dataBounds = bounds;
+                        }
+                        onemeta["bounds"] = $scope.dataBounds;
+                        // if ($scope.totalToLoad > $scope.totalLoaded - 5) {
+                        //    $scope.map.setView({ bounds: $scope.dataBounds, padding: 50 });
+                        // };
+                    });
+                    
+                } catch(err) {
+
+                };
+            };
+        };
+    };
+
+    $scope.getCurrent($scope.downloadImageMetadata);
 
 }]);

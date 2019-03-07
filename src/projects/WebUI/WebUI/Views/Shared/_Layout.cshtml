@@ -37,7 +37,7 @@
     <!-- X-Editable https://vitalets.github.io/angular-xeditable/ -->
     <link src="https://cdnjs.cloudflare.com/ajax/libs/angular-xeditable/0.8.0/css/xeditable.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-xeditable/0.8.0/js/xeditable.min.js"></script>
-
+    <script src='https://www.bing.com/api/maps/mapcontrol?branch=release'></script>
 </head>
 <body>
     <nav class="navbar navbar-inverse navbar-static-top">
@@ -62,6 +62,7 @@
                         <ul class="dropdown-menu">
                             <li><a asp-area="" asp-controller="RemoteSensing" asp-action="Edit">Edit</a></li>
                             <li><a asp-area="" asp-controller="RemoteSensing" asp-action="Browse">Browse </a></li>
+                            <li><a asp-area="" asp-controller="RemoteSensing" asp-action="MapBrowse">Map </a></li>
                         </ul>
                     </li>
                 </ul>

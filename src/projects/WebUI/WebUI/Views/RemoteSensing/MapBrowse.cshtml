@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Browse";
+}
+
+<div class="container body-content" ng-app="fileUpload" ng-controller="MyCtrl">
+
+    <partial name="_PrefixMap" />
+
+    <div id="myMap" style="width:1000px;height:1000px;float:left;"></div>
+
+    <div ng-if="onemeta">
+        <label>{{onemeta}} : {{totalLoaded}} / {{totalToLoad}}</label>
+    </div>
+</div>
+
+<script src="~/lib/remote-sensing/remote-sensing.js"></script>
