@@ -257,13 +257,15 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         });
     };
 
-    $scope.launchMap = function (lat, lon, level) {
+    $scope.launchMap = function (lat, lon, level, scale) {
         
         var map = new Microsoft.Maps.Map('#myMap', {
             credentials: "ArVGTwXaB6QlXN1XMCGlIgjnXcOGRUhHUw6_gIgU2k62v9D8YS8Imk_97jPzxW73",
             center: new Microsoft.Maps.Location(lat, lon),
             mapTypeId: Microsoft.Maps.MapTypeId.aerial,
-            zoom: level
+            zoom: level, 
+            minZoom: level - 3,
+            maxZoom: level + scale - 1
         });
 
         $scope.map = map; 
@@ -314,7 +316,11 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
         var lat = ($scope.metadata.minlat + $scope.metadata.maxlat) / 2.0; 
         var lon = ($scope.metadata.minlon + $scope.metadata.maxlon) / 2.0; 
         var level = $scope.metadata.level; 
-        $scope.launchMap(lat, lon, level);
+        var scale = 1;
+        if ("scale" in $scope.metadata) {
+            scale = $scope.metadata.scale;
+        };
+        $scope.launchMap(lat, lon, level, scale);
         $scope.onemeta = JSON.stringify(onemeta);
         $scope.totalToLoad = 0;
         $scope.totalLoaded = 0;

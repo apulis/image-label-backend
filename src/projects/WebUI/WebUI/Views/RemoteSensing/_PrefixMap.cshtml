@@ -13,7 +13,7 @@
     <md-input-container flex="50">
         <label>Prefix Selection</label>
         <md-select name="current.prefix" ng-model="current.prefix" ng-change="doneSelectPrefixBrowseContour()">
-            <md-option ng-value="g" ng-repeat="g in prefixSelections">{{g}}</md-option>
+            <md-option ng-value="g[0]" ng-repeat="g in prefixSelections">{{g[1]}}</md-option>
         </md-select>
     </md-input-container>
 </div>
