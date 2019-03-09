@@ -265,7 +265,11 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "Upl
             mapTypeId: Microsoft.Maps.MapTypeId.aerial,
             zoom: level, 
             minZoom: level - 3,
-            maxZoom: level + scale - 1
+            maxZoom: level + scale - 1, 
+            allowHidingLabelsOfRoad: true, 
+            allowInfoboxOverflow: true, 
+            disableKeyboardInput: true, 
+            showTermsLink: false
         });
 
         $scope.map = map; 
