@@ -174,8 +174,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             tm = '?' + new Date().getTime();
         }
         $scope.currentImage = imageUrl + tm;
-        $scope.currentOrg = $scope.formImageUrl($scope.form_image_name(imgname, "image")) + tm;
-        $scope.currentSeg = $scope.formImageUrl($scope.form_image_name(imgname, "seg")) + tm;
+        $scope.currentOrg = $scope.formImageUrl($scope.form_image_name(imgname, "image")) ;
+        $scope.currentSeg = $scope.formImageUrl($scope.form_image_name(imgname, "seg")) ;
         $scope.onemeta = JSON.stringify(onemeta); 
     }
 
@@ -1337,6 +1337,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         }
 
         function clearAll() {
+            
             cxt.clearRect(0, 0, c.width, c.height);
             segImageData = new Array();
             block_line_map = {};
@@ -1344,7 +1345,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             canvasStatus = new Array();
             nowposition = 0; 
             onloadFlag = false;
-            mergeArray = new Array();
+            mergeArray = new Array(); 
         }
 
         function submitChange() {
