@@ -1,18 +1,23 @@
 ﻿<div layout="row" ng-if="metadata.images">
-    <button ng-if="canUp()" style="height:30px;width:30px">
-        <i class="fa fa-arrow-up" aria-hidden="true" style="color:green" ng-click="moveUp()"></i>
+
+    <button ng-if="current.editable">
+        <i class="fa fa-edit fa-3x" aria-hidden="true" style="color:green" ng-click="startEditImage()"></i>
     </button>
 
-    <button ng-if="canDown()" style="height:30px;width:30px">
-        <i class="fa fa-arrow-down" aria-hidden="true" style="color:green" ng-click="moveDown()"></i>
+    <button ng-if="canUp()">
+        <i class="fa fa-arrow-up fa-3x" aria-hidden="true" style="color:green" ng-click="moveUp()"></i>
     </button>
 
-    <button ng-if="canLeft()" style="height:30px;width:30px">
-        <i class="fa fa-arrow-left" aria-hidden="true" style="color:green" ng-click="moveLeft()"></i>
+    <button ng-if="canDown()">
+        <i class="fa fa-arrow-down fa-3x" aria-hidden="true" style="color:green" ng-click="moveDown()"></i>
     </button>
 
-    <button ng-if="canRight()" style="height:30px;width:30px">
-        <i class="fa fa-arrow-right" aria-hidden="true" style="color:green" ng-click="moveRight()"></i>
+    <button ng-if="canLeft()">
+        <i class="fa fa-arrow-left fa-3x" aria-hidden="true" style="color:green" ng-click="moveLeft()"></i>
+    </button>
+
+    <button ng-if="canRight()">
+        <i class="fa fa-arrow-right fa-3x" aria-hidden="true" style="color:green" ng-click="moveRight()"></i>
     </button>
 
     <md-input-container>
@@ -22,6 +27,6 @@
         </md-select>
     </md-input-container>
 
-
 </div>
+
 

@@ -52,7 +52,6 @@ namespace WebUI.Controllers
             return View();
         }
 
-        [AllowAnonymous]
         public IActionResult Edit()
         {
             return View();

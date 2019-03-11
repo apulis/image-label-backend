@@ -26,6 +26,21 @@
         <div ng-if="onemeta">
             <label>{{onemeta}}</label>
         </div>
+
+        <div layout="row" ng-if="current.editable" >
+            <div class="col-md-1">
+                <button class="btn btn-default" id="mergeId">Merge</button>
+                <button class="btn btn-default" id="sliceId">Slice</button>
+                <button class="btn btn-default" id="undoId">Undo</button>
+                <button class="btn btn-default" id="redoId">Redo</button>
+                <button class="btn btn-default" id="saveId">Save</button>
+
+            </div>
+            <div class="col-md-11">
+                <canvas id="canvasOutput" width="1000" height="1000"></canvas>
+            </div>
+        </div>
+
     </div>
 
 
