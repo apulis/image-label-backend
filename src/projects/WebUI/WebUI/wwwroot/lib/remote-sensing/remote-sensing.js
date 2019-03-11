@@ -4,7 +4,7 @@ app.run(function (editableOptions) {
     editableOptions.theme = 'bs3';
 });
 
-app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$route", "$location", "Upload", function ($scope, $filter, $http, $log, $timeout, Upload) {
+app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$route", "$location", "Upload", function ($scope, $filter, $http, $log, $route, $location, $timeout, Upload) {
 
     $scope.status = { selectPrefix: false };
     $scope.selection = {
@@ -166,11 +166,16 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         var onemeta = {};
         onemeta["latitude"] = oneimage["lat"];
         onemeta["longitude"] = oneimage["lon"];
+        $scope.currentImageName = imgname;
         var imageSelected = $scope.form_image_name(imgname, $scope.selection.tag);
         var imageUrl = $scope.formImageUrl(imageSelected);
-        $scope.currentImage = imageUrl;
-        $scope.currentOrg = $scope.formImageUrl($scope.form_image_name(imgname, "image"));
-        $scope.currentSeg = $scope.formImageUrl($scope.form_image_name(imgname, "seg"));
+        var tm = ""; 
+        if ($scope.editable) {
+            tm = '?' + new Date().getTime();
+        }
+        $scope.currentImage = imageUrl + tm;
+        $scope.currentOrg = $scope.formImageUrl($scope.form_image_name(imgname, "image")) + tm;
+        $scope.currentSeg = $scope.formImageUrl($scope.form_image_name(imgname, "seg")) + tm;
         $scope.onemeta = JSON.stringify(onemeta); 
     }
 
@@ -1331,8 +1336,19 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             refreshCanvas(canvasStatus[0]);
         }
 
+        function clearAll() {
+            cxt.clearRect(0, 0, c.width, c.height);
+            segImageData = new Array();
+            block_line_map = {};
+            blockMap = new Array();
+            canvasStatus = new Array();
+            nowposition = 0; 
+            onloadFlag = false;
+            mergeArray = new Array();
+        }
+
         function submitChange() {
-            var overlayUrl = c.toDataURL("image/jpg");
+            var overlayUrl = c.toDataURL("image/png");
             var ofcn = document.createElement("canvas");
             var ofc = ofcn.getContext('2d');
             ofcn.width = cxt.canvas.width;
@@ -1341,9 +1357,61 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             var segUrl = ofcn.toDataURL("image/png");
             $log.log(overlayUrl);
             $log.log(segUrl);
+
+            $scope.uploadSegAndOverlay(overlayUrl, segUrl, clearAll);
         }
+    }
 
+    $scope.uploadSegAndOverlayOld = function (overlayUrl, segUrl) {
+        var uploadAction = Upload.upload({
+            url: '/api/Image/UploadImage',
+            data: {
+                prefix: $scope.current.prefix,
+                row: $scope.selection.row,
+                col: $scope.selection.col, 
+                // files: [overlayUrl, segUrl]
+            }
+        }); // .base64DataUrl([overlayUrl, segUrl]);
 
+        var successFunc = function (resp) {
+            $log.log("Upload success ... ");
+        };
+
+        var errorFunc = function (resp) {
+            $log.log('Error upload, status:  ' + resp.status);
+        };
+
+        var progFunc = function (evt) {
+            var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+            $log.log('progress: ' + progressPercentage + '% ' );
+        };
+
+        uploadAction.base64DataUrl([overlayUrl, segUrl]).then(successFunc, errorFunc, progFunc);
+    
+    }
+
+    $scope.uploadSegAndOverlay = function (overlayUrl, segUrl, onCompletion ) {
+        var overlayData = overlayUrl.substr(overlayUrl.indexOf('base64,') + 'base64,'.length);
+        var segData = segUrl.substr(segUrl.indexOf('base64,') + 'base64,'.length);
+        var postUpload = $http.post('/api/Image/UploadJson', {
+            prefix: $scope.current.prefix,
+            row: $scope.selection.row,
+            col: $scope.selection.col,
+            name: $scope.currentImageName,
+            overlay: overlayData,
+            seg: segData
+        });
+
+        var successFunc = function (response) {
+            $log.log("Upload success ... ");
+            if (onCompletion != null) {
+                onCompletion();
+            } else {
+                $scope.editMode = false; 
+            }
+        };
+
+        postUpload.then(successFunc, $scope.onError);
     }
 
 }]);

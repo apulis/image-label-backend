@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -12,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Azure;
 using WebUI.Models;
+
 
 namespace WebUI.Controllers
 {
@@ -148,6 +151,137 @@ namespace WebUI.Controllers
             retJson[Constants.PrefixEntry] = new JArray(lst);
             _logger.LogDebug($"SelectPrefix: {retJson}");
             return Content(retJson.ToString(), "application/json");
+        }
+
+        // Post: api/Image/UploadImage
+        [IgnoreAntiforgeryToken]
+        [HttpPost("UploadImage", Name = "UploadImage")]
+        public async Task<IActionResult> UploadImage()
+        {
+            Int64 totalUpload = 0;
+            var files = Request.Form.Files;
+            JObject ret = new JObject();
+            var location = LocalSetting.Current.Location;
+
+            try
+            {
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        using (var stream = new MemoryStream())
+                        {
+                            await file.CopyToAsync(stream);
+                            /*
+                            totalUpload += stream.Length;
+                            var retJson = await ImageUpload.UploadImageAndResize(CloudProvider.All,
+                                location,
+                                "restaurant/" + uuid + "/image",
+                                stream,
+                                Constant.ImageSizeMax,
+                                Constant.ImageSizeMin,
+                                null,
+                                file.FileName,
+                                _logger);
+                            ret[file.FileName] = retJson;*/
+                        }
+                    }
+                }
+                _logger.LogInformation($"UploadImage: {files.Count}");
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                var errorLog = new { exception = ex.ToString() };
+                _logger.LogInformation("UploadImage: {0}", errorLog);
+                return Ok(new { error = ex.ToString() });
+            }
+        }
+
+        private async Task<JObject> GetMetadata(String prefix )
+        {
+            
+            var container = CloudStorage.GetContainer(null);
+            var dirPath = container.GetDirectoryReference(prefix);
+            var metadataBlob = dirPath.GetBlockBlobReference(Constant.MetadataJson);
+            return await metadataBlob.DownloadGenericObjectAsync(); 
+        }
+
+        private IActionResult ValidateName(JObject postdata, JObject metadata, string name )
+        {
+            var row = JsonUtils.GetType<int>("row", postdata, 0);
+            var col = JsonUtils.GetType<int>("col", postdata, 0);
+            var imgobj = JsonUtils.GetJToken("images", metadata); 
+            if ( Object.ReferenceEquals(imgobj, null ))
+            {
+                return Ok(new { error = "Metadata has no images" }); 
+            }
+            var imgarr = imgobj as JArray; 
+            if (Object.ReferenceEquals(imgarr, null))
+            {
+                return Ok(new { error = $"Metadata.images is not array" });
+            }
+            if (row < 0 || row >= imgarr.Count )
+            {
+                return Ok(new { error = $"Metadata.images has {imgarr.Count} rows, but request row = {row}" });
+            }
+            var onerow = imgarr[row] as JArray;
+            if (Object.ReferenceEquals(onerow, null))
+            {
+                return Ok(new { error = $"Metadata.image[{row}] is empty array " });
+            }
+            if ( col < 0 || col >= onerow.Count )
+            {
+                return Ok(new { error = $"Metadata.image[{row}] has {onerow.Count} columns, but request col = {col} " });
+            }
+            var oneimage = onerow[col] as JObject;
+            if (Object.ReferenceEquals(oneimage, null))
+            {
+                return Ok(new { error = $"Metadata.image[{row}][{col}] is empty JObject." });
+            }
+            var curimage = JsonUtils.GetString(Constants.OperationImage, oneimage);
+            if ( String.CompareOrdinal(curimage, name)!=0 )
+            {
+                return Ok(new { error = $"Metadata.image[{row}][{col}] has image {curimage}, but {name} is requested." });
+            }
+            return null; 
+        }
+
+
+
+
+        // Post: api/Image/SetCurrent
+        [HttpPost("UploadJson", Name = "UploadJson")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> UploadJson([FromBody] JObject postdata)
+        {
+            var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
+            var metadata = await GetMetadata(prefix);
+            var name = JsonUtils.GetString("name", postdata);
+            var ret = ValidateName(postdata, metadata, name);
+            if (!Object.ReferenceEquals(ret, null))
+            {
+                return ret;
+            }
+            var overlayBase64 = JsonUtils.GetString("overlay", postdata);
+            var segBase64 = JsonUtils.GetString("seg", postdata);
+            var container = CloudStorage.GetContainer(null);
+            var dirPath = container.GetDirectoryReference(prefix);
+            var overlayBlob = dirPath.GetBlockBlobReference("overlay_" + name);
+
+            var overlayImage = ImageOps.FromBase64(overlayBase64, _logger);
+            var overlayJpeg = overlayImage.ToJPEG();
+            
+            await overlayBlob.UploadFromByteArrayAsync(overlayJpeg, 0, overlayJpeg.Length);
+
+            var segBytes = Convert.FromBase64String(segBase64);
+            var basename = name.Split('.')[0];
+            var segBlob = dirPath.GetBlockBlobReference("seg_" + basename + ".png");
+            await segBlob.UploadFromByteArrayAsync(segBytes, 0, segBytes.Length);
+
+
+
+            return Ok();
         }
     }
 }
