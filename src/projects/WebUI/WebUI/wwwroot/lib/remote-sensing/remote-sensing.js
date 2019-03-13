@@ -955,6 +955,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             });
             $("#saveId").click(function () {
                 //保存
+                submitChange();
             });
 
             //初始化系统设置
