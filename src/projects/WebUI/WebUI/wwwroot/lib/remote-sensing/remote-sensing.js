@@ -428,8 +428,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     var isbanding = false;
 
     //canvas
-    var c = document.getElementById("canvasOutput");
-    var cxt = c.getContext("2d");
+    var c;
+    var cxt;
 
     //设置canvas的显示高度和宽度
     var canvaswidth = cxt.canvas.width;
@@ -444,7 +444,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         $scope.current.editMode = true;
         //如果没有进行按钮绑定，则再进行绑定一次
         if (!isbanding) {
-            buttonBingding();
+            Bingding();
             isbanding = true;
         }
 
@@ -509,7 +509,11 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         }
 
     }
-    function buttonBingding() {
+    function Bingding() {
+
+        c = document.getElementById("canvasOutput");
+        cxt = c.getContext("2d");
+
         $("#mergeId").click(function () {
             refreshCanvas(canvasStatus[nowposition]);
             if ($(this).hasClass("btn-success")) {
