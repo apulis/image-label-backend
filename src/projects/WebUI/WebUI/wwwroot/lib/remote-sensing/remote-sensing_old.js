@@ -1,4 +1,4 @@
-var app = angular.module("fileUpload", ["xeditable", "ui.select", "ngMaterial", 'ngMessages', 'ngRoute', "ngFileUpload"]);
+ï»¿var app = angular.module("fileUpload", ["xeditable", "ui.select", "ngMaterial", 'ngMessages', 'ngRoute', "ngFileUpload"]);
 
 app.run(function (editableOptions) {
     editableOptions.theme = 'bs3';
@@ -174,8 +174,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             tm = '?' + new Date().getTime();
         }
         $scope.currentImage = imageUrl + tm;
-        $scope.currentOrg = $scope.formImageUrl($scope.form_image_name(imgname, "image")) ;
-        $scope.currentSeg = $scope.formImageUrl($scope.form_image_name(imgname, "seg")) ;
+        $scope.currentOrg = $scope.formImageUrl($scope.form_image_name(imgname, "image")) + tm;
+        $scope.currentSeg = $scope.formImageUrl($scope.form_image_name(imgname, "seg")) + tm;
         $scope.onemeta = JSON.stringify(onemeta); 
     }
 
@@ -401,73 +401,74 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
         $scope.current.editMode = true; 
 
-    //segÊı¾İ
-    var segImageData = new Array();
-    //ÉèÖÃ²»Í¬Çø¿éÏßÌõÑÕÉ«
-    var block_line_map = {};
-    //±éÀúÑÕÉ«,»ñµÃ¶ÔÓ¦µÄÇø¿é±í
-    var blockMap = new Array();
-    //ÉèÖÃcanvas×´Ì¬¶ÓÁĞ£¬ÓÃÓÚundoºÍredo
-    var canvasStatus = new Array();
-    //ÉèÖÃµ±Ç°²Ù×÷¶ÓÁĞÎ»ÖÃ
-    var nowposition;
-    //Á½ÕÅÍ¼Æ¬¶¼¼ÓÔØÍê³É±êÖ¾
-    var onloadFlag = false;
-    //ÉèÖÃµ±Ç°×´Ì¬£ºSTATUS_NATURE(×ÔÈ»×´Ì¬£¬ÓÃ»§Î´×öÊ²Ã´Ñ¡Ôñ)/STATUS_MERGE(µØ¿éÈÚºÏ×´Ì¬)/STATUS_SLICE(µØ¿éÇĞ¸î×´Ì¬)/STATUS_SLICING(ÕıÔÚ½øĞĞµØ¿éÇĞ¸î×´Ì¬)
-    var nowStatus;
-    const STATUS_NATURE = 0;
-    const STATUS_MERGE = 1;
-    const STATUS_SLICE = 2;
-    const STATUS_SLICING = 3;
-    //ÉèÖÃÇø¿éÈÚºÏµÄÊı×é
-    var mergeArray = new Array();
-    //ÉèÖÃµØ¿éÇĞ¸îÊ±µÄÁÙÊ±Êı¾İ
-    var slicingdata;
-    //ÉèÖÃÇĞ¸îµÄÇøÓò
-    var slicingblock;
-    //ÉèÖÃÍ¼ÏñÌáÈ¡¾«¶ÈÅÅ³ı¸ÉÈÅ
-    var precision = 18;
+        //segæ•°æ®
+        var segImageData = new Array();
+        //è®¾ç½®ä¸åŒåŒºå—çº¿æ¡é¢œè‰²
+        var block_line_map = {};
+        //éå†é¢œè‰²,è·å¾—å¯¹åº”çš„åŒºå—è¡¨
+        var blockMap = new Array();
+        //è®¾ç½®canvasçŠ¶æ€é˜Ÿåˆ—ï¼Œç”¨äºundoå’Œredo
+        var canvasStatus = new Array();
+        //è®¾ç½®å½“å‰æ“ä½œé˜Ÿåˆ—ä½ç½®
+        var nowposition;
+        //ä¸¤å¼ å›¾ç‰‡éƒ½åŠ è½½å®Œæˆæ ‡å¿—
+        var onloadFlag = false;
+        //è®¾ç½®å½“å‰çŠ¶æ€ï¼šSTATUS_NATURE(è‡ªç„¶çŠ¶æ€ï¼Œç”¨æˆ·æœªåšä»€ä¹ˆé€‰æ‹©)/STATUS_MERGE(åœ°å—èåˆçŠ¶æ€)/STATUS_SLICE(åœ°å—åˆ‡å‰²çŠ¶æ€)/STATUS_SLICING(æ­£åœ¨è¿›è¡Œåœ°å—åˆ‡å‰²çŠ¶æ€)
+        var nowStatus;
+        const STATUS_NATURE = 0;
+        const STATUS_MERGE = 1;
+        const STATUS_SLICE = 2;
+        const STATUS_SLICING = 3;
+        //è®¾ç½®åŒºå—èåˆçš„æ•°ç»„
+        var mergeArray = new Array();
+        //è®¾ç½®åœ°å—åˆ‡å‰²æ—¶çš„ä¸´æ—¶æ•°æ®
+        var slicingdata;
+        //è®¾ç½®åˆ‡å‰²çš„åŒºåŸŸ
+        var slicingblock;
+        //è®¾ç½®å›¾åƒæå–ç²¾åº¦æ’é™¤å¹²æ‰°
+        var precision = 18;
 
         //canvas
         var c = document.getElementById("canvasOutput");
         var cxt = c.getContext("2d");
 
-    //ÉèÖÃcanvasµÄÏÔÊ¾¸ß¶ÈºÍ¿í¶È
-    var canvaswidth = cxt.canvas.width;
-    var canvasheight = cxt.canvas.height;
+        //è®¾ç½®canvasçš„æ˜¾ç¤ºé«˜åº¦å’Œå®½åº¦
+        var canvaswidth = cxt.canvas.width;
+        var canvasheight = cxt.canvas.height;
 
-        //¼ÓÔØseg
+        //åŠ è½½seg
         var img_seg_b = new Image();
         img_seg_b.crossOrigin = "Anonymous";
-        // img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/seg_wangcheng_1000_21000.png";
         img_seg_b.src = $scope.currentSeg;
+        //img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/bingmap/Hengshui_L15_s3_edit/seg_c132100231110020.png";
+        //img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/seg_wangcheng_1000_21000.png";
         img_seg_b.onload = function () {
-            //off screen»æÖÆsegÊı¾İ
+            //off screenç»˜åˆ¶segæ•°æ®
             var ofcn = document.createElement('canvas');
             var ofc = ofcn.getContext('2d');
-        ofcn.width = canvaswidth;
-        ofcn.height = canvasheight;
-        ofc.drawImage(img_seg_b, 0, 0, canvaswidth, canvasheight);
-        //»ñµÃsegÊı¾İ
-        var imageData = ofc.getImageData(0, 0, canvaswidth, canvasheight);
+            ofcn.width = canvaswidth;
+            ofcn.height = canvasheight;
+            ofc.drawImage(img_seg_b, 0, 0, canvaswidth, canvasheight);
+            //è·å¾—segæ•°æ®
+            var imageData = ofc.getImageData(0, 0, canvaswidth, canvasheight);
 
-            //±£Áô³õÊ¼segÊı¾İ
+            //ä¿ç•™åˆå§‹segæ•°æ®
             segImageData.push(getCopyImageData(imageData));
 
-            //´¦ÀísegÍ¼Ïñ
+            //å¤„ç†segå›¾åƒ
             segContours(imageData);
 
-            //±£Áô³õÊ¼Status
+            //ä¿ç•™åˆå§‹Status
             var initialData = getCopyImageData(imageData);
 
             canvasStatus.push(initialData);
 
-            //³õÊ¼»¯»­²¼,´ËÊ±segÍ¼Æ¬ÒÑ¾­¼ÓÔØÍê³ÉÁË
-            //ÅĞ¶ÏÁ½ÕÅÍ¼Æ¬ÊÇ·ñ¶¼¼ÓÔØÍê³É
+            //åˆå§‹åŒ–ç”»å¸ƒ,æ­¤æ—¶segå›¾ç‰‡å·²ç»åŠ è½½å®Œæˆäº†
+            //åˆ¤æ–­ä¸¤å¼ å›¾ç‰‡æ˜¯å¦éƒ½åŠ è½½å®Œæˆ
             if (onloadFlag) {
-                //³õÊ¼×´Ì¬ÉèÖÃ²Ù×÷Î»ÖÃÎª0
+                //åˆå§‹çŠ¶æ€è®¾ç½®æ“ä½œä½ç½®ä¸º0
                 nowposition = 0;
-                //³õÊ¼»¯°´Å¥×´Ì¬
+                //åˆå§‹åŒ–æŒ‰é’®çŠ¶æ€
                 refreshButton();
                 clearCanvas();
             } else {
@@ -477,69 +478,70 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
         var img = new Image();
         img.crossOrigin = 'Anonymous';
-        // img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/wangcheng_1000_21000.png";
+        //img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/wangcheng_1000_21000.png";
+        //img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/bingmap/Hengshui_L15_s3_edit/c132100231110020.jpg";
         img.src = $scope.currentOrg;
         img.onload = function () {
 
-            //ÉèÖÃcanvasÉÏµÄµã»÷ÊÂ¼ş
+            //è®¾ç½®canvasä¸Šçš„ç‚¹å‡»äº‹ä»¶
             c.onclick = function (e) {
 
-                //Èç¹û×´Ì¬ÎªSTATUS_NATURE£¬ÔòÖ»¸ßÁÁÑ¡ÖĞÇøÓò
+                //å¦‚æœçŠ¶æ€ä¸ºSTATUS_NATUREï¼Œåˆ™åªé«˜äº®é€‰ä¸­åŒºåŸŸ
                 if (nowStatus == STATUS_NATURE) {
                     refreshCanvas(canvasStatus[nowposition]);
 
-                    //»ñµÃ×î½ü±£´æµÄstatus
+                    //è·å¾—æœ€è¿‘ä¿å­˜çš„status
                     var tempData = getCopyImageData(canvasStatus[nowposition]);
 
                     //var myColor = ofc.getImageData(e.offsetX, e.offsetY, 1, 1);
-                //µ±Ç°Êó±êÔÚcanvasÖĞµÄ×ø±êÎª(e.offsetX, e.offsetY)
-                //¸ù¾İ×ø±ê¼ÆËãÑÕÉ«Êı¾İ¿ªÊ¼Î»ÖÃÎªe.offsetX*4 + e.offsetY*4*canvaswidth;
-                var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+                    //å½“å‰é¼ æ ‡åœ¨canvasä¸­çš„åæ ‡ä¸º(e.offsetX, e.offsetY)
+                    //æ ¹æ®åæ ‡è®¡ç®—é¢œè‰²æ•°æ®å¼€å§‹ä½ç½®ä¸ºe.offsetX*4 + e.offsetY*4*canvaswidth;
+                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
 
                     highlightSelected(tempData, loc);
 
                     refreshCanvas(tempData);
                 } else if (nowStatus == STATUS_MERGE) {
-                    //Èç¹ûÇø¿éÈÚºÏÊı×éÖĞÃ»ÓĞÖµ£¬±íÊ¾ÕâÊÇÓÃ»§Ñ¡ÖĞµÄµÚÒ»¿é
+                    //å¦‚æœåŒºå—èåˆæ•°ç»„ä¸­æ²¡æœ‰å€¼ï¼Œè¡¨ç¤ºè¿™æ˜¯ç”¨æˆ·é€‰ä¸­çš„ç¬¬ä¸€å—
                     if (mergeArray.length == 0) {
                         refreshCanvas(canvasStatus[nowposition]);
-                        //»ñµÃ×î½ü±£´æµÄstatus
+                        //è·å¾—æœ€è¿‘ä¿å­˜çš„status
                         var tempData = getCopyImageData(canvasStatus[nowposition]);
-                    //»ñµÃÓÃ»§µã»÷µÄÎ»ÖÃ
-                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
-                    var blocknum = highlightSelected(tempData, loc);
-                        //½«µÚÒ»´Îµã»÷µÄÊı¾İ±£´æµ½mergeArray
+                        //è·å¾—ç”¨æˆ·ç‚¹å‡»çš„ä½ç½®
+                        var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+                        var blocknum = highlightSelected(tempData, loc);
+                        //å°†ç¬¬ä¸€æ¬¡ç‚¹å‡»çš„æ•°æ®ä¿å­˜åˆ°mergeArray
                         mergeArray.push(blocknum);
                         refreshCanvas(tempData);
                     } else {
-                        //Èç¹û²»ÊÇµÚÒ»´Îµã»÷£¬Ôò´ÓmergeArrayÖĞÈ¥È¡µÃµÚÒ»´ÎµÄÇø¿éºÅ
-                        //»ñµÃ×î½ü±£´æµÄstatus
-                    var tempData = getCopyImageData(canvasStatus[nowposition]);
-                    //»ñµÃÓÃ»§µã»÷µÄÎ»ÖÃ
-                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
-                    var blocknum = highlightSelected(tempData, loc);
+                        //å¦‚æœä¸æ˜¯ç¬¬ä¸€æ¬¡ç‚¹å‡»ï¼Œåˆ™ä»mergeArrayä¸­å»å–å¾—ç¬¬ä¸€æ¬¡çš„åŒºå—å·
+                        //è·å¾—æœ€è¿‘ä¿å­˜çš„status
+                        var tempData = getCopyImageData(canvasStatus[nowposition]);
+                        //è·å¾—ç”¨æˆ·ç‚¹å‡»çš„ä½ç½®
+                        var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+                        var blocknum = highlightSelected(tempData, loc);
 
-                        //ÅĞ¶Ï¸ÃÇøÓòÊÇ·ñÒÑ¾­±»Ñ¡ÖĞÁË
+                        //åˆ¤æ–­è¯¥åŒºåŸŸæ˜¯å¦å·²ç»è¢«é€‰ä¸­äº†
                         if (mergeArray.indexOf(blocknum) == -1) {
-                            //Èç¹ûÖ®Ç°Ã»ÓĞ±»Ñ¡ÖĞ£¬ÔòÌí¼Ó½ømergeArray
+                            //å¦‚æœä¹‹å‰æ²¡æœ‰è¢«é€‰ä¸­ï¼Œåˆ™æ·»åŠ è¿›mergeArray
                             mergeArray.push(blocknum);
                         }
 
-                        //½«mergeArrayÖĞËùÓĞÇøÓò±äÉ«
+                        //å°†mergeArrayä¸­æ‰€æœ‰åŒºåŸŸå˜è‰²
                         highlightSelectedByBlocks(tempData, mergeArray);
                         refreshCanvas(tempData);
 
-                        //ÅĞ¶ÏmergeArrayµÄÊıÁ¿n,Èç¹ûn=2(Ôİ¶¨),ÔòºÏ²¢ÇøÓò
+                        //åˆ¤æ–­mergeArrayçš„æ•°é‡n,å¦‚æœn=2(æš‚å®š),åˆ™åˆå¹¶åŒºåŸŸ
                         if (mergeArray.length == 2) {
 
-                            //ÑÓ³Ù1sÖ´ĞĞ
+                            //å»¶è¿Ÿ1sæ‰§è¡Œ
                             var timer = self.setInterval(function () {
 
-                                var ac = confirm("ÊÇ·ñºÏ²¢ÕâÁ½¸öÇøÓò£¿");
+                                var ac = confirm("æ˜¯å¦åˆå¹¶è¿™ä¸¤ä¸ªåŒºåŸŸï¼Ÿ");
                                 if (ac) {
-                                    //ÏÈÅĞ¶Ï2¸öÇøÓòÊÇ·ñÏàÁ¬
+                                    //å…ˆåˆ¤æ–­2ä¸ªåŒºåŸŸæ˜¯å¦ç›¸è¿
                                     //var adjacent = isAdjacent(mergeArray);
-                                    //»ñµÃ³õÊ¼segÊı¾İ£¬²¢½«segÊı¾İÖĞmergeArray[1]µÄÖµÈ«²¿±ä³ÉmergeArray[0]µÄÖµ
+                                    //è·å¾—åˆå§‹segæ•°æ®ï¼Œå¹¶å°†segæ•°æ®ä¸­mergeArray[1]çš„å€¼å…¨éƒ¨å˜æˆmergeArray[0]çš„å€¼
                                     var dupSegData = getCopyImageData(segImageData[nowposition]);
                                     //console.log("nowposition:" + nowposition);
                                     for (var i = 0; i < dupSegData.data.length; i = i + 4) {
@@ -550,40 +552,40 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                                         }
                                     }
 
-                                    //Èç¹ûµ±Ç°µÄ×´Ì¬²»ÊÇ×îĞÂµÄ×´Ì¬£¬ÀıÈçÊÇ¾­¹ıredoµÄÖĞ¼äÌ¬£¬±£´æºóÉ¾³ıµ±Ç°×´Ì¬Ö®ºóµÄ×´Ì¬
+                                    //å¦‚æœå½“å‰çš„çŠ¶æ€ä¸æ˜¯æœ€æ–°çš„çŠ¶æ€ï¼Œä¾‹å¦‚æ˜¯ç»è¿‡redoçš„ä¸­é—´æ€ï¼Œä¿å­˜ååˆ é™¤å½“å‰çŠ¶æ€ä¹‹åçš„çŠ¶æ€
                                     if (nowposition != canvasStatus.length) {
                                         canvasStatus.splice(nowposition + 1, canvasStatus.length - 1 - nowposition);
                                         segImageData.splice(nowposition + 1, segImageData.length - 1 - nowposition);
                                     }
 
-                                    //µ±Ç°×´Ì¬+1
+                                    //å½“å‰çŠ¶æ€+1
                                     nowposition++;
-                                    //¸üĞÂsegImageData
+                                    //æ›´æ–°segImageData
                                     segImageData.push(getCopyImageData(dupSegData));
 
-                                    //´¦ÀíĞÂµÄsegÍ¼Ïñ
+                                    //å¤„ç†æ–°çš„segå›¾åƒ
                                     segContours(dupSegData);
 
-                                    //±£´æĞÂ×´Ì¬
+                                    //ä¿å­˜æ–°çŠ¶æ€
                                     var updatedData = getCopyImageData(dupSegData);
 
-                                    //½«mergeArrayÖĞµÄÖµ¶¼¸ÄÎªmergeArray[0]
-                                    //É¾³ıÊı×éµÄÈ«²¿2¸öÔªËØ
+                                    //å°†mergeArrayä¸­çš„å€¼éƒ½æ”¹ä¸ºmergeArray[0]
+                                    //åˆ é™¤æ•°ç»„çš„å…¨éƒ¨2ä¸ªå…ƒç´ 
                                     mergeArray.pop();
                                     mergeArray.pop();
-                                    //ÒÆ³ıactive class
+                                    //ç§»é™¤active class
                                     $("#mergeId").removeClass("btn-success");
                                     $("#mergeId").addClass("btn-default");
 
-                                    //±£´æµ±Ç°×´Ì¬
+                                    //ä¿å­˜å½“å‰çŠ¶æ€
                                     canvasStatus.push(updatedData);
 
-                                    //ÖØ»æ²¢¸ßÁÁÑ¡ÖĞµÄÇøÓò
+                                    //é‡ç»˜å¹¶é«˜äº®é€‰ä¸­çš„åŒºåŸŸ
                                     highlightSelected(dupSegData, loc);
                                     refreshCanvas(dupSegData);
                                     refreshButton();
 
-                                    //½«ÏµÍ³×´Ì¬ÖØÖÃÎªSTATUS_NATURE
+                                    //å°†ç³»ç»ŸçŠ¶æ€é‡ç½®ä¸ºSTATUS_NATURE
                                     nowStatus = STATUS_NATURE;
 
                                     clearInterval(timer);
@@ -591,7 +593,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                                 }
                                 else {
 
-                                    //Çå¿ÕÑ¡Çø
+                                    //æ¸…ç©ºé€‰åŒº
                                     mergeArray = [];
                                     refreshCanvas(canvasStatus[nowposition]);
                                     clearInterval(timer);
@@ -605,44 +607,44 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
                     }
                 } else if (nowStatus == STATUS_SLICE) {
-                    //Èç¹ûµ±Ç°×´Ì¬Îª·Ö¸î×´Ì¬
+                    //å¦‚æœå½“å‰çŠ¶æ€ä¸ºåˆ†å‰²çŠ¶æ€
                     refreshCanvas(canvasStatus[nowposition]);
 
-                    //»ñµÃ×î½ü±£´æµÄstatus
-                var tempData = getCopyImageData(canvasStatus[nowposition]);
+                    //è·å¾—æœ€è¿‘ä¿å­˜çš„status
+                    var tempData = getCopyImageData(canvasStatus[nowposition]);
 
-                //µ±Ç°Êó±êÔÚcanvasÖĞµÄ×ø±êÎª(e.offsetX, e.offsetY)
-                //¸ù¾İ×ø±ê¼ÆËãÑÕÉ«Êı¾İ¿ªÊ¼Î»ÖÃÎªe.offsetX*4 + e.offsetY*4*canvaswidth;
-                var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+                    //å½“å‰é¼ æ ‡åœ¨canvasä¸­çš„åæ ‡ä¸º(e.offsetX, e.offsetY)
+                    //æ ¹æ®åæ ‡è®¡ç®—é¢œè‰²æ•°æ®å¼€å§‹ä½ç½®ä¸ºe.offsetX*4 + e.offsetY*4*canvaswidth;
+                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
 
-                var nowblock = highlightReverseSelected(tempData, loc);
+                    var nowblock = highlightReverseSelected(tempData, loc);
 
-                    //½«µ±Ç°Êı¾İ±£´æµ½slicingdata
+                    //å°†å½“å‰æ•°æ®ä¿å­˜åˆ°slicingdata
                     slicingdata = tempData;
                     slicingblock = nowblock;
 
                     refreshCanvas(tempData);
 
-                    //½«µ±Ç°×´Ì¬×ª»»ÎªSTATUS_SLICING
+                    //å°†å½“å‰çŠ¶æ€è½¬æ¢ä¸ºSTATUS_SLICING
                     nowStatus = STATUS_SLICING;
 
                 } else if (nowStatus == STATUS_SLICING) {
-                    //Èç¹ûµ±Ç°×´Ì¬ÎªÕıÔÚÇĞ¸î
+                    //å¦‚æœå½“å‰çŠ¶æ€ä¸ºæ­£åœ¨åˆ‡å‰²
                 }
 
 
             }
 
-            //ÉèÖÃcanvasÉÏµÄÍÏ¶¯ÊÂ¼ş(ÓÃÓÚµØ¿é·Ö¸î»®Ïß)
+            //è®¾ç½®canvasä¸Šçš„æ‹–åŠ¨äº‹ä»¶(ç”¨äºåœ°å—åˆ†å‰²åˆ’çº¿)
             c.onmousedown = function (e) {
                 if (nowStatus == STATUS_SLICING) {
-                    //off screen»æÖÆsegÊı¾İ
+                    //off screenç»˜åˆ¶segæ•°æ®
                     var ofcn = document.createElement('canvas');
-                var ofc = ofcn.getContext('2d');
-                ofcn.width = canvaswidth;
-                ofcn.height = canvasheight;
-                ofc.strokeStyle = "rgba(0,255,0,1)";
-                ofc.strokeWidth = 1;
+                    var ofc = ofcn.getContext('2d');
+                    ofcn.width = canvaswidth;
+                    ofcn.height = canvasheight;
+                    ofc.strokeStyle = "rgba(0,255,0,1)";
+                    ofc.strokeWidth = 1;
                     ofc.lineWidth = 1;
 
                     ofc.putImageData(slicingdata, 0, 0);
@@ -651,14 +653,14 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     document.onmousemove = function (e) {
                         var e = e || window.event;
                         //cxt.lineTo(e.offsetX, e.offsetY);
-                        //»ñµÃµ±Ç°Î»ÖÃµÄÏñËØ
+                        //è·å¾—å½“å‰ä½ç½®çš„åƒç´ 
                         ofc.lineTo(e.offsetX, e.offsetY);
                         ofc.stroke();
 
                         slicingdata = ofc.getImageData(0, 0, blockMap.length, blockMap[0].length);
 
                         //ofc.putImageData(slicingimage, 0, 0);
-                        //»­±³¾°
+                        //ç”»èƒŒæ™¯
                         cxt.drawImage(img, 0, 0);
                         cxt.drawImage(ofc.canvas, 0, 0);
                     };
@@ -667,31 +669,31 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     if (nowStatus == STATUS_SLICING) {
                         document.onmousemove = null;
                         document.onmouseup = null;
-                        //×´Ì¬ÇĞ»ØSTATUS_SLICE
+                        //çŠ¶æ€åˆ‡å›STATUS_SLICE
 
-                        //»ñµÃ»­ÍêºóµÄÍ¼ÏñÊı¾İslicingdata
-                        //ÉèÖÃmaskBlockMap
+                        //è·å¾—ç”»å®Œåçš„å›¾åƒæ•°æ®slicingdata
+                        //è®¾ç½®maskBlockMap
                         var maskBlockMap = new Array();
 
                         for (var i = 0; i < blockMap.length; i++) {
                             maskBlockMap[i] = new Array(i);
                             for (var j = 0; j < blockMap[i].length; j++) {
 
-                                //µ±Ç°½ÚµãÊ¼Î»ÖÃ£ºi * 4 + j * 4 * blockMap.length
+                                //å½“å‰èŠ‚ç‚¹å§‹ä½ç½®ï¼ši * 4 + j * 4 * blockMap.length
                                 var current_pos = i * 4 + j * 4 * blockMap.length;
-                                //ÅĞ¶ÏÇøÓòÊÇ·ñÎªÇĞ¸îÇøÓò
+                                //åˆ¤æ–­åŒºåŸŸæ˜¯å¦ä¸ºåˆ‡å‰²åŒºåŸŸ
                                 if (segImageData[nowposition].data[current_pos] == slicingblock && segImageData[nowposition].data[current_pos + 1] == slicingblock && segImageData[nowposition].data[current_pos + 2] == slicingblock) {
-                                    //ÕâÀïµÄÊı¾İ¶¼ÊÇÇĞ¸îÇøÓòµÄÄÚ²¿Êı¾İ
-                                    //¸ù¾İÍ¸Ã÷¶ÈÀ´ÅĞ¶ÏºÍÏßÌõÀ´ÅĞ¶Ï
-                                    //»ñµÃµ±Ç°ÇøÓòµÄÏßÌõÑÕÉ«
+                                    //è¿™é‡Œçš„æ•°æ®éƒ½æ˜¯åˆ‡å‰²åŒºåŸŸçš„å†…éƒ¨æ•°æ®
+                                    //æ ¹æ®é€æ˜åº¦æ¥åˆ¤æ–­å’Œçº¿æ¡æ¥åˆ¤æ–­
+                                    //è·å¾—å½“å‰åŒºåŸŸçš„çº¿æ¡é¢œè‰²
                                     var linecolor = block_line_map[slicingblock];
                                     if (slicingdata.data[current_pos + 3] != 0 && slicingdata.data[current_pos] != linecolor[0] && slicingdata.data[current_pos + 1] != linecolor[1] && slicingdata.data[current_pos + 2] != linecolor[2]) {
                                         //block_line_map
 
-                                        //µ±Ç°ÇøÓòÊÇÇĞ¸îÏß£¬ÔòÖÃmaskBlockMapÎª0
+                                        //å½“å‰åŒºåŸŸæ˜¯åˆ‡å‰²çº¿ï¼Œåˆ™ç½®maskBlockMapä¸º0
                                         maskBlockMap[i][j] = 0;
                                     } else {
-                                        //µ±Ç°ÇøÓò²»ÊÇÇĞ¸îÏß£¬ÔòÖÃmaskBlockMapÎª1
+                                        //å½“å‰åŒºåŸŸä¸æ˜¯åˆ‡å‰²çº¿ï¼Œåˆ™ç½®maskBlockMapä¸º1
                                         maskBlockMap[i][j] = 1;
                                     }
                                 } else {
@@ -734,28 +736,28 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                                     nmuberpixel = 0;
                                 }
 
-                                //ÏòÉÏ±éÀú
+                                //å‘ä¸Šéå†
                                 if (y != 0) {
                                     if (maskBlockMap[x][y - 1] == 1) {
                                         maskBlockMap[x][y - 1] = maskBlockMap[x][y];
                                         sliceMaskBlock(x, y - 1);
                                     }
                                 }
-                                //ÏòÏÂ±éÀú
+                                //å‘ä¸‹éå†
                                 if (y != maskBlockMap[x].length - 1) {
                                     if (maskBlockMap[x][y + 1] == 1) {
                                         maskBlockMap[x][y + 1] = maskBlockMap[x][y];
                                         sliceMaskBlock(x, y + 1);
                                     }
                                 }
-                                //Ïò×ó±éÀú
+                                //å‘å·¦éå†
                                 if (x != 0) {
                                     if (maskBlockMap[x - 1][y] == 1) {
                                         maskBlockMap[x - 1][y] = maskBlockMap[x][y];
                                         sliceMaskBlock(x - 1, y);
                                     }
                                 }
-                                //ÏòÓÒ±éÀú
+                                //å‘å³éå†
                                 if (x != maskBlockMap.length - 1) {
                                     if (maskBlockMap[x + 1][y] == 1) {
                                         maskBlockMap[x + 1][y] = maskBlockMap[x][y];
@@ -779,25 +781,25 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                             numberBlockPixel.push(nmuberpixel);
                         }
 
-                    //´ËÊ±£¬numberBlockPixelµÄ³¤¶ÈÓ¦ÎªnumberBlock - 2
-                    
-                    var finalNumberBlock = new Array();
+                        //æ­¤æ—¶ï¼ŒnumberBlockPixelçš„é•¿åº¦åº”ä¸ºnumberBlock - 2
 
-                    for (var i = 0; i < numberBlockPixel.length; i++) {
-                        if (numberBlockPixel[i] > precision) {
-                            finalNumberBlock.push(i + 2);
+                        var finalNumberBlock = new Array();
+
+                        for (var i = 0; i < numberBlockPixel.length; i++) {
+                            if (numberBlockPixel[i] > precision) {
+                                finalNumberBlock.push(i + 2);
+                            }
                         }
-                    }
 
-                    //½«
+                        //å°†
 
-                    numberBlock = finalNumberBlock.length;
-                    //console.log("numberBlock:" + numberBlock);
+                        numberBlock = finalNumberBlock.length;
+                        //console.log("numberBlock:" + numberBlock);
 
-                    if (numberBlock == 1) {
-                        alert("¶Ô²»Æğ£¬ÇøÓòÎ´±ÕºÏ");
-                            //ÖØ»æ
-                            //»ñµÃ×î½ü±£´æµÄstatus
+                        if (numberBlock == 1) {
+                            alert("å¯¹ä¸èµ·ï¼ŒåŒºåŸŸæœªé—­åˆ");
+                            //é‡ç»˜
+                            //è·å¾—æœ€è¿‘ä¿å­˜çš„status
                             var tempData = getCopyImageData(canvasStatus[nowposition]);
 
                             highlightReverseSelectedByBlock(tempData, slicingblock);
@@ -805,10 +807,10 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                             refreshCanvas(tempData);
                             slicingdata = tempData;
                         } else if (numberBlock == 2) {
-                            //¸ù¾İfinalNumberBlockºÍmaskBlockMap¸üĞÂsegImageDataµ½ÏÂÒ»×´Ì¬
+                            //æ ¹æ®finalNumberBlockå’ŒmaskBlockMapæ›´æ–°segImageDataåˆ°ä¸‹ä¸€çŠ¶æ€
                             var dupSegData = getCopyImageData(segImageData[nowposition]);
 
-                            //Î´·Ö¸îºóµÄµÚ¶ş¿éÇøÓò·ÖÅäÒ»¸öĞÂµÄÇø¿éºÅ
+                            //æœªåˆ†å‰²åçš„ç¬¬äºŒå—åŒºåŸŸåˆ†é…ä¸€ä¸ªæ–°çš„åŒºå—å·
                             var anotherblock;
                             var linekeys = Object.keys(block_line_map);
                             for (var i = 0; i < 254; i++) {
@@ -821,22 +823,22 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                             }
 
                             if (anotherblock == undefined) {
-                                alert("»®·ÖÇøÓò¹ı¶à");
+                                alert("åˆ’åˆ†åŒºåŸŸè¿‡å¤š");
                                 return;
                             }
                             //console.log("finalNumberBlock:" + finalNumberBlock);
                             for (var i = 0; i < maskBlockMap.length; i++) {
                                 for (var j = 0; j < maskBlockMap[i].length; j++) {
-                                    //µ±Ç°½ÚµãÊ¼Î»ÖÃ£ºi * 4 + j * 4 * maskBlockMap.length
+                                    //å½“å‰èŠ‚ç‚¹å§‹ä½ç½®ï¼ši * 4 + j * 4 * maskBlockMap.length
                                     var current_pos = i * 4 + j * 4 * maskBlockMap.length;
 
-                                    //ÅĞ¶ÏÇøÓòÊÇ·ñÎªÇĞ¸îÇøÓò
+                                    //åˆ¤æ–­åŒºåŸŸæ˜¯å¦ä¸ºåˆ‡å‰²åŒºåŸŸ
                                     if (dupSegData.data[current_pos] == slicingblock && dupSegData.data[current_pos + 1] == slicingblock && dupSegData.data[current_pos + 2] == slicingblock) {
-                                        //ÕâÀïµÄÊı¾İ¶¼ÊÇÇĞ¸îÇøÓòµÄÄÚ²¿Êı¾İ
-                                        //½«finalNumberBlock[0]µÄÊı¾İ±£ÁôÎªÔ­Ñù£¬finalNumberBlock[1]µÄÊı¾İĞŞ¸ÄÎªĞÂµÄanotherblock
-                                        //ÆäËû¸ÉÈÅ½ÚµãÈ«²¿ÖÃÎªfinalNumberBlock[0]
+                                        //è¿™é‡Œçš„æ•°æ®éƒ½æ˜¯åˆ‡å‰²åŒºåŸŸçš„å†…éƒ¨æ•°æ®
+                                        //å°†finalNumberBlock[0]çš„æ•°æ®ä¿ç•™ä¸ºåŸæ ·ï¼ŒfinalNumberBlock[1]çš„æ•°æ®ä¿®æ”¹ä¸ºæ–°çš„anotherblock
+                                        //å…¶ä»–å¹²æ‰°èŠ‚ç‚¹å…¨éƒ¨ç½®ä¸ºfinalNumberBlock[0]
                                         if (maskBlockMap[i][j] == finalNumberBlock[1]) {
-                                            //Èç¹û¸Ã×ø±êµÄÖµÎªĞÂÇøÓò
+                                            //å¦‚æœè¯¥åæ ‡çš„å€¼ä¸ºæ–°åŒºåŸŸ
                                             dupSegData.data[current_pos] = anotherblock;
                                             dupSegData.data[current_pos + 1] = anotherblock;
                                             dupSegData.data[current_pos + 2] = anotherblock;
@@ -847,40 +849,40 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                                 }
                             }
 
-                            //Èç¹ûµ±Ç°µÄ×´Ì¬²»ÊÇ×îĞÂµÄ×´Ì¬£¬ÀıÈçÊÇ¾­¹ıredoµÄÖĞ¼äÌ¬£¬±£´æºóÉ¾³ıµ±Ç°×´Ì¬Ö®ºóµÄ×´Ì¬
+                            //å¦‚æœå½“å‰çš„çŠ¶æ€ä¸æ˜¯æœ€æ–°çš„çŠ¶æ€ï¼Œä¾‹å¦‚æ˜¯ç»è¿‡redoçš„ä¸­é—´æ€ï¼Œä¿å­˜ååˆ é™¤å½“å‰çŠ¶æ€ä¹‹åçš„çŠ¶æ€
                             if (nowposition != canvasStatus.length) {
                                 canvasStatus.splice(nowposition + 1, canvasStatus.length - 1 - nowposition);
                                 segImageData.splice(nowposition + 1, segImageData.length - 1 - nowposition);
                             }
 
-                            //µ±Ç°×´Ì¬+1
+                            //å½“å‰çŠ¶æ€+1
                             nowposition++;
-                            //¸üĞÂsegImageData
+                            //æ›´æ–°segImageData
                             segImageData.push(getCopyImageData(dupSegData));
 
-                            //´¦ÀíĞÂµÄsegÍ¼Ïñ
+                            //å¤„ç†æ–°çš„segå›¾åƒ
                             segContours(dupSegData);
 
-                            //±£´æĞÂ×´Ì¬
+                            //ä¿å­˜æ–°çŠ¶æ€
                             var updatedData = getCopyImageData(dupSegData);
 
-                            //ÒÆ³ısuccess class
+                            //ç§»é™¤success class
                             $("#sliceId").removeClass("btn-success");
                             $("#sliceId").addClass("btn-default");
 
-                            //±£´æµ±Ç°×´Ì¬
+                            //ä¿å­˜å½“å‰çŠ¶æ€
                             canvasStatus.push(updatedData);
 
                             refreshCanvas(dupSegData);
                             refreshButton();
 
-                            //½«ÏµÍ³×´Ì¬ÖØÖÃÎªSTATUS_NATURE
+                            //å°†ç³»ç»ŸçŠ¶æ€é‡ç½®ä¸ºSTATUS_NATURE
                             nowStatus = STATUS_NATURE;
 
                         } else if (numberBlock > 2) {
-                            alert("¶Ô²»Æğ£¬ÇøÓò»®·Ö¹ı¶à");
-                            //ÖØ»æ
-                            //»ñµÃ×î½ü±£´æµÄstatus
+                            alert("å¯¹ä¸èµ·ï¼ŒåŒºåŸŸåˆ’åˆ†è¿‡å¤š");
+                            //é‡ç»˜
+                            //è·å¾—æœ€è¿‘ä¿å­˜çš„status
                             var tempData = getCopyImageData(canvasStatus[nowposition]);
 
                             highlightReverseSelectedByBlock(tempData, slicingblock);
@@ -888,19 +890,19 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                             refreshCanvas(tempData);
                             slicingdata = tempData;
                         } else {
-                            alert("Î´Öª´íÎó")
+                            alert("æœªçŸ¥é”™è¯¯")
                         }
                     }
 
                 };
             }
 
-            //³õÊ¼»¯»­²¼,´ËÊ±±³¾°Í¼Æ¬ÒÑ¾­¼ÓÔØÍê³ÉÁË
-            //ÅĞ¶ÏÁ½ÕÅÍ¼Æ¬ÊÇ·ñ¶¼¼ÓÔØÍê³É
+            //åˆå§‹åŒ–ç”»å¸ƒ,æ­¤æ—¶èƒŒæ™¯å›¾ç‰‡å·²ç»åŠ è½½å®Œæˆäº†
+            //åˆ¤æ–­ä¸¤å¼ å›¾ç‰‡æ˜¯å¦éƒ½åŠ è½½å®Œæˆ
             if (onloadFlag) {
-                //³õÊ¼×´Ì¬ÉèÖÃ²Ù×÷Î»ÖÃÎª0
+                //åˆå§‹çŠ¶æ€è®¾ç½®æ“ä½œä½ç½®ä¸º0
                 nowposition = 0;
-                //³õÊ¼»¯°´Å¥×´Ì¬
+                //åˆå§‹åŒ–æŒ‰é’®çŠ¶æ€
                 refreshButton();
                 clearCanvas();
             } else {
@@ -912,14 +914,14 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                 if ($(this).hasClass("btn-success")) {
                     $(this).removeClass("btn-success");
                     $(this).addClass("btn-default");
-                    //Çé¿ömergeArray
+                    //æƒ…å†µmergeArray
                     mergeArray = [];
-                    //½«µ±Ç°ÓÃ»§×´Ì¬¸ÄÎªSTATUS_NATURE
+                    //å°†å½“å‰ç”¨æˆ·çŠ¶æ€æ”¹ä¸ºSTATUS_NATURE
                     nowStatus = STATUS_NATURE;
                 } else {
                     $(this).removeClass("btn-default");
                     $(this).addClass("btn-success");
-                    //½«µ±Ç°ÓÃ»§×´Ì¬¸ÄÎªSTATUS_MERGE
+                    //å°†å½“å‰ç”¨æˆ·çŠ¶æ€æ”¹ä¸ºSTATUS_MERGE
                     nowStatus = STATUS_MERGE;
                 }
             });
@@ -929,12 +931,12 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                 if ($(this).hasClass("btn-success")) {
                     $(this).removeClass("btn-success");
                     $(this).addClass("btn-default");
-                    //½«µ±Ç°ÓÃ»§×´Ì¬¸ÄÎªSTATUS_NATURE
+                    //å°†å½“å‰ç”¨æˆ·çŠ¶æ€æ”¹ä¸ºSTATUS_NATURE
                     nowStatus = STATUS_NATURE;
                 } else {
                     $(this).removeClass("btn-default");
                     $(this).addClass("btn-success");
-                    //½«µ±Ç°ÓÃ»§×´Ì¬¸ÄÎªSTATUS_SLICE
+                    //å°†å½“å‰ç”¨æˆ·çŠ¶æ€æ”¹ä¸ºSTATUS_SLICE
                     nowStatus = STATUS_SLICE;
                 }
             });
@@ -955,11 +957,12 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                 }
             });
             $("#saveId").click(function () {
-                //±£´æ
+                //ä¿å­˜
+                submitChange(); 
             });
 
-            //³õÊ¼»¯ÏµÍ³ÉèÖÃ
-            //³õÊ¼»¯ÓÃ»§×´Ì¬
+            //åˆå§‹åŒ–ç³»ç»Ÿè®¾ç½®
+            //åˆå§‹åŒ–ç”¨æˆ·çŠ¶æ€
             nowStatus = STATUS_NATURE;
 
         }
@@ -973,32 +976,32 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                 return true;
             }
         }
-        //´¦ÀísegÍ¼Ïñ£¬½«±ßÔµÌáÈ¡³öÀ´£¬ÄÚ²¿±ä³ÉÍ¸Ã÷£¬ÓÃÓÚ¸²¸Çµ½±³¾°Í¼ÏñÉÏ
+        //å¤„ç†segå›¾åƒï¼Œå°†è¾¹ç¼˜æå–å‡ºæ¥ï¼Œå†…éƒ¨å˜æˆé€æ˜ï¼Œç”¨äºè¦†ç›–åˆ°èƒŒæ™¯å›¾åƒä¸Š
         function segContours(imageData) {
 
-        //»ñµÃÍ¼ÏñÑÕÉ«µÄÊı¾İ±í
-        //imageData.dataÊı¾İÎªÒ»Î¬£¬Ë®Æ½¶ÁÈ¡Í¼Ïñ
-        for (var i = 0; i < canvaswidth; i++) { //ÏÈÉùÃ÷Ò»Î¬,Ò»Î¬³¤¶ÈÎªcanvaswidth
-            blockMap[i] = new Array(i);
-            for (var j = 0; j < canvasheight; j++) { //ÔÙÉùÃ÷¶şÎ¬,¶şÎ¬³¤¶ÈÎªcanvasheight
+            //è·å¾—å›¾åƒé¢œè‰²çš„æ•°æ®è¡¨
+            //imageData.dataæ•°æ®ä¸ºä¸€ç»´ï¼Œæ°´å¹³è¯»å–å›¾åƒ
+            for (var i = 0; i < canvaswidth; i++) { //å…ˆå£°æ˜ä¸€ç»´,ä¸€ç»´é•¿åº¦ä¸ºcanvaswidth
+                blockMap[i] = new Array(i);
+                for (var j = 0; j < canvasheight; j++) { //å†å£°æ˜äºŒç»´,äºŒç»´é•¿åº¦ä¸ºcanvasheight
 
-                    //¸ù¾İÑÕÉ«µÄÊı¾İ±íÉú³É±ßÔµºÍÇø¿é
-                    //Ê×ÏÈÇø·Ö±ßÔµ½Úµã£¬Èç¹ûÒ»¸ö½ÚµãÊÇ±ßÔµ½Úµã£¬ÄÇÃ´ÆäÏàÁÚ£¨ÉÏ¡¢ÏÂ¡¢×ó¡¢ÓÒ£©±Ø¶¨ÓĞÒ»¸ö²»Í¬ÑÕÉ«µÄÏñËØ
+                    //æ ¹æ®é¢œè‰²çš„æ•°æ®è¡¨ç”Ÿæˆè¾¹ç¼˜å’ŒåŒºå—
+                    //é¦–å…ˆåŒºåˆ†è¾¹ç¼˜èŠ‚ç‚¹ï¼Œå¦‚æœä¸€ä¸ªèŠ‚ç‚¹æ˜¯è¾¹ç¼˜èŠ‚ç‚¹ï¼Œé‚£ä¹ˆå…¶ç›¸é‚»ï¼ˆä¸Šã€ä¸‹ã€å·¦ã€å³ï¼‰å¿…å®šæœ‰ä¸€ä¸ªä¸åŒé¢œè‰²çš„åƒç´ 
 
-                //µ±Ç°½ÚµãÊ¼Î»ÖÃ£ºi * 4 + j * 4 * canvaswidth
-                var current_pos = i * 4 + j * 4 * canvaswidth;
-                //µ±Ç°½ÚµãÉÏ·½Î»ÖÃ£ºi * 4 + (j - 1) * 4 * canvaswidth
-                var up_pos = i * 4 + (j - 1) * 4 * canvaswidth;
-                //µ±Ç°½ÚµãÏÂ·½Î»ÖÃ£ºi * 4 + (j + 1) * 4 * canvaswidth
-                var down_pos = i * 4 + (j + 1) * 4 * canvaswidth;
-                //µ±Ç°½Úµã×ó·½Î»ÖÃ£º(i - 1) * 4 + j * 4 * canvaswidth
-                var left_pos = (i - 1) * 4 + j * 4 * canvaswidth;
-                //µ±Ç°½ÚµãÓÒ·½Î»ÖÃ£º(i + 1) * 4 + j * 4 * canvaswidth
-                var right_pos = (i + 1) * 4 + j * 4 * canvaswidth;
+                    //å½“å‰èŠ‚ç‚¹å§‹ä½ç½®ï¼ši * 4 + j * 4 * canvaswidth
+                    var current_pos = i * 4 + j * 4 * canvaswidth;
+                    //å½“å‰èŠ‚ç‚¹ä¸Šæ–¹ä½ç½®ï¼ši * 4 + (j - 1) * 4 * canvaswidth
+                    var up_pos = i * 4 + (j - 1) * 4 * canvaswidth;
+                    //å½“å‰èŠ‚ç‚¹ä¸‹æ–¹ä½ç½®ï¼ši * 4 + (j + 1) * 4 * canvaswidth
+                    var down_pos = i * 4 + (j + 1) * 4 * canvaswidth;
+                    //å½“å‰èŠ‚ç‚¹å·¦æ–¹ä½ç½®ï¼š(i - 1) * 4 + j * 4 * canvaswidth
+                    var left_pos = (i - 1) * 4 + j * 4 * canvaswidth;
+                    //å½“å‰èŠ‚ç‚¹å³æ–¹ä½ç½®ï¼š(i + 1) * 4 + j * 4 * canvaswidth
+                    var right_pos = (i + 1) * 4 + j * 4 * canvaswidth;
 
                     var isnew = true;
-                    //ÅĞ¶ÏÊÇ·ñÊÇÇøÓòÄÚ²¿½Úµã,¸úÏàÁÚ½Úµã¶Ô±È
-                    //ÓëÉÏ·½½Úµã½øĞĞ±È½Ï
+                    //åˆ¤æ–­æ˜¯å¦æ˜¯åŒºåŸŸå†…éƒ¨èŠ‚ç‚¹,è·Ÿç›¸é‚»èŠ‚ç‚¹å¯¹æ¯”
+                    //ä¸ä¸Šæ–¹èŠ‚ç‚¹è¿›è¡Œæ¯”è¾ƒ
 
                     if (j != 0) {
                         if (imageData.data[current_pos] != imageData.data[up_pos]) {
@@ -1006,45 +1009,45 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                         }
                     }
 
-                //ÓëÏÂ·½½Úµã½øĞĞ±È½Ï
-                if (j != canvasheight - 1) {
-                    if (imageData.data[current_pos] != imageData.data[down_pos]) {
-                        isnew = false;
+                    //ä¸ä¸‹æ–¹èŠ‚ç‚¹è¿›è¡Œæ¯”è¾ƒ
+                    if (j != canvasheight - 1) {
+                        if (imageData.data[current_pos] != imageData.data[down_pos]) {
+                            isnew = false;
+                        }
                     }
-                }
 
-                    //Óë×ó·½½Úµã½øĞĞ±È½Ï
+                    //ä¸å·¦æ–¹èŠ‚ç‚¹è¿›è¡Œæ¯”è¾ƒ
                     if (i != 0) {
                         if (imageData.data[current_pos] != imageData.data[left_pos]) {
                             isnew = false;
                         }
                     }
 
-                //ÓëÓÒ·½½Úµã½øĞĞ±È½Ï
-                if (i != canvaswidth - 1) {
-                    if (imageData.data[current_pos] != imageData.data[right_pos]) {
-                        isnew = false;
+                    //ä¸å³æ–¹èŠ‚ç‚¹è¿›è¡Œæ¯”è¾ƒ
+                    if (i != canvaswidth - 1) {
+                        if (imageData.data[current_pos] != imageData.data[right_pos]) {
+                            isnew = false;
+                        }
                     }
-                }
 
-                    //¸ü¼Ó±êÖ¾ÅĞ¶Ï
+                    //æ›´åŠ æ ‡å¿—åˆ¤æ–­
                     if (isnew) {
-                        //Èç¹ûÊÇÄÚ²¿½Úµã£¬Ôò½«Çø¿é±êÖ¾±ê¼ÇÎª0
+                        //å¦‚æœæ˜¯å†…éƒ¨èŠ‚ç‚¹ï¼Œåˆ™å°†åŒºå—æ ‡å¿—æ ‡è®°ä¸º0
                         blockMap[i][j] = 0;
                     } else {
-                        //Èç¹ûÊÇÂÖÀª½Úµã£¬Ôò±£ÁôÔ­±ê¼Ç
+                        //å¦‚æœæ˜¯è½®å»“èŠ‚ç‚¹ï¼Œåˆ™ä¿ç•™åŸæ ‡è®°
                         blockMap[i][j] = imageData.data[current_pos];
-                        //ÅĞ¶Ï¸Ã±ßÔµÊÇ·ñÒÑ¾­ÉèÖÃÁËÑÕÉ«
+                        //åˆ¤æ–­è¯¥è¾¹ç¼˜æ˜¯å¦å·²ç»è®¾ç½®äº†é¢œè‰²
                         var keys = Object.keys(block_line_map);
                         var result = keys.indexOf(imageData.data[current_pos] + "");
 
                         if (result == -1) {
 
-                            //Èç¹ûÃ»ÓĞÉèÖÃÑÕÉ«£¬ÔòÉèÖÃÒ»¸öËæ»úµÄÑÕÉ«
+                            //å¦‚æœæ²¡æœ‰è®¾ç½®é¢œè‰²ï¼Œåˆ™è®¾ç½®ä¸€ä¸ªéšæœºçš„é¢œè‰²
                             //var r = Math.floor(Math.random() * 128 + 128);
                             //var g = Math.floor(Math.random() * 256);
                             //var b = Math.floor(Math.random() * 256);
-                            var r = 25; 
+                            var r = 25;
                             var g = 225;
                             var b = 255;
                             block_line_map[imageData.data[current_pos]] = [r, g, b, 180];
@@ -1053,19 +1056,19 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                 }
             }
 
-            //½«ÂÖÀª±íÓ³Éä»ØÑÕÉ«±í
+            //å°†è½®å»“è¡¨æ˜ å°„å›é¢œè‰²è¡¨
             for (var i = 0; i < blockMap.length; i++) {
                 for (var j = 0; j < blockMap[i].length; j++) {
-                    //ÅĞ¶ÏÊÇÂÖÀª½Úµã
-                    //i,j¡úi * 4 + j * 4 * blockMap[i].length;
+                    //åˆ¤æ–­æ˜¯è½®å»“èŠ‚ç‚¹
+                    //i,jâ†’i * 4 + j * 4 * blockMap[i].length;
                     var current_pos = i * 4 + j * 4 * blockMap[i].length;
                     if (blockMap[i][j] == 0) {
-                        //Èç¹û²»ÊÇÂÖÀª½Úµã£¬½«½ÚµãÍ¸Ã÷
+                        //å¦‚æœä¸æ˜¯è½®å»“èŠ‚ç‚¹ï¼Œå°†èŠ‚ç‚¹é€æ˜
                         for (var k = 0; k < 4; k++) {
                             imageData.data[current_pos + 3] = 0;
                         }
                     } else {
-                        //Èç¹ûÊÇÂÖÀª½Úµã£¬ÔòÈ¡³öÂÖÀª½Úµã¶ÔÓ¦µÄÑÕÉ«Êı¾İ
+                        //å¦‚æœæ˜¯è½®å»“èŠ‚ç‚¹ï¼Œåˆ™å–å‡ºè½®å»“èŠ‚ç‚¹å¯¹åº”çš„é¢œè‰²æ•°æ®
                         var cc = block_line_map[blockMap[i][j]];
                         for (var k = 0; k < 4; k++) {
                             imageData.data[current_pos + k] = cc[k];
@@ -1078,16 +1081,16 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
         function highlightSelected(tempData, loc) {
 
-            //Í¸Ã÷¶È
+            //é€æ˜åº¦
             var o = tempData.data[loc + 3];
-            //»ñµÃµ±Ç°ÇøÓòºÅ
+            //è·å¾—å½“å‰åŒºåŸŸå·
             var nowblock;
             if (o == 0) {
-                //Èç¹ûÍ¸Ã÷¶ÈÎª0£¬ÄÇÃ´Êó±êµÄÎ»ÖÃÔÚÇøÓòÄÚ²¿£¬Ö±½Ó»ñµÃµ±Ç°µÄÇøÓò
+                //å¦‚æœé€æ˜åº¦ä¸º0ï¼Œé‚£ä¹ˆé¼ æ ‡çš„ä½ç½®åœ¨åŒºåŸŸå†…éƒ¨ï¼Œç›´æ¥è·å¾—å½“å‰çš„åŒºåŸŸ
                 nowblock = tempData.data[loc];
             } else {
-                //Èç¹ûÍ¸Ã÷¶È²»Îª0£¬ÄÇÃ´ĞèÒª´Óblock_line_mapÖĞ»ñµÃÇøÓòÓëÏßÌõµÄÓ³Éä
-                //½«µ±Ç°ÏßÌõÑÕÉ«Óë±íÖĞµÄ¶Ô±È
+                //å¦‚æœé€æ˜åº¦ä¸ä¸º0ï¼Œé‚£ä¹ˆéœ€è¦ä»block_line_mapä¸­è·å¾—åŒºåŸŸä¸çº¿æ¡çš„æ˜ å°„
+                //å°†å½“å‰çº¿æ¡é¢œè‰²ä¸è¡¨ä¸­çš„å¯¹æ¯”
                 /*  var r = imageData.data[loc];
                 var g = imageData.data[loc+1];
                 var b = imageData.data[loc+2];
@@ -1097,12 +1100,12 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                         break;
                   }
                 } */
-                //µãµ½ÏßÌõÉÏ¾ÍÃ»ÓĞ·´Ó¦
+                //ç‚¹åˆ°çº¿æ¡ä¸Šå°±æ²¡æœ‰ååº”
                 return -1;
             }
             //console.log("block:" + nowblock);
-            //½«¸ÄÇøÓòºÅµÄËùÓĞÑÕÉ«¶¼¸Ä±ä
-            //Ê×ÏÈ¸Ä±äÇøÓòÄÚ²¿µÄÑÕÉ«
+            //å°†æ”¹åŒºåŸŸå·çš„æ‰€æœ‰é¢œè‰²éƒ½æ”¹å˜
+            //é¦–å…ˆæ”¹å˜åŒºåŸŸå†…éƒ¨çš„é¢œè‰²
             for (var i = 0; i < tempData.data.length; i = i + 4) {
                 if (tempData.data[i] == nowblock && tempData.data[i + 1] == nowblock && tempData.data[i + 2] == nowblock && tempData.data[i + 3] != 255) {
                     tempData.data[i] = 25;
@@ -1111,22 +1114,22 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     tempData.data[i + 3] = 175;
                 }
             }
-            //·µ»Øµ±Ç°Çø¿éºÅ
+            //è¿”å›å½“å‰åŒºå—å·
             return nowblock;
         }
 
         function highlightReverseSelected(tempData, loc) {
 
-            //Í¸Ã÷¶È
+            //é€æ˜åº¦
             var o = tempData.data[loc + 3];
-            //»ñµÃµ±Ç°ÇøÓòºÅ
+            //è·å¾—å½“å‰åŒºåŸŸå·
             var nowblock;
             if (o == 0) {
-                //Èç¹ûÍ¸Ã÷¶ÈÎª0£¬ÄÇÃ´Êó±êµÄÎ»ÖÃÔÚÇøÓòÄÚ²¿£¬Ö±½Ó»ñµÃµ±Ç°µÄÇøÓò
+                //å¦‚æœé€æ˜åº¦ä¸º0ï¼Œé‚£ä¹ˆé¼ æ ‡çš„ä½ç½®åœ¨åŒºåŸŸå†…éƒ¨ï¼Œç›´æ¥è·å¾—å½“å‰çš„åŒºåŸŸ
                 nowblock = tempData.data[loc];
             } else {
-                //Èç¹ûÍ¸Ã÷¶È²»Îª0£¬ÄÇÃ´ĞèÒª´Óblock_line_mapÖĞ»ñµÃÇøÓòÓëÏßÌõµÄÓ³Éä
-                //½«µ±Ç°ÏßÌõÑÕÉ«Óë±íÖĞµÄ¶Ô±È
+                //å¦‚æœé€æ˜åº¦ä¸ä¸º0ï¼Œé‚£ä¹ˆéœ€è¦ä»block_line_mapä¸­è·å¾—åŒºåŸŸä¸çº¿æ¡çš„æ˜ å°„
+                //å°†å½“å‰çº¿æ¡é¢œè‰²ä¸è¡¨ä¸­çš„å¯¹æ¯”
                 /*  var r = imageData.data[loc];
                 var g = imageData.data[loc+1];
                 var b = imageData.data[loc+2];
@@ -1136,7 +1139,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                         break;
                   }
                 } */
-                //µãµ½ÏßÌõÉÏ¾ÍÃ»ÓĞ·´Ó¦
+                //ç‚¹åˆ°çº¿æ¡ä¸Šå°±æ²¡æœ‰ååº”
                 return -1;
             }
 
@@ -1158,15 +1161,15 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             //tempData.data[i + 3] = 175;
             //}
             //}
-            //·µ»Øµ±Ç°Çø¿éºÅ
+            //è¿”å›å½“å‰åŒºå—å·
             return nowblock;
         }
 
         function highlightSelectedByBlocks(tempData, nowblocks) {
 
             //console.log("block:" + nowblock);
-            //½«¸ÄÇøÓòºÅµÄËùÓĞÑÕÉ«¶¼¸Ä±ä
-            //Ê×ÏÈ¸Ä±äÇøÓòÄÚ²¿µÄÑÕÉ«
+            //å°†æ”¹åŒºåŸŸå·çš„æ‰€æœ‰é¢œè‰²éƒ½æ”¹å˜
+            //é¦–å…ˆæ”¹å˜åŒºåŸŸå†…éƒ¨çš„é¢œè‰²
             for (var i = 0; i < tempData.data.length; i = i + 4) {
                 if (nowblocks.indexOf(tempData.data[i]) != -1 && nowblocks.indexOf(tempData.data[i + 1]) != -1 && nowblocks.indexOf(tempData.data[i + 2]) != -1 && tempData.data[i + 3] != 255) {
                     tempData.data[i] = 25;
@@ -1194,34 +1197,34 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
         function isAdjacent(mergeArray) {
             var adjacent = false;
-            //Èç¹û2¸öÇøÓòÊÇÏàÁ¬µÄ£¬ÄÇÃ´Æä±ß½ç±ØÈ»ÊÇÏà»¥¿¿½üµÄ,¼´Ò»¿éÇøÓòµÄ±ß½ç(ÀıÈçmergeArray[0]µÄ±ß½çÉÏ£¬±Ø¶¨´æÔÚÒ»µã£¬¸ÄµãµÄÉÏ¡¢ÏÂ¡¢×ó¡¢ÓÒµÄÄ³¸ö·½ÏòÊÇmergeArray[1]µÄ±ß½ç)
-            //±éÀúblockMap
+            //å¦‚æœ2ä¸ªåŒºåŸŸæ˜¯ç›¸è¿çš„ï¼Œé‚£ä¹ˆå…¶è¾¹ç•Œå¿…ç„¶æ˜¯ç›¸äº’é è¿‘çš„,å³ä¸€å—åŒºåŸŸçš„è¾¹ç•Œ(ä¾‹å¦‚mergeArray[0]çš„è¾¹ç•Œä¸Šï¼Œå¿…å®šå­˜åœ¨ä¸€ç‚¹ï¼Œæ”¹ç‚¹çš„ä¸Šã€ä¸‹ã€å·¦ã€å³çš„æŸä¸ªæ–¹å‘æ˜¯mergeArray[1]çš„è¾¹ç•Œ)
+            //éå†blockMap
             for (var i = 0; i < blockMap.length; i++) {
                 for (var j = 0; j < blockMap[i].length; j++) {
                     if (blockMap[i][j] == mergeArray[0]) {
-                        //Èç¹û¸ÄµãÎªmergeArray[0]µÄ±ß½ç£¬ÅĞ¶Ï¸Ã½ÚµãµÄÉÏÏÂ×óÓÒ
-                        //ÓëÉÏ·½½Úµã±È½Ï
+                        //å¦‚æœæ”¹ç‚¹ä¸ºmergeArray[0]çš„è¾¹ç•Œï¼Œåˆ¤æ–­è¯¥èŠ‚ç‚¹çš„ä¸Šä¸‹å·¦å³
+                        //ä¸ä¸Šæ–¹èŠ‚ç‚¹æ¯”è¾ƒ
                         if (j != 0) {
                             if (blockMap[i][j - 1] == mergeArray[1]) {
                                 adjacent = true;
                                 break;
                             }
                         }
-                        //ÓëÏÂ·½½Úµã±È½Ï
+                        //ä¸ä¸‹æ–¹èŠ‚ç‚¹æ¯”è¾ƒ
                         if (j != blockMap[i].length - 1) {
                             if (blockMap[i][j + 1] == mergeArray[1]) {
                                 adjacent = true;
                                 break;
                             }
                         }
-                        //Óë×ó·½½Úµã±È½Ï
+                        //ä¸å·¦æ–¹èŠ‚ç‚¹æ¯”è¾ƒ
                         if (i != 0) {
                             if (blockMap[i - 1][j] == mergeArray[1]) {
                                 adjacent = true;
                                 break;
                             }
                         }
-                        //ÓëÓÒ·½½Úµã±È½Ï
+                        //ä¸å³æ–¹èŠ‚ç‚¹æ¯”è¾ƒ
                         if (i != blockMap.length - 1) {
                             if (blockMap[i + 1][j] == mergeArray[1]) {
                                 adjacent = true;
@@ -1250,16 +1253,16 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
         function refreshCanvas(status) {
 
-            //»­±³¾°
+            //ç”»èƒŒæ™¯
             cxt.drawImage(img, 0, 0);
 
-            //off screen»æÖÆsegÊı¾İ
+            //off screenç»˜åˆ¶segæ•°æ®
             var ofcn = document.createElement('canvas');
-        var ofc = ofcn.getContext('2d');
-        ofcn.width = canvaswidth;
-        ofcn.height = canvasheight;
+            var ofc = ofcn.getContext('2d');
+            ofcn.width = canvaswidth;
+            ofcn.height = canvasheight;
 
-        ofc.putImageData(status, 0, 0);
+            ofc.putImageData(status, 0, 0);
             cxt.drawImage(ofc.canvas, 0, 0);
         }
 
@@ -1292,7 +1295,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         }
 
         function clearCanvas() {
-            //off screen»æÖÆ
+            //off screenç»˜åˆ¶
             refreshCanvas(canvasStatus[0]);
         }
 
