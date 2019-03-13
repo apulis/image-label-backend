@@ -431,10 +431,6 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     var c;
     var cxt;
 
-    //设置canvas的显示高度和宽度
-    var canvaswidth = cxt.canvas.width;
-    var canvasheight = cxt.canvas.height;
-
     //加载seg
     var img_seg_b = new Image();
     //加载img
@@ -442,9 +438,9 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     $scope.startEditImage = function () {
 
         $scope.current.editMode = true;
-        //如果没有进行按钮绑定，则再进行绑定一次
+        //如果没有按钮绑定，则再进行绑定一次
         if (!isbanding) {
-            Bingding();
+            Binding();
             isbanding = true;
         }
 
@@ -509,10 +505,14 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         }
 
     }
-    function Bingding() {
+    function Binding() {
 
         c = document.getElementById("canvasOutput");
         cxt = c.getContext("2d");
+
+        //设置canvas的显示高度和宽度
+        var canvaswidth = cxt.canvas.width;
+        var canvasheight = cxt.canvas.height;
 
         $("#mergeId").click(function () {
             refreshCanvas(canvasStatus[nowposition]);
