@@ -425,26 +425,32 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         var slicingdata;
         //设置切割的区域
         var slicingblock;
+        //设置图像提取精度排除干扰
+        var precision = 18;
 
         //canvas
         var c = document.getElementById("canvasOutput");
         var cxt = c.getContext("2d");
 
+        //设置canvas的显示高度和宽度
+        var canvaswidth = cxt.canvas.width;
+        var canvasheight = cxt.canvas.height;
 
         //加载seg
         var img_seg_b = new Image();
         img_seg_b.crossOrigin = "Anonymous";
-        // img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/seg_wangcheng_1000_21000.png";
         img_seg_b.src = $scope.currentSeg;
+        //img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/bingmap/Hengshui_L15_s3_edit/seg_c132100231110020.png";
+        //img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/seg_wangcheng_1000_21000.png";
         img_seg_b.onload = function () {
             //off screen绘制seg数据
             var ofcn = document.createElement('canvas');
             var ofc = ofcn.getContext('2d');
-            ofcn.width = img_seg_b.width;
-            ofcn.height = img_seg_b.height;
-            ofc.drawImage(img_seg_b, 0, 0);
+            ofcn.width = canvaswidth;
+            ofcn.height = canvasheight;
+            ofc.drawImage(img_seg_b, 0, 0, canvaswidth, canvasheight);
             //获得seg数据
-            var imageData = ofc.getImageData(0, 0, img_seg_b.width, img_seg_b.height);
+            var imageData = ofc.getImageData(0, 0, canvaswidth, canvasheight);
 
             //保留初始seg数据
             segImageData.push(getCopyImageData(imageData));
@@ -472,7 +478,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
         var img = new Image();
         img.crossOrigin = 'Anonymous';
-        // img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/wangcheng_1000_21000.png";
+        //img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/wangcheng_1000_21000.png";
+        //img.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/bingmap/Hengshui_L15_s3_edit/c132100231110020.jpg";
         img.src = $scope.currentOrg;
         img.onload = function () {
 
@@ -488,8 +495,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
                     //var myColor = ofc.getImageData(e.offsetX, e.offsetY, 1, 1);
                     //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
-                    //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*img.height;
-                    var loc = e.offsetX * 4 + e.offsetY * 4 * img.height;
+                    //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*canvaswidth;
+                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
 
                     highlightSelected(tempData, loc);
 
@@ -501,7 +508,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                         //获得最近保存的status
                         var tempData = getCopyImageData(canvasStatus[nowposition]);
                         //获得用户点击的位置
-                        var loc = e.offsetX * 4 + e.offsetY * 4 * img.height;
+                        var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
                         var blocknum = highlightSelected(tempData, loc);
                         //将第一次点击的数据保存到mergeArray
                         mergeArray.push(blocknum);
@@ -511,7 +518,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                         //获得最近保存的status
                         var tempData = getCopyImageData(canvasStatus[nowposition]);
                         //获得用户点击的位置
-                        var loc = e.offsetX * 4 + e.offsetY * 4 * img.height;
+                        var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
                         var blocknum = highlightSelected(tempData, loc);
 
                         //判断该区域是否已经被选中了
@@ -607,8 +614,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     var tempData = getCopyImageData(canvasStatus[nowposition]);
 
                     //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
-                    //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*img.height;
-                    var loc = e.offsetX * 4 + e.offsetY * 4 * img.height;
+                    //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*canvaswidth;
+                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
 
                     var nowblock = highlightReverseSelected(tempData, loc);
 
@@ -634,8 +641,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     //off screen绘制seg数据
                     var ofcn = document.createElement('canvas');
                     var ofc = ofcn.getContext('2d');
-                    ofcn.width = cxt.canvas.width;
-                    ofcn.height = cxt.canvas.height;
+                    ofcn.width = canvaswidth;
+                    ofcn.height = canvasheight;
                     ofc.strokeStyle = "rgba(0,255,0,1)";
                     ofc.strokeWidth = 1;
                     ofc.lineWidth = 1;
@@ -775,22 +782,18 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                         }
 
                         //此时，numberBlockPixel的长度应为numberBlock - 2
-                        //设置图像提取精度排除干扰
-                        var precision = 11;
+
                         var finalNumberBlock = new Array();
 
                         for (var i = 0; i < numberBlockPixel.length; i++) {
-                            if (numberBlockPixel[i] < precision) {
-                                numberBlockPixel.splice(i--, 1);
-                            } else {
-                                //numberBlock是从2开始的
+                            if (numberBlockPixel[i] > precision) {
                                 finalNumberBlock.push(i + 2);
                             }
                         }
 
                         //将
 
-                        numberBlock = numberBlockPixel.length;
+                        numberBlock = finalNumberBlock.length;
                         //console.log("numberBlock:" + numberBlock);
 
                         if (numberBlock == 1) {
@@ -955,7 +958,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             });
             $("#saveId").click(function () {
                 //保存
-                submitChange();
+                submitChange(); 
             });
 
             //初始化系统设置
@@ -978,23 +981,23 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
             //获得图像颜色的数据表
             //imageData.data数据为一维，水平读取图像
-            for (var i = 0; i < img_seg_b.width; i++) { //先声明一维,一维长度为img.width
+            for (var i = 0; i < canvaswidth; i++) { //先声明一维,一维长度为canvaswidth
                 blockMap[i] = new Array(i);
-                for (var j = 0; j < img_seg_b.height; j++) { //再声明二维,二维长度为img.height
+                for (var j = 0; j < canvasheight; j++) { //再声明二维,二维长度为canvasheight
 
                     //根据颜色的数据表生成边缘和区块
                     //首先区分边缘节点，如果一个节点是边缘节点，那么其相邻（上、下、左、右）必定有一个不同颜色的像素
 
-                    //当前节点始位置：i * 4 + j * 4 * img_seg_b.width
-                    var current_pos = i * 4 + j * 4 * img_seg_b.width;
-                    //当前节点上方位置：i * 4 + (j - 1) * 4 * img_seg_b.width
-                    var up_pos = i * 4 + (j - 1) * 4 * img_seg_b.width;
-                    //当前节点下方位置：i * 4 + (j + 1) * 4 * img_seg_b.width
-                    var down_pos = i * 4 + (j + 1) * 4 * img_seg_b.width;
-                    //当前节点左方位置：(i - 1) * 4 + j * 4 * img_seg_b.width
-                    var left_pos = (i - 1) * 4 + j * 4 * img_seg_b.width;
-                    //当前节点右方位置：(i + 1) * 4 + j * 4 * img_seg_b.width
-                    var right_pos = (i + 1) * 4 + j * 4 * img_seg_b.width;
+                    //当前节点始位置：i * 4 + j * 4 * canvaswidth
+                    var current_pos = i * 4 + j * 4 * canvaswidth;
+                    //当前节点上方位置：i * 4 + (j - 1) * 4 * canvaswidth
+                    var up_pos = i * 4 + (j - 1) * 4 * canvaswidth;
+                    //当前节点下方位置：i * 4 + (j + 1) * 4 * canvaswidth
+                    var down_pos = i * 4 + (j + 1) * 4 * canvaswidth;
+                    //当前节点左方位置：(i - 1) * 4 + j * 4 * canvaswidth
+                    var left_pos = (i - 1) * 4 + j * 4 * canvaswidth;
+                    //当前节点右方位置：(i + 1) * 4 + j * 4 * canvaswidth
+                    var right_pos = (i + 1) * 4 + j * 4 * canvaswidth;
 
                     var isnew = true;
                     //判断是否是区域内部节点,跟相邻节点对比
@@ -1007,7 +1010,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     }
 
                     //与下方节点进行比较
-                    if (j != img_seg_b.height - 1) {
+                    if (j != canvasheight - 1) {
                         if (imageData.data[current_pos] != imageData.data[down_pos]) {
                             isnew = false;
                         }
@@ -1021,7 +1024,7 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                     }
 
                     //与右方节点进行比较
-                    if (i != img_seg_b.width - 1) {
+                    if (i != canvaswidth - 1) {
                         if (imageData.data[current_pos] != imageData.data[right_pos]) {
                             isnew = false;
                         }
@@ -1044,8 +1047,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                             //var r = Math.floor(Math.random() * 128 + 128);
                             //var g = Math.floor(Math.random() * 256);
                             //var b = Math.floor(Math.random() * 256);
-                            var r = 0; 
-                            var g = 255;
+                            var r = 25;
+                            var g = 225;
                             var b = 255;
                             block_line_map[imageData.data[current_pos]] = [r, g, b, 180];
                         }
@@ -1256,8 +1259,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             //off screen绘制seg数据
             var ofcn = document.createElement('canvas');
             var ofc = ofcn.getContext('2d');
-            ofcn.width = cxt.canvas.width;
-            ofcn.height = cxt.canvas.height;
+            ofcn.width = canvaswidth;
+            ofcn.height = canvasheight;
 
             ofc.putImageData(status, 0, 0);
             cxt.drawImage(ofc.canvas, 0, 0);
