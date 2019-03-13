@@ -277,6 +277,7 @@ namespace WebUI.Controllers
             var segBytes = Convert.FromBase64String(segBase64);
             var basename = name.Split('.')[0];
             var segBlob = dirPath.GetBlockBlobReference("seg_" + basename + ".png");
+            _logger.LogInformation($"UploadJson update segment {segBytes.Length} && overlay image {overlayJpeg.Length}");
             await segBlob.UploadFromByteArrayAsync(segBytes, 0, segBytes.Length);
 
 
