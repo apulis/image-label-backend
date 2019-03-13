@@ -514,6 +514,421 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         var canvaswidth = cxt.canvas.width;
         var canvasheight = cxt.canvas.height;
 
+        //设置canvas上的点击事件
+        c.onclick = function (e) {
+
+            //如果状态为STATUS_NATURE，则只高亮选中区域
+            if (nowStatus == STATUS_NATURE) {
+                refreshCanvas(canvasStatus[nowposition]);
+
+                //获得最近保存的status
+                var tempData = getCopyImageData(canvasStatus[nowposition]);
+
+                //var myColor = ofc.getImageData(e.offsetX, e.offsetY, 1, 1);
+                //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
+                //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*canvaswidth;
+                var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+
+                highlightSelected(tempData, loc);
+
+                refreshCanvas(tempData);
+            } else if (nowStatus == STATUS_MERGE) {
+                //如果区块融合数组中没有值，表示这是用户选中的第一块
+                if (mergeArray.length == 0) {
+                    refreshCanvas(canvasStatus[nowposition]);
+                    //获得最近保存的status
+                    var tempData = getCopyImageData(canvasStatus[nowposition]);
+                    //获得用户点击的位置
+                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+                    var blocknum = highlightSelected(tempData, loc);
+                    //将第一次点击的数据保存到mergeArray
+                    mergeArray.push(blocknum);
+                    refreshCanvas(tempData);
+                } else {
+                    //如果不是第一次点击，则从mergeArray中去取得第一次的区块号
+                    //获得最近保存的status
+                    var tempData = getCopyImageData(canvasStatus[nowposition]);
+                    //获得用户点击的位置
+                    var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+                    var blocknum = highlightSelected(tempData, loc);
+
+                    //判断该区域是否已经被选中了
+                    if (mergeArray.indexOf(blocknum) == -1) {
+                        //如果之前没有被选中，则添加进mergeArray
+                        mergeArray.push(blocknum);
+                    }
+
+                    //将mergeArray中所有区域变色
+                    highlightSelectedByBlocks(tempData, mergeArray);
+                    refreshCanvas(tempData);
+
+                    //判断mergeArray的数量n,如果n=2(暂定),则合并区域
+                    if (mergeArray.length == 2) {
+
+                        //延迟1s执行
+                        var timer = self.setInterval(function () {
+
+                            var ac = confirm("是否合并这两个区域？");
+                            if (ac) {
+                                //先判断2个区域是否相连
+                                //var adjacent = isAdjacent(mergeArray);
+                                //获得初始seg数据，并将seg数据中mergeArray[1]的值全部变成mergeArray[0]的值
+                                var dupSegData = getCopyImageData(segImageData[nowposition]);
+                                //console.log("nowposition:" + nowposition);
+                                for (var i = 0; i < dupSegData.data.length; i = i + 4) {
+                                    if (dupSegData.data[i] == mergeArray[1]) {
+                                        dupSegData.data[i] = mergeArray[0];
+                                        dupSegData.data[i + 1] = mergeArray[0];
+                                        dupSegData.data[i + 2] = mergeArray[0];
+                                    }
+                                }
+
+                                //如果当前的状态不是最新的状态，例如是经过redo的中间态，保存后删除当前状态之后的状态
+                                if (nowposition != canvasStatus.length) {
+                                    canvasStatus.splice(nowposition + 1, canvasStatus.length - 1 - nowposition);
+                                    segImageData.splice(nowposition + 1, segImageData.length - 1 - nowposition);
+                                }
+
+                                //当前状态+1
+                                nowposition++;
+                                //更新segImageData
+                                segImageData.push(getCopyImageData(dupSegData));
+
+                                //处理新的seg图像
+                                segContours(dupSegData);
+
+                                //保存新状态
+                                var updatedData = getCopyImageData(dupSegData);
+
+                                //将mergeArray中的值都改为mergeArray[0]
+                                //删除数组的全部2个元素
+                                mergeArray.pop();
+                                mergeArray.pop();
+                                //移除active class
+                                $("#mergeId").removeClass("btn-success");
+                                $("#mergeId").addClass("btn-default");
+
+                                //保存当前状态
+                                canvasStatus.push(updatedData);
+
+                                //重绘并高亮选中的区域
+                                highlightSelected(dupSegData, loc);
+                                refreshCanvas(dupSegData);
+                                refreshButton();
+
+                                //将系统状态重置为STATUS_NATURE
+                                nowStatus = STATUS_NATURE;
+
+                                clearInterval(timer);
+                                timer = null;
+                            }
+                            else {
+
+                                //清空选区
+                                mergeArray = [];
+                                refreshCanvas(canvasStatus[nowposition]);
+                                clearInterval(timer);
+                                timer = null;
+                            }
+
+
+                        }, 300)
+                    }
+
+
+                }
+            } else if (nowStatus == STATUS_SLICE) {
+                //如果当前状态为分割状态
+                refreshCanvas(canvasStatus[nowposition]);
+
+                //获得最近保存的status
+                var tempData = getCopyImageData(canvasStatus[nowposition]);
+
+                //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
+                //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*canvaswidth;
+                var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
+
+                var nowblock = highlightReverseSelected(tempData, loc);
+
+                //将当前数据保存到slicingdata
+                slicingdata = tempData;
+                slicingblock = nowblock;
+
+                refreshCanvas(tempData);
+
+                //将当前状态转换为STATUS_SLICING
+                nowStatus = STATUS_SLICING;
+
+            } else if (nowStatus == STATUS_SLICING) {
+                //如果当前状态为正在切割
+            }
+
+
+        }
+
+
+        //设置canvas上的拖动事件(用于地块分割划线)
+        c.onmousedown = function (e) {
+            if (nowStatus == STATUS_SLICING) {
+                //off screen绘制seg数据
+                var ofcn = document.createElement('canvas');
+                var ofc = ofcn.getContext('2d');
+                ofcn.width = canvaswidth;
+                ofcn.height = canvasheight;
+                ofc.strokeStyle = "rgba(0,255,0,1)";
+                ofc.strokeWidth = 1;
+                ofc.lineWidth = 1;
+
+                ofc.putImageData(slicingdata, 0, 0);
+                var e = e || window.event;
+                cxt.moveTo(e.offsetX, e.offsetY);
+                document.onmousemove = function (e) {
+                    var e = e || window.event;
+                    //cxt.lineTo(e.offsetX, e.offsetY);
+                    //获得当前位置的像素
+                    ofc.lineTo(e.offsetX, e.offsetY);
+                    ofc.stroke();
+
+                    slicingdata = ofc.getImageData(0, 0, blockMap.length, blockMap[0].length);
+
+                    //ofc.putImageData(slicingimage, 0, 0);
+                    //画背景
+                    cxt.drawImage(img, 0, 0);
+                    cxt.drawImage(ofc.canvas, 0, 0);
+                };
+            }
+            document.onmouseup = function () {
+                if (nowStatus == STATUS_SLICING) {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                    //状态切回STATUS_SLICE
+
+                    //获得画完后的图像数据slicingdata
+                    //设置maskBlockMap
+                    var maskBlockMap = new Array();
+
+                    for (var i = 0; i < blockMap.length; i++) {
+                        maskBlockMap[i] = new Array(i);
+                        for (var j = 0; j < blockMap[i].length; j++) {
+
+                            //当前节点始位置：i * 4 + j * 4 * blockMap.length
+                            var current_pos = i * 4 + j * 4 * blockMap.length;
+                            //判断区域是否为切割区域
+                            if (segImageData[nowposition].data[current_pos] == slicingblock && segImageData[nowposition].data[current_pos + 1] == slicingblock && segImageData[nowposition].data[current_pos + 2] == slicingblock) {
+                                //这里的数据都是切割区域的内部数据
+                                //根据透明度来判断和线条来判断
+                                //获得当前区域的线条颜色
+                                var linecolor = block_line_map[slicingblock];
+                                if (slicingdata.data[current_pos + 3] != 0 && slicingdata.data[current_pos] != linecolor[0] && slicingdata.data[current_pos + 1] != linecolor[1] && slicingdata.data[current_pos + 2] != linecolor[2]) {
+                                    //block_line_map
+
+                                    //当前区域是切割线，则置maskBlockMap为0
+                                    maskBlockMap[i][j] = 0;
+                                } else {
+                                    //当前区域不是切割线，则置maskBlockMap为1
+                                    maskBlockMap[i][j] = 1;
+                                }
+                            } else {
+                                maskBlockMap[i][j] = 0;
+                            }
+                        }
+                    }
+
+                    var numberBlock = 2;
+                    var nmuberpixel = 0;
+                    var numberBlockPixel = new Array();
+
+                    function tco(f) {
+                        var value;
+                        var active = false;
+                        var accumulated = [];
+
+                        return function accumulator() {
+                            accumulated.push(arguments);
+                            if (!active) {
+                                active = true;
+                                while (accumulated.length) {
+                                    value = f.apply(this, accumulated.shift());
+                                }
+                                active = false;
+                                return value;
+                            }
+                        };
+                    }
+
+                    var sliceMaskBlock = tco(function (x, y) {
+                        if (maskBlockMap[x][y] != 0) {
+                            if (maskBlockMap[x][y] == 1) {
+                                //console.log("nmuberpixel=" + nmuberpixel);
+                                if (nmuberpixel != 0) {
+                                    numberBlockPixel.push(nmuberpixel);
+                                }
+                                maskBlockMap[x][y] = numberBlock;
+                                numberBlock++;
+                                nmuberpixel = 0;
+                            }
+
+                            //向上遍历
+                            if (y != 0) {
+                                if (maskBlockMap[x][y - 1] == 1) {
+                                    maskBlockMap[x][y - 1] = maskBlockMap[x][y];
+                                    sliceMaskBlock(x, y - 1);
+                                }
+                            }
+                            //向下遍历
+                            if (y != maskBlockMap[x].length - 1) {
+                                if (maskBlockMap[x][y + 1] == 1) {
+                                    maskBlockMap[x][y + 1] = maskBlockMap[x][y];
+                                    sliceMaskBlock(x, y + 1);
+                                }
+                            }
+                            //向左遍历
+                            if (x != 0) {
+                                if (maskBlockMap[x - 1][y] == 1) {
+                                    maskBlockMap[x - 1][y] = maskBlockMap[x][y];
+                                    sliceMaskBlock(x - 1, y);
+                                }
+                            }
+                            //向右遍历
+                            if (x != maskBlockMap.length - 1) {
+                                if (maskBlockMap[x + 1][y] == 1) {
+                                    maskBlockMap[x + 1][y] = maskBlockMap[x][y];
+                                    sliceMaskBlock(x + 1, y);
+                                }
+                            }
+                            nmuberpixel++;
+                        }
+                    });
+
+                    for (var i = 0; i < maskBlockMap.length; i++) {
+                        for (var j = 0; j < maskBlockMap[i].length; j++) {
+                            if (maskBlockMap[i][j] == 1) {
+                                sliceMaskBlock(i, j);
+                            }
+                        }
+                    }
+
+                    //console.log("nmuberpixel=" + nmuberpixel);
+                    if (nmuberpixel != 0) {
+                        numberBlockPixel.push(nmuberpixel);
+                    }
+
+                    //此时，numberBlockPixel的长度应为numberBlock - 2
+
+                    var finalNumberBlock = new Array();
+
+                    for (var i = 0; i < numberBlockPixel.length; i++) {
+                        if (numberBlockPixel[i] > precision) {
+                            finalNumberBlock.push(i + 2);
+                        }
+                    }
+
+                    //将
+
+                    numberBlock = finalNumberBlock.length;
+                    //console.log("numberBlock:" + numberBlock);
+
+                    if (numberBlock == 1) {
+                        alert("对不起，区域未闭合");
+                        //重绘
+                        //获得最近保存的status
+                        var tempData = getCopyImageData(canvasStatus[nowposition]);
+
+                        highlightReverseSelectedByBlock(tempData, slicingblock);
+
+                        refreshCanvas(tempData);
+                        slicingdata = tempData;
+                    } else if (numberBlock == 2) {
+                        //根据finalNumberBlock和maskBlockMap更新segImageData到下一状态
+                        var dupSegData = getCopyImageData(segImageData[nowposition]);
+
+                        //未分割后的第二块区域分配一个新的区块号
+                        var anotherblock;
+                        var linekeys = Object.keys(block_line_map);
+                        for (var i = 0; i < 254; i++) {
+                            var tempkey = 254 - i;
+                            var result = linekeys.indexOf(tempkey + "");
+                            if (result == -1) {
+                                anotherblock = tempkey;
+                                break;
+                            }
+                        }
+
+                        if (anotherblock == undefined) {
+                            alert("划分区域过多");
+                            return;
+                        }
+                        //console.log("finalNumberBlock:" + finalNumberBlock);
+                        for (var i = 0; i < maskBlockMap.length; i++) {
+                            for (var j = 0; j < maskBlockMap[i].length; j++) {
+                                //当前节点始位置：i * 4 + j * 4 * maskBlockMap.length
+                                var current_pos = i * 4 + j * 4 * maskBlockMap.length;
+
+                                //判断区域是否为切割区域
+                                if (dupSegData.data[current_pos] == slicingblock && dupSegData.data[current_pos + 1] == slicingblock && dupSegData.data[current_pos + 2] == slicingblock) {
+                                    //这里的数据都是切割区域的内部数据
+                                    //将finalNumberBlock[0]的数据保留为原样，finalNumberBlock[1]的数据修改为新的anotherblock
+                                    //其他干扰节点全部置为finalNumberBlock[0]
+                                    if (maskBlockMap[i][j] == finalNumberBlock[1]) {
+                                        //如果该坐标的值为新区域
+                                        dupSegData.data[current_pos] = anotherblock;
+                                        dupSegData.data[current_pos + 1] = anotherblock;
+                                        dupSegData.data[current_pos + 2] = anotherblock;
+                                        dupSegData.data[current_pos + 3] = 255;
+                                    }
+
+                                }
+                            }
+                        }
+
+                        //如果当前的状态不是最新的状态，例如是经过redo的中间态，保存后删除当前状态之后的状态
+                        if (nowposition != canvasStatus.length) {
+                            canvasStatus.splice(nowposition + 1, canvasStatus.length - 1 - nowposition);
+                            segImageData.splice(nowposition + 1, segImageData.length - 1 - nowposition);
+                        }
+
+                        //当前状态+1
+                        nowposition++;
+                        //更新segImageData
+                        segImageData.push(getCopyImageData(dupSegData));
+
+                        //处理新的seg图像
+                        segContours(dupSegData);
+
+                        //保存新状态
+                        var updatedData = getCopyImageData(dupSegData);
+
+                        //移除success class
+                        $("#sliceId").removeClass("btn-success");
+                        $("#sliceId").addClass("btn-default");
+
+                        //保存当前状态
+                        canvasStatus.push(updatedData);
+
+                        refreshCanvas(dupSegData);
+                        refreshButton();
+
+                        //将系统状态重置为STATUS_NATURE
+                        nowStatus = STATUS_NATURE;
+
+                    } else if (numberBlock > 2) {
+                        alert("对不起，区域划分过多");
+                        //重绘
+                        //获得最近保存的status
+                        var tempData = getCopyImageData(canvasStatus[nowposition]);
+
+                        highlightReverseSelectedByBlock(tempData, slicingblock);
+
+                        refreshCanvas(tempData);
+                        slicingdata = tempData;
+                    } else {
+                        alert("未知错误")
+                    }
+                }
+
+            };
+        }
+
         $("#mergeId").click(function () {
             refreshCanvas(canvasStatus[nowposition]);
             if ($(this).hasClass("btn-success")) {
@@ -565,421 +980,6 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             submitChange();
             //保存
         });
-    }
-
-    //设置canvas上的点击事件
-    c.onclick = function (e) {
-
-        //如果状态为STATUS_NATURE，则只高亮选中区域
-        if (nowStatus == STATUS_NATURE) {
-            refreshCanvas(canvasStatus[nowposition]);
-
-            //获得最近保存的status
-            var tempData = getCopyImageData(canvasStatus[nowposition]);
-
-            //var myColor = ofc.getImageData(e.offsetX, e.offsetY, 1, 1);
-            //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
-            //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*canvaswidth;
-            var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
-
-            highlightSelected(tempData, loc);
-
-            refreshCanvas(tempData);
-        } else if (nowStatus == STATUS_MERGE) {
-            //如果区块融合数组中没有值，表示这是用户选中的第一块
-            if (mergeArray.length == 0) {
-                refreshCanvas(canvasStatus[nowposition]);
-                //获得最近保存的status
-                var tempData = getCopyImageData(canvasStatus[nowposition]);
-                //获得用户点击的位置
-                var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
-                var blocknum = highlightSelected(tempData, loc);
-                //将第一次点击的数据保存到mergeArray
-                mergeArray.push(blocknum);
-                refreshCanvas(tempData);
-            } else {
-                //如果不是第一次点击，则从mergeArray中去取得第一次的区块号
-                //获得最近保存的status
-                var tempData = getCopyImageData(canvasStatus[nowposition]);
-                //获得用户点击的位置
-                var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
-                var blocknum = highlightSelected(tempData, loc);
-
-                //判断该区域是否已经被选中了
-                if (mergeArray.indexOf(blocknum) == -1) {
-                    //如果之前没有被选中，则添加进mergeArray
-                    mergeArray.push(blocknum);
-                }
-
-                //将mergeArray中所有区域变色
-                highlightSelectedByBlocks(tempData, mergeArray);
-                refreshCanvas(tempData);
-
-                //判断mergeArray的数量n,如果n=2(暂定),则合并区域
-                if (mergeArray.length == 2) {
-
-                    //延迟1s执行
-                    var timer = self.setInterval(function () {
-
-                        var ac = confirm("是否合并这两个区域？");
-                        if (ac) {
-                            //先判断2个区域是否相连
-                            //var adjacent = isAdjacent(mergeArray);
-                            //获得初始seg数据，并将seg数据中mergeArray[1]的值全部变成mergeArray[0]的值
-                            var dupSegData = getCopyImageData(segImageData[nowposition]);
-                            //console.log("nowposition:" + nowposition);
-                            for (var i = 0; i < dupSegData.data.length; i = i + 4) {
-                                if (dupSegData.data[i] == mergeArray[1]) {
-                                    dupSegData.data[i] = mergeArray[0];
-                                    dupSegData.data[i + 1] = mergeArray[0];
-                                    dupSegData.data[i + 2] = mergeArray[0];
-                                }
-                            }
-
-                            //如果当前的状态不是最新的状态，例如是经过redo的中间态，保存后删除当前状态之后的状态
-                            if (nowposition != canvasStatus.length) {
-                                canvasStatus.splice(nowposition + 1, canvasStatus.length - 1 - nowposition);
-                                segImageData.splice(nowposition + 1, segImageData.length - 1 - nowposition);
-                            }
-
-                            //当前状态+1
-                            nowposition++;
-                            //更新segImageData
-                            segImageData.push(getCopyImageData(dupSegData));
-
-                            //处理新的seg图像
-                            segContours(dupSegData);
-
-                            //保存新状态
-                            var updatedData = getCopyImageData(dupSegData);
-
-                            //将mergeArray中的值都改为mergeArray[0]
-                            //删除数组的全部2个元素
-                            mergeArray.pop();
-                            mergeArray.pop();
-                            //移除active class
-                            $("#mergeId").removeClass("btn-success");
-                            $("#mergeId").addClass("btn-default");
-
-                            //保存当前状态
-                            canvasStatus.push(updatedData);
-
-                            //重绘并高亮选中的区域
-                            highlightSelected(dupSegData, loc);
-                            refreshCanvas(dupSegData);
-                            refreshButton();
-
-                            //将系统状态重置为STATUS_NATURE
-                            nowStatus = STATUS_NATURE;
-
-                            clearInterval(timer);
-                            timer = null;
-                        }
-                        else {
-
-                            //清空选区
-                            mergeArray = [];
-                            refreshCanvas(canvasStatus[nowposition]);
-                            clearInterval(timer);
-                            timer = null;
-                        }
-
-
-                    }, 300)
-                }
-
-
-            }
-        } else if (nowStatus == STATUS_SLICE) {
-            //如果当前状态为分割状态
-            refreshCanvas(canvasStatus[nowposition]);
-
-            //获得最近保存的status
-            var tempData = getCopyImageData(canvasStatus[nowposition]);
-
-            //当前鼠标在canvas中的坐标为(e.offsetX, e.offsetY)
-            //根据坐标计算颜色数据开始位置为e.offsetX*4 + e.offsetY*4*canvaswidth;
-            var loc = e.offsetX * 4 + e.offsetY * 4 * canvaswidth;
-
-            var nowblock = highlightReverseSelected(tempData, loc);
-
-            //将当前数据保存到slicingdata
-            slicingdata = tempData;
-            slicingblock = nowblock;
-
-            refreshCanvas(tempData);
-
-            //将当前状态转换为STATUS_SLICING
-            nowStatus = STATUS_SLICING;
-
-        } else if (nowStatus == STATUS_SLICING) {
-            //如果当前状态为正在切割
-        }
-
-
-    }
-
-
-    //设置canvas上的拖动事件(用于地块分割划线)
-    c.onmousedown = function (e) {
-        if (nowStatus == STATUS_SLICING) {
-            //off screen绘制seg数据
-            var ofcn = document.createElement('canvas');
-            var ofc = ofcn.getContext('2d');
-            ofcn.width = canvaswidth;
-            ofcn.height = canvasheight;
-            ofc.strokeStyle = "rgba(0,255,0,1)";
-            ofc.strokeWidth = 1;
-            ofc.lineWidth = 1;
-
-            ofc.putImageData(slicingdata, 0, 0);
-            var e = e || window.event;
-            cxt.moveTo(e.offsetX, e.offsetY);
-            document.onmousemove = function (e) {
-                var e = e || window.event;
-                //cxt.lineTo(e.offsetX, e.offsetY);
-                //获得当前位置的像素
-                ofc.lineTo(e.offsetX, e.offsetY);
-                ofc.stroke();
-
-                slicingdata = ofc.getImageData(0, 0, blockMap.length, blockMap[0].length);
-
-                //ofc.putImageData(slicingimage, 0, 0);
-                //画背景
-                cxt.drawImage(img, 0, 0);
-                cxt.drawImage(ofc.canvas, 0, 0);
-            };
-        }
-        document.onmouseup = function () {
-            if (nowStatus == STATUS_SLICING) {
-                document.onmousemove = null;
-                document.onmouseup = null;
-                //状态切回STATUS_SLICE
-
-                //获得画完后的图像数据slicingdata
-                //设置maskBlockMap
-                var maskBlockMap = new Array();
-
-                for (var i = 0; i < blockMap.length; i++) {
-                    maskBlockMap[i] = new Array(i);
-                    for (var j = 0; j < blockMap[i].length; j++) {
-
-                        //当前节点始位置：i * 4 + j * 4 * blockMap.length
-                        var current_pos = i * 4 + j * 4 * blockMap.length;
-                        //判断区域是否为切割区域
-                        if (segImageData[nowposition].data[current_pos] == slicingblock && segImageData[nowposition].data[current_pos + 1] == slicingblock && segImageData[nowposition].data[current_pos + 2] == slicingblock) {
-                            //这里的数据都是切割区域的内部数据
-                            //根据透明度来判断和线条来判断
-                            //获得当前区域的线条颜色
-                            var linecolor = block_line_map[slicingblock];
-                            if (slicingdata.data[current_pos + 3] != 0 && slicingdata.data[current_pos] != linecolor[0] && slicingdata.data[current_pos + 1] != linecolor[1] && slicingdata.data[current_pos + 2] != linecolor[2]) {
-                                //block_line_map
-
-                                //当前区域是切割线，则置maskBlockMap为0
-                                maskBlockMap[i][j] = 0;
-                            } else {
-                                //当前区域不是切割线，则置maskBlockMap为1
-                                maskBlockMap[i][j] = 1;
-                            }
-                        } else {
-                            maskBlockMap[i][j] = 0;
-                        }
-                    }
-                }
-
-                var numberBlock = 2;
-                var nmuberpixel = 0;
-                var numberBlockPixel = new Array();
-
-                function tco(f) {
-                    var value;
-                    var active = false;
-                    var accumulated = [];
-
-                    return function accumulator() {
-                        accumulated.push(arguments);
-                        if (!active) {
-                            active = true;
-                            while (accumulated.length) {
-                                value = f.apply(this, accumulated.shift());
-                            }
-                            active = false;
-                            return value;
-                        }
-                    };
-                }
-
-                var sliceMaskBlock = tco(function (x, y) {
-                    if (maskBlockMap[x][y] != 0) {
-                        if (maskBlockMap[x][y] == 1) {
-                            //console.log("nmuberpixel=" + nmuberpixel);
-                            if (nmuberpixel != 0) {
-                                numberBlockPixel.push(nmuberpixel);
-                            }
-                            maskBlockMap[x][y] = numberBlock;
-                            numberBlock++;
-                            nmuberpixel = 0;
-                        }
-
-                        //向上遍历
-                        if (y != 0) {
-                            if (maskBlockMap[x][y - 1] == 1) {
-                                maskBlockMap[x][y - 1] = maskBlockMap[x][y];
-                                sliceMaskBlock(x, y - 1);
-                            }
-                        }
-                        //向下遍历
-                        if (y != maskBlockMap[x].length - 1) {
-                            if (maskBlockMap[x][y + 1] == 1) {
-                                maskBlockMap[x][y + 1] = maskBlockMap[x][y];
-                                sliceMaskBlock(x, y + 1);
-                            }
-                        }
-                        //向左遍历
-                        if (x != 0) {
-                            if (maskBlockMap[x - 1][y] == 1) {
-                                maskBlockMap[x - 1][y] = maskBlockMap[x][y];
-                                sliceMaskBlock(x - 1, y);
-                            }
-                        }
-                        //向右遍历
-                        if (x != maskBlockMap.length - 1) {
-                            if (maskBlockMap[x + 1][y] == 1) {
-                                maskBlockMap[x + 1][y] = maskBlockMap[x][y];
-                                sliceMaskBlock(x + 1, y);
-                            }
-                        }
-                        nmuberpixel++;
-                    }
-                });
-
-                for (var i = 0; i < maskBlockMap.length; i++) {
-                    for (var j = 0; j < maskBlockMap[i].length; j++) {
-                        if (maskBlockMap[i][j] == 1) {
-                            sliceMaskBlock(i, j);
-                        }
-                    }
-                }
-
-                //console.log("nmuberpixel=" + nmuberpixel);
-                if (nmuberpixel != 0) {
-                    numberBlockPixel.push(nmuberpixel);
-                }
-
-                //此时，numberBlockPixel的长度应为numberBlock - 2
-
-                var finalNumberBlock = new Array();
-
-                for (var i = 0; i < numberBlockPixel.length; i++) {
-                    if (numberBlockPixel[i] > precision) {
-                        finalNumberBlock.push(i + 2);
-                    }
-                }
-
-                //将
-
-                numberBlock = finalNumberBlock.length;
-                //console.log("numberBlock:" + numberBlock);
-
-                if (numberBlock == 1) {
-                    alert("对不起，区域未闭合");
-                    //重绘
-                    //获得最近保存的status
-                    var tempData = getCopyImageData(canvasStatus[nowposition]);
-
-                    highlightReverseSelectedByBlock(tempData, slicingblock);
-
-                    refreshCanvas(tempData);
-                    slicingdata = tempData;
-                } else if (numberBlock == 2) {
-                    //根据finalNumberBlock和maskBlockMap更新segImageData到下一状态
-                    var dupSegData = getCopyImageData(segImageData[nowposition]);
-
-                    //未分割后的第二块区域分配一个新的区块号
-                    var anotherblock;
-                    var linekeys = Object.keys(block_line_map);
-                    for (var i = 0; i < 254; i++) {
-                        var tempkey = 254 - i;
-                        var result = linekeys.indexOf(tempkey + "");
-                        if (result == -1) {
-                            anotherblock = tempkey;
-                            break;
-                        }
-                    }
-
-                    if (anotherblock == undefined) {
-                        alert("划分区域过多");
-                        return;
-                    }
-                    //console.log("finalNumberBlock:" + finalNumberBlock);
-                    for (var i = 0; i < maskBlockMap.length; i++) {
-                        for (var j = 0; j < maskBlockMap[i].length; j++) {
-                            //当前节点始位置：i * 4 + j * 4 * maskBlockMap.length
-                            var current_pos = i * 4 + j * 4 * maskBlockMap.length;
-
-                            //判断区域是否为切割区域
-                            if (dupSegData.data[current_pos] == slicingblock && dupSegData.data[current_pos + 1] == slicingblock && dupSegData.data[current_pos + 2] == slicingblock) {
-                                //这里的数据都是切割区域的内部数据
-                                //将finalNumberBlock[0]的数据保留为原样，finalNumberBlock[1]的数据修改为新的anotherblock
-                                //其他干扰节点全部置为finalNumberBlock[0]
-                                if (maskBlockMap[i][j] == finalNumberBlock[1]) {
-                                    //如果该坐标的值为新区域
-                                    dupSegData.data[current_pos] = anotherblock;
-                                    dupSegData.data[current_pos + 1] = anotherblock;
-                                    dupSegData.data[current_pos + 2] = anotherblock;
-                                    dupSegData.data[current_pos + 3] = 255;
-                                }
-
-                            }
-                        }
-                    }
-
-                    //如果当前的状态不是最新的状态，例如是经过redo的中间态，保存后删除当前状态之后的状态
-                    if (nowposition != canvasStatus.length) {
-                        canvasStatus.splice(nowposition + 1, canvasStatus.length - 1 - nowposition);
-                        segImageData.splice(nowposition + 1, segImageData.length - 1 - nowposition);
-                    }
-
-                    //当前状态+1
-                    nowposition++;
-                    //更新segImageData
-                    segImageData.push(getCopyImageData(dupSegData));
-
-                    //处理新的seg图像
-                    segContours(dupSegData);
-
-                    //保存新状态
-                    var updatedData = getCopyImageData(dupSegData);
-
-                    //移除success class
-                    $("#sliceId").removeClass("btn-success");
-                    $("#sliceId").addClass("btn-default");
-
-                    //保存当前状态
-                    canvasStatus.push(updatedData);
-
-                    refreshCanvas(dupSegData);
-                    refreshButton();
-
-                    //将系统状态重置为STATUS_NATURE
-                    nowStatus = STATUS_NATURE;
-
-                } else if (numberBlock > 2) {
-                    alert("对不起，区域划分过多");
-                    //重绘
-                    //获得最近保存的status
-                    var tempData = getCopyImageData(canvasStatus[nowposition]);
-
-                    highlightReverseSelectedByBlock(tempData, slicingblock);
-
-                    refreshCanvas(tempData);
-                    slicingdata = tempData;
-                } else {
-                    alert("未知错误")
-                }
-            }
-
-        };
     }
 
     function containsInArray(val, arr) {
