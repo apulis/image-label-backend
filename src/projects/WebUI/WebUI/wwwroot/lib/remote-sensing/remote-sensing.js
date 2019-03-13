@@ -424,6 +424,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     var slicingblock;
     //设置图像提取精度排除干扰
     var precision = 18;
+    //设置按钮绑定
+    var isbanding = false;
 
     //canvas
     var c = document.getElementById("canvasOutput");
@@ -440,6 +442,12 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     $scope.startEditImage = function () {
 
         $scope.current.editMode = true;
+        //如果没有进行按钮绑定，则再进行绑定一次
+        if (!isbanding) {
+            buttonBingding();
+            isbanding = true;
+        }
+
         clearAll();
         img_seg_b.crossOrigin = "Anonymous";
         // img_seg_b.src = "https://skypulischinanorth.blob.core.chinacloudapi.cn/public/demo/wangcheng/region1/seg_wangcheng_1000_21000.png";
@@ -501,58 +509,59 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         }
 
     }
-
-    $("#mergeId").click(function () {
-        refreshCanvas(canvasStatus[nowposition]);
-        if ($(this).hasClass("btn-success")) {
-            $(this).removeClass("btn-success");
-            $(this).addClass("btn-default");
-            //情况mergeArray
-            mergeArray = [];
-            //将当前用户状态改为STATUS_NATURE
-            nowStatus = STATUS_NATURE;
-        } else {
-            $(this).removeClass("btn-default");
-            $(this).addClass("btn-success");
-            //将当前用户状态改为STATUS_MERGE
-            nowStatus = STATUS_MERGE;
-        }
-    });
-
-    $("#sliceId").click(function () {
-        refreshCanvas(canvasStatus[nowposition]);
-        if ($(this).hasClass("btn-success")) {
-            $(this).removeClass("btn-success");
-            $(this).addClass("btn-default");
-            //将当前用户状态改为STATUS_NATURE
-            nowStatus = STATUS_NATURE;
-        } else {
-            $(this).removeClass("btn-default");
-            $(this).addClass("btn-success");
-            //将当前用户状态改为STATUS_SLICE
-            nowStatus = STATUS_SLICE;
-        }
-    });
-
-    $("#undoId").click(function () {
-        if (nowposition != 0) {
-            nowposition--;
+    function buttonBingding() {
+        $("#mergeId").click(function () {
             refreshCanvas(canvasStatus[nowposition]);
-            refreshButton();
-        }
-    });
+            if ($(this).hasClass("btn-success")) {
+                $(this).removeClass("btn-success");
+                $(this).addClass("btn-default");
+                //情况mergeArray
+                mergeArray = [];
+                //将当前用户状态改为STATUS_NATURE
+                nowStatus = STATUS_NATURE;
+            } else {
+                $(this).removeClass("btn-default");
+                $(this).addClass("btn-success");
+                //将当前用户状态改为STATUS_MERGE
+                nowStatus = STATUS_MERGE;
+            }
+        });
 
-    $("#redoId").click(function () {
-        if (nowposition != canvasStatus.length - 1) {
-            nowposition++;
+        $("#sliceId").click(function () {
             refreshCanvas(canvasStatus[nowposition]);
-            refreshButton();
-        }
-    });
-    $("#saveId").click(function () {
-        submitChange();
-        //保存
-    });
+            if ($(this).hasClass("btn-success")) {
+                $(this).removeClass("btn-success");
+                $(this).addClass("btn-default");
+                //将当前用户状态改为STATUS_NATURE
+                nowStatus = STATUS_NATURE;
+            } else {
+                $(this).removeClass("btn-default");
+                $(this).addClass("btn-success");
+                //将当前用户状态改为STATUS_SLICE
+                nowStatus = STATUS_SLICE;
+            }
+        });
+
+        $("#undoId").click(function () {
+            if (nowposition != 0) {
+                nowposition--;
+                refreshCanvas(canvasStatus[nowposition]);
+                refreshButton();
+            }
+        });
+
+        $("#redoId").click(function () {
+            if (nowposition != canvasStatus.length - 1) {
+                nowposition++;
+                refreshCanvas(canvasStatus[nowposition]);
+                refreshButton();
+            }
+        });
+        $("#saveId").click(function () {
+            submitChange();
+            //保存
+        });
+    }
 
     //设置canvas上的点击事件
     c.onclick = function (e) {
