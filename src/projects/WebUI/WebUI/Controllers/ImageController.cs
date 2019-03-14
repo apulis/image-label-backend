@@ -267,10 +267,17 @@ namespace WebUI.Controllers
             var overlayBase64 = JsonUtils.GetString("overlay", postdata);
             var segBase64 = JsonUtils.GetString("seg", postdata);
             overlayBase64 = overlayBase64.FromJSBase64();
-            segBase64 = segBase64.FromJSBase64(); 
+            segBase64 = segBase64.FromJSBase64();
 
             var container = CloudStorage.GetContainer(null);
             var dirPath = container.GetDirectoryReference(prefix);
+
+            var segBytes = Convert.FromBase64String(segBase64);
+            var basename = name.Split('.')[0];
+            var segBlob = dirPath.GetBlockBlobReference("seg_" + basename + ".png");
+            _logger.LogInformation($"UploadJson update segment {segBytes.Length} && overlay image {overlayJpeg.Length}");
+            await segBlob.UploadFromByteArrayAsync(segBytes, 0, segBytes.Length);
+
             var overlayBlob = dirPath.GetBlockBlobReference("overlay_" + name);
 
             var overlayImage = ImageOps.FromBase64(overlayBase64, _logger);
@@ -278,11 +285,7 @@ namespace WebUI.Controllers
             
             await overlayBlob.UploadFromByteArrayAsync(overlayJpeg, 0, overlayJpeg.Length);
 
-            var segBytes = Convert.FromBase64String(segBase64);
-            var basename = name.Split('.')[0];
-            var segBlob = dirPath.GetBlockBlobReference("seg_" + basename + ".png");
-            _logger.LogInformation($"UploadJson update segment {segBytes.Length} && overlay image {overlayJpeg.Length}");
-            await segBlob.UploadFromByteArrayAsync(segBytes, 0, segBytes.Length);
+            
 
 
 
