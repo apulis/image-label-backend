@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Common.Extensions;
 using Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -265,6 +266,9 @@ namespace WebUI.Controllers
             }
             var overlayBase64 = JsonUtils.GetString("overlay", postdata);
             var segBase64 = JsonUtils.GetString("seg", postdata);
+            overlayBase64 = overlayBase64.FromJSBase64();
+            segBase64 = segBase64.FromJSBase64(); 
+
             var container = CloudStorage.GetContainer(null);
             var dirPath = container.GetDirectoryReference(prefix);
             var overlayBlob = dirPath.GetBlockBlobReference("overlay_" + name);
