@@ -1371,8 +1371,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
     $scope.uploadSegAndOverlay = function (overlayUrl, segUrl, onCompletion) {
         var overlayData = overlayUrl.substr(overlayUrl.indexOf('base64,') + 'base64,'.length);
-       //var segData = segUrl.substr(segUrl.indexOf('base64,') + 'base64,'.length);
-        var segData = segUrl;
+        var segData = segUrl.substr(segUrl.indexOf('base64,') + 'base64,'.length);
+        // var segData = segUrl;
 	    var postUpload = $http.post('/api/Image/UploadJson', {
             prefix: $scope.current.prefix,
             row: $scope.selection.row,
