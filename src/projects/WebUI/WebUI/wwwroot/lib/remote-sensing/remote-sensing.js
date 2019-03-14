@@ -430,7 +430,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     //canvas
     var c;
     var cxt;
-
+    var canvaswidth;
+    var canvasheight;
     //加载seg
     var img_seg_b = new Image();
     //加载img
@@ -511,8 +512,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         cxt = c.getContext("2d");
 
         //设置canvas的显示高度和宽度
-        var canvaswidth = cxt.canvas.width;
-        var canvasheight = cxt.canvas.height;
+        canvaswidth = cxt.canvas.width;
+        canvasheight = cxt.canvas.height;
 
         //设置canvas上的点击事件
         c.onclick = function (e) {
@@ -1370,8 +1371,9 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
 
     $scope.uploadSegAndOverlay = function (overlayUrl, segUrl, onCompletion) {
         var overlayData = overlayUrl.substr(overlayUrl.indexOf('base64,') + 'base64,'.length);
-        var segData = segUrl.substr(segUrl.indexOf('base64,') + 'base64,'.length);
-        var postUpload = $http.post('/api/Image/UploadJson', {
+       //var segData = segUrl.substr(segUrl.indexOf('base64,') + 'base64,'.length);
+        var segData = segUrl;
+	    var postUpload = $http.post('/api/Image/UploadJson', {
             prefix: $scope.current.prefix,
             row: $scope.selection.row,
             col: $scope.selection.col,
