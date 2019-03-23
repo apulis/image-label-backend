@@ -1,5 +1,5 @@
 {
-  "cluster": "skypulis",
-  "region": "chinanorth",
-  "fqdn": "apulis-china-infra01.sigsus.com"
+  "cluster": "skypulis2",
+  "region": "chinaeast2",
+  "fqdn": "apulis-chinaeast-infra01.chinaeast2.cloudapp.chinacloudapi.cn"
 }
