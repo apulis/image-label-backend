@@ -16,7 +16,6 @@ using Common.Utils;
 namespace WebUI.Azure
 {
     public class AzureCloudProvider : CloudProvider {
-        public String DefaultLocation = Constant.DefaultLocation;
         public JObject config = null;
         public Dictionary<String, bool> locations = new Dictionary<String, bool>(StringComparer.OrdinalIgnoreCase);
         public List<String> locationLst = new List<String>();
@@ -67,7 +66,7 @@ namespace WebUI.Azure
         public String GetLocation(string location)
         {
             if (String.IsNullOrEmpty(location))
-                return DefaultLocation;
+                return LocalSetting.Current.Location;
             else if (locations.ContainsKey(location))
                 return location;
             else
