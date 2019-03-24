@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Views\**\*" PackagePath="%(Identity)" />
     <None Include="wwwroot\lib\remote-sensing\remote-sensing.js" />
   </ItemGroup>
 
