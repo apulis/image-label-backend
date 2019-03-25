@@ -32,7 +32,9 @@ namespace WebUI.Models
 
         public static string GetConfigFile( string filename )
         {
-            return Path.Combine(ConfigDirectory, filename);
+            var file = Path.Combine(ConfigDirectory, filename);
+            Console.WriteLine($"Config file ... ${file}");
+            return file; 
         }
 
     }
