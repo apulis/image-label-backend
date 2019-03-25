@@ -15,7 +15,7 @@ namespace WebUI.Models
         public const string GeneralConfigFile = "config.json";
         public const string AppInfoConfigFile = "configApp.json";
         public const string OrderConfigFile = "configOrder.json";
-        public static string _configFolder = Path.Combine("WebUI", "config");
+        public static string _configFolder = "config";
 
         public static string ConfigDirectory {
             get
@@ -23,8 +23,8 @@ namespace WebUI.Models
                 if (String.IsNullOrEmpty(_configDirectory))
                 {
                     var currentDirectory = Directory.GetCurrentDirectory();
-                    var parentDirectory = Directory.GetParent(currentDirectory);
-                    _configDirectory = Path.Combine(parentDirectory.FullName, _configFolder);
+                    // var parentDirectory = Directory.GetParent(currentDirectory);
+                    _configDirectory = Path.Combine(currentDirectory, _configFolder);
                 }
                 return _configDirectory;
             }
