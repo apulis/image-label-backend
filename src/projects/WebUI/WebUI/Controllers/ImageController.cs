@@ -251,10 +251,10 @@ namespace WebUI.Controllers
 
 
 
-        // Post: api/Image/SetCurrent
-        [HttpPost("UploadJson", Name = "UploadJson")]
+        // Post: api/Image/UploadSegmentation
+        [HttpPost("UploadSegmentation", Name = "UploadSegmentation")]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> UploadJson([FromBody] JObject postdata)
+        public async Task<IActionResult> UploadSegmentation([FromBody] JObject postdata)
         {
             var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
             var metadata = await GetMetadata(prefix);
@@ -283,11 +283,43 @@ namespace WebUI.Controllers
             var overlayJpeg = overlayImage.ToJPEG();
             
             await overlayBlob.UploadFromByteArrayAsync(overlayJpeg, 0, overlayJpeg.Length);
-            _logger.LogInformation($"UploadJson update segment {segBytes.Length} && overlay image {overlayJpeg.Length}");
+            _logger.LogInformation($"UploadSegmentation update segment {segBytes.Length} && overlay image {overlayJpeg.Length}");
 
 
 
 
+
+            return Ok();
+        }
+
+        // Post: api/Image/UploadSegmentation
+        [HttpPost("UploadJson", Name = "UploadJson")]
+        [IgnoreAntiforgeryToken]
+        [AllowAnonymous]
+        public async Task<IActionResult> UploadJson([FromBody] JObject postdata)
+        {
+            _logger.LogInformation($"UploadJson: {postdata} ");
+            var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
+            var metadata = await GetMetadata(prefix);
+            var name = JsonUtils.GetString("name", postdata);
+            var ret = ValidateName(postdata, metadata, name);
+            if (!Object.ReferenceEquals(ret, null))
+            {
+                return ret;
+            }
+            var data64 = JsonUtils.GetString("data", postdata);
+            data64 = data64.FromJSBase64();
+
+            var container = CloudStorage.GetContainer(null);
+            var dirPath = container.GetDirectoryReference(prefix);
+
+            var dataBytes = Convert.FromBase64String(data64);
+            var dataBlob = dirPath.GetBlockBlobReference(name);
+            await dataBlob.UploadFromByteArrayAsync(dataBytes, 0, dataBytes.Length);
+
+            var overlayBlob = dirPath.GetBlockBlobReference("overlay_" + name);
+
+            _logger.LogInformation($"UploadSegmentation update Json {dataBytes.Length}");
 
             return Ok();
         }
