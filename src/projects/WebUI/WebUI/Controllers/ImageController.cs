@@ -240,10 +240,12 @@ namespace WebUI.Controllers
             {
                 return Ok(new { error = $"Metadata.image[{row}][{col}] is empty JObject." });
             }
+             
             var curimage = JsonUtils.GetString(Constants.OperationImage, oneimage);
-            if ( String.CompareOrdinal(curimage, name)!=0 )
+            var basename = curimage.Split('.')[0];
+            if ( name.IndexOf(basename, StringComparison.Ordinal)<0 )
             {
-                return Ok(new { error = $"Metadata.image[{row}][{col}] has image {curimage}, but {name} is requested." });
+                return Ok(new { error = $"Metadata.image[{row}][{col}] has image {basename}, but {name} is requested." });
             }
             return null; 
         }
@@ -317,9 +319,7 @@ namespace WebUI.Controllers
             var dataBlob = dirPath.GetBlockBlobReference(name);
             await dataBlob.UploadFromByteArrayAsync(dataBytes, 0, dataBytes.Length);
 
-            var overlayBlob = dirPath.GetBlockBlobReference("overlay_" + name);
-
-            _logger.LogInformation($"UploadSegmentation update Json {dataBytes.Length}");
+            _logger.LogInformation($"UploadJson update Json {dataBytes.Length}");
 
             return Ok();
         }
