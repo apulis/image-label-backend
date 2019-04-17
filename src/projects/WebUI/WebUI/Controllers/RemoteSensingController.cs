@@ -57,6 +57,11 @@ namespace WebUI.Controllers
             return View();
         }
 
+        public IActionResult EditMap()
+        {
+            return View();
+        }
+
         public IActionResult MapBrowse()
         {
             return View();
