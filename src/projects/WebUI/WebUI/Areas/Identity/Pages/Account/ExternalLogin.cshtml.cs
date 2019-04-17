@@ -159,6 +159,7 @@ namespace WebUI.Areas.Identity.Pages.Account
                             _logger.LogInformation($"Add role \"{role}\" to {user}");
                             await _userManager.AddToRoleAsync(user, role);
                         }
+                        _logger.LogInformation($"User role is set to {role}");
                         HttpContext.Session.SetString(Constants.JsontagRole, role);
 
                         return Redirect(returnUrl);

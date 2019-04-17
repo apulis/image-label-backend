@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WebUI.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace WebUI.Controllers
 {
@@ -14,10 +15,11 @@ namespace WebUI.Controllers
     public class HomeController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
-        public HomeController(UserManager<IdentityUser> userManager)
+        private readonly ILogger<HomeController> _logger;
+        public HomeController(UserManager<IdentityUser> userManager, ILogger<HomeController> logger)
         {
             _userManager = userManager;
-           
+            _logger = logger; 
         }
 
         private async Task GetRole( )
@@ -30,10 +32,12 @@ namespace WebUI.Controllers
                 if (role.Count > 0)
                 {
                     var roleInfo = String.Join(",", role);
+                    _logger.LogInformation($"HomeController: User role is set to {roleInfo}");
                     HttpContext.Session.SetString(Constants.JsontagRole, roleInfo);
                     return; 
                 }
             }
+            _logger.LogInformation($"User is null, role removed...");
             HttpContext.Session.Remove(Constants.JsontagRole);
 
         }
