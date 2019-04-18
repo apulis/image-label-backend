@@ -300,13 +300,16 @@ namespace WebUI.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> UploadJson([FromBody] JObject postdata)
         {
-            _logger.LogInformation($"UploadJson: {postdata} ");
+            // _logger.LogInformation($"UploadJson: {postdata} ");
             var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
             var metadata = await GetMetadata(prefix);
             var name = JsonUtils.GetString("name", postdata);
             var ret = ValidateName(postdata, metadata, name);
             if (!Object.ReferenceEquals(ret, null))
             {
+                var row = JsonUtils.GetType<int>("row", postdata, 0);
+                var col = JsonUtils.GetType<int>("col", postdata, 0);
+                _logger.LogInformation($"UploadJson is not valid, prefix = {prefix}, name = {name}, row = {row}, col = {col}");
                 return ret;
             }
             var data64 = JsonUtils.GetString("data", postdata);
