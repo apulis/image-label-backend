@@ -103,6 +103,11 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
                 $scope.current.editable = ($scope.current.mode == 1);
             }
         }
+        $scope.current.prefixSet = true;
+    }
+
+    $scope.doneSelectPrefixIFrame = function () {
+        $scope.checkPrefix();
     }
 
     $scope.doneSelectPrefix = function () {
@@ -315,6 +320,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
             // myWindow.document.write(JSON.stringify(geoJson));
         });
     };
+
+    
 
     $scope.doneSelectPrefixBrowseContour = function () {
         $scope.mapkey = "contour";

@@ -2,4 +2,30 @@
     ViewData["Title"] = "Edit Map";
 }
 
-<iframe src="/yitong/index.html" style="border:none;" height="1024px" width="1024"></iframe>
+<div class="container body-content" ng-app="fileUpload" ng-controller="MyCtrl">
+
+    <div layout="row">
+
+        <div>
+            <label>Current Prefix : {{current.prefix}} </label>
+            <a class="btn btn-danger" ng-click="selectPrefix()">
+                Select
+            </a>
+
+        </div>
+    </div>
+
+    <div layout="row" ng-if="status.selectPrefix">
+        <md-input-container flex="50">
+            <label>Prefix Selection</label>
+            <md-select name="current.prefix" ng-model="current.prefix" ng-change="doneSelectPrefixIFrame()">
+                <md-option ng-value="g[0]" ng-repeat="g in prefixSelections">{{g[1]}}</md-option>
+            </md-select>
+        </md-input-container>
+    </div>
+
+    <div ng-if="current.prefix">
+        <iframe src="/yitong/index.html?siteUrl={{current.cdn}}&service={{current.prefix}}" style="border:none;" height="1024px" width="1024"></iframe>
+    </div>
+</div>
+
