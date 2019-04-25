@@ -4,6 +4,12 @@ app.run(function (editableOptions) {
     editableOptions.theme = 'bs3';
 });
 
+app.config(function ($sceDelegateProvider) {
+    $sceDelegateProvider.resourceUrlWhitelist([
+        '**'
+    ]);
+});
+
 app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$route", "$location", "Upload", function ($scope, $filter, $http, $log, $route, $location, $timeout, Upload) {
 
     $scope.status = { selectPrefix: false };
@@ -11,6 +17,8 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
         row: 0, col: 0, tag: "image", operation: {}
     };
     $scope.metadata = {};
+
+
 
     $scope.hasObject = function (obj) {
         if (obj == null) {
