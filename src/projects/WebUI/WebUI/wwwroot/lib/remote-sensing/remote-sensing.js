@@ -18,7 +18,9 @@ app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", "$ro
     };
     $scope.metadata = {};
 
-
+    $scope.getIframeSrc = function () {
+        return "/yitong/index.html?siteUrl=" + $scope.current.cdn + "&service=" + $scope.current.prefix;
+    };
 
     $scope.hasObject = function (obj) {
         if (obj == null) {
