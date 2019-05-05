@@ -327,5 +327,64 @@ namespace WebUI.Controllers
 
             return Ok();
         }
+
+        // Post: api/Image/UploadSegmentation
+        [HttpPost("UploadJsons", Name = "UploadJsons")]
+        [IgnoreAntiforgeryToken]
+        [AllowAnonymous]
+        public async Task<IActionResult> UploadJsons([FromBody] JObject postdata)
+        {
+            // _logger.LogInformation($"UploadJson: {postdata} ");
+            var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
+            var metadata = await GetMetadata(prefix);
+            var content = JsonUtils.GetJToken("content", postdata) as JArray;
+            if ( !Object.ReferenceEquals(content,null) )
+            {
+                var msg = $"UploadJsons has an empty content JArray";
+                _logger.LogInformation(msg);
+                return Ok(new { error = msg }); ;
+            }
+            var tasks = new List<Task>();
+            var errMsg = "";
+            var cnt = -1;
+            var uploadLength = 0;
+            var uploadFiles = 0; 
+            foreach (var onecontent in content)
+            {
+                var onedata = onecontent as JObject;
+                cnt += 1;
+                if ( !Object.ReferenceEquals(onedata, null))
+                {
+                    errMsg += $"Entry {cnt} is an empty JObject\n";
+                    continue; 
+                }
+                var name = JsonUtils.GetString("name", onedata);
+                var row = JsonUtils.GetType<int>("row", onedata, 0);
+                var col = JsonUtils.GetType<int>("col", onedata, 0);
+                var ret = ValidateName(onedata, metadata, name);
+                if (!Object.ReferenceEquals(ret, null))
+                {
+                    errMsg += $"Failed to validate entry {cnt}, prefix = {prefix}, name = {name}, row = {row}, col = {col}\n";
+                    _logger.LogInformation($"UploadJson is not valid, prefix = {prefix}, name = {name}, row = {row}, col = {col}");
+                    continue;
+                }
+                var data64 = JsonUtils.GetString("data", onedata);
+                data64 = data64.FromJSBase64();
+
+                var container = CloudStorage.GetContainer(null);
+                var dirPath = container.GetDirectoryReference(prefix);
+
+                var dataBytes = Convert.FromBase64String(data64);
+                var dataBlob = dirPath.GetBlockBlobReference(name);
+                tasks.Add(dataBlob.UploadFromByteArrayAsync(dataBytes, 0, dataBytes.Length));
+                uploadFiles++;
+                uploadLength += dataBytes.Length;
+            }
+            await Task.WhenAll(tasks);
+            _logger.LogInformation($"UploadJsons update {uploadFiles} files, total length = {uploadLength}B");
+
+            return Ok();
+        }
+
     }
 }
