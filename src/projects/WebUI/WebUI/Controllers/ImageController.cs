@@ -354,7 +354,7 @@ namespace WebUI.Controllers
             {
                 var onedata = onecontent as JObject;
                 cnt += 1;
-                if ( !Object.ReferenceEquals(onedata, null))
+                if ( Object.ReferenceEquals(onedata, null))
                 {
                     errMsg += $"Entry {cnt} is an empty JObject\n";
                     continue; 
