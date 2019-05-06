@@ -339,7 +339,7 @@ namespace WebUI.Controllers
             var metadata = await GetMetadata(prefix);
             var contentTag = JsonUtils.GetJToken("content", postdata);
             var content = contentTag as JArray;
-            if ( Object.ReferenceEquals(content,null) )
+            if ( Object.ReferenceEquals(content,null) || content.Count==0 )
             {
                 var msg = $"UploadJsons has an empty content JArray, content = {contentTag}";
                 _logger.LogInformation(msg);
@@ -382,9 +382,14 @@ namespace WebUI.Controllers
                 uploadLength += dataBytes.Length;
             }
             await Task.WhenAll(tasks);
-            _logger.LogInformation($"UploadJsons update {uploadFiles} files, total length = {uploadLength}B");
-
-            return Ok();
+            _logger.LogInformation($"UploadJsons update {uploadFiles} files, total length = {uploadLength}B, error = {errMsg}");
+            if ( errMsg.Length==0)
+            { 
+                return Ok();
+            } else
+            {
+                return Ok(new { error = errMsg});
+            }
         }
 
     }
