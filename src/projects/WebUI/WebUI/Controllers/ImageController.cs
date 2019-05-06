@@ -337,10 +337,11 @@ namespace WebUI.Controllers
             // _logger.LogInformation($"UploadJson: {postdata} ");
             var prefix = JsonUtils.GetString(Constants.PrefixEntry, postdata);
             var metadata = await GetMetadata(prefix);
-            var content = JsonUtils.GetJToken("content", postdata) as JArray;
-            if ( !Object.ReferenceEquals(content,null) )
+            var contentTag = JsonUtils.GetJToken("content", postdata);
+            var content = contentTag as JArray;
+            if ( Object.ReferenceEquals(content,null) )
             {
-                var msg = $"UploadJsons has an empty content JArray";
+                var msg = $"UploadJsons has an empty content JArray, content = {contentTag}";
                 _logger.LogInformation(msg);
                 return Ok(new { error = msg }); ;
             }
