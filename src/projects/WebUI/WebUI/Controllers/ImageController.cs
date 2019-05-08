@@ -332,6 +332,7 @@ namespace WebUI.Controllers
         [HttpPost("UploadJsons", Name = "UploadJsons")]
         [IgnoreAntiforgeryToken]
         [AllowAnonymous]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> UploadJsons([FromBody] JObject postdata)
         {
             // _logger.LogInformation($"UploadJson: {postdata} ");
