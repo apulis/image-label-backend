@@ -35,13 +35,13 @@ namespace WebUI.Controllers
 
         // GET: api/Image
         [HttpGet]
-        public async Task<string> Get()
+        public async Task<IActionResult> Get()
         {
             var container = CloudStorage.GetContainer("cdn","private",null,null);
             var dirpath = container.GetDirectoryReference("tasks");
             var blob = dirpath.GetBlockBlobReference("index.json");
             var content =await blob.DownloadTextAsync();
-            return content;
+            return Content(content);
             //return new string[] { "value1", "value2" };
 
         }
