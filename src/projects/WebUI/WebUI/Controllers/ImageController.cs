@@ -30,22 +30,44 @@ namespace WebUI.Controllers
         {
             // _tokenCache = tokenCache;
             _logger = logger.CreateLogger("ImageController");
+
         }
 
         // GET: api/Image
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<string> Get()
         {
-
-            return new string[] { "value1", "value2" };
+            var container = CloudStorage.GetContainer("cdn","private",null,null);
+            var dirpath = container.GetDirectoryReference("tasks");
+            var blob = dirpath.GetBlockBlobReference("index.json");
+            var content =await blob.DownloadTextAsync();
+            return content;
+            //return new string[] { "value1", "value2" };
 
         }
 
-        // GET: api/Image/5
-        [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
+        // get: api/image/5
+        [HttpGet("{task_id}")]
+        public async Task<IActionResult> Get(string task_id)
         {
-            return "value";
+            var container = CloudStorage.GetContainer(null);
+            var dirpath = container.GetDirectoryReference($"tasks/{task_id}");
+            var blob = dirpath.GetBlockBlobReference("list.json");
+            var content = await blob.DownloadTextAsync();
+            return Content(content);
+            //return "value";
+        }
+
+        // GET: api/Image/5
+        [HttpGet("{task_id}/{id}")]
+        public async Task<IActionResult> Get(string task_id, int id)
+        {
+            var container = CloudStorage.GetContainer(null);
+            var dirpath = container.GetDirectoryReference($"tasks/{task_id}/images");
+            var blob = dirpath.GetBlockBlobReference($"{id}.json");
+            var content = await blob.DownloadTextAsyncExceptionNull();
+            return Content(content);
+            //return "value";
         }
 
         // POST: api/Image
@@ -68,9 +90,17 @@ namespace WebUI.Controllers
 
         // GET: api/Image/5
         [HttpGet("GetAllPaths/{prefix}", Name = "GetAllPaths")]
-        public string GetAllPaths(string prefix)
+        public async Task<IActionResult> GetAllPaths(string prefix)
         {
-            return prefix;
+            var container = CloudStorage.GetContainer(null);
+            var dirpath = container.GetDirectoryReference(prefix);
+            var dic =await dirpath.GetAllFiles();
+            var lst = new List<string>();
+            foreach( var pair in dic)
+            {
+                lst.Add(pair.Key);
+            }
+            return Content(lst.ToString(), "application/json");
         }
 
         // GET: api/Image/GetCurrent
