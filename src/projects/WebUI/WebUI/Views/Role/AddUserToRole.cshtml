@@ -1,0 +1,21 @@
+﻿@model WebUI.ViewModels.UserRoleViewModel
+
+@{
+    ViewBag.Title = "添加用户到角色";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-action="AddUserToRole" method="post">
+    <input type="hidden" name="roleId" value="@Model.RoleId" />
+    <div class="form-group row">
+        <label asp-for="Email" class="col-sm-2"></label>
+        <div class="col-sm-10">
+            <input class="form-control" asp-for="Email">
+            <span class="invalid" asp-validation-for="Email"></span>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">添加</button>
+    <a class="btn btn-secondary" asp-action="EditRole" asp-route-id="@Model.RoleId">返回</a>
+</form>

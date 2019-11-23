@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Http
+
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -67,6 +73,17 @@
                             <li><a asp-area="" asp-controller="RemoteSensing" asp-action="EditMap">Edit Map </a></li>
                         </ul>
                     </li>
+                    @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin")){
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                管理<span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="nav-link text-dark" asp-area="" asp-controller="Claim" asp-action="Index">Claim管理</a></li>
+                                <li><a class="nav-link text-dark" asp-area="" asp-controller="Role" asp-action="Index">角色管理</a></li>
+                            </ul>
+                        </li>
+                        }
                 </ul>
                 <partial name="_LoginPartial" />
             </div>

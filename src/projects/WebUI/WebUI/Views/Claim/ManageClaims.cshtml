@@ -1,0 +1,34 @@
+﻿@model WebUI.ViewModels.UserClaimViewModel
+
+@{
+    ViewBag.Title = "编辑用户的Claims";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<table class="table">
+    <thead class="thead-dark">
+    <tr>
+        <th scope="col">Claim名称</th>
+        <th scope="col">操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var claim in Model.claims)
+    {
+        <tr>
+            <td scope="row">@claim</td>
+            <td>
+                <form asp-action="RemoveClaim" asp-route-claim="@claim" asp-route-id="@Model.user_id" method="post" style="white-space: nowrap;">
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('确认删除？')">
+                        删除
+                    </button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<a asp-action="AddClaimToUser" asp-route-id="@Model.user_id" class="btn btn-primary">为用户添加Claim</a>
+<a asp-action="Index" class="btn btn-secondary">返回用户列表</a>

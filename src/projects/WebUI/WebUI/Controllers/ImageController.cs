@@ -9,6 +9,7 @@ using Common.Extensions;
 using Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -25,27 +26,86 @@ namespace WebUI.Controllers
     public class ImageController : ControllerBase
     {
         private readonly ILogger _logger;
+        private readonly UserManager<IdentityUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
 
-        public ImageController(ILoggerFactory logger)
+        public ImageController(ILoggerFactory logger, UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager)
         {
             // _tokenCache = tokenCache;
             _logger = logger.CreateLogger("ImageController");
+            this.userManager = userManager;
+            this.roleManager = roleManager;
         }
 
         // GET: api/Image
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<List<string>> Get()
         {
+            var containerPrivate = CloudStorage.GetContainer("cdn","private",null,null);
 
-            return new string[] { "value1", "value2" };
+            var dirpath = containerPrivate.GetDirectoryReference("tasks");
+            var blob = dirpath.GetBlockBlobReference("index.json");
+            var content =await blob.DownloadGenericObjectAsync();
+            List<string> taskList = new List<string>();
+            var allTask = JsonUtils.GetJToken("tasks", content) as JArray;
+
+            var container = CloudStorage.GetContainer(null);
+            var taskpath = container.GetDirectoryReference("index");
+            var taskBlob = taskpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+            var json = await taskBlob.DownloadGenericObjectAsync();
+            var addAuth = JsonUtils.GetJToken(Constants.JsontagClaim, json);
+            var addAuthObj = addAuth == null ? null : addAuth as JObject;
+            IdentityUser user = await userManager.GetUserAsync(HttpContext.User);
+            if (!Object.ReferenceEquals(addAuthObj, null))
+            {
+                foreach (var pair in addAuthObj)
+                {
+                    if (pair.Key == user.Email)
+                    {
+                        var ClaimArray = pair.Value as JArray;
+                        foreach (var claim in ClaimArray)
+                        {
+                            taskList.Add(claim.ToString());
+                        }
+                    }
+                }
+            }
+            List<string> selfTaskList = new List<string>();
+            foreach (var task in allTask)
+            {
+                var taskObj = task as JObject;
+                if (taskList.Contains(taskObj["name"].ToString()))
+                {
+                    selfTaskList.Add(taskObj["name"].ToString());
+                }
+            }
+            return selfTaskList;
+            //return new string[] { "value1", "value2" };
 
         }
 
-        // GET: api/Image/5
-        [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
+        // get: api/image/5
+        [HttpGet("{task_id}")]
+        public async Task<IActionResult> Get(string task_id)
         {
-            return "value";
+            var container = CloudStorage.GetContainer(null);
+            var dirpath = container.GetDirectoryReference($"tasks/{task_id}");
+            var blob = dirpath.GetBlockBlobReference("list.json");
+            var content = await blob.DownloadTextAsync();
+            return Content(content);
+            //return "value";
+        }
+
+        // GET: api/Image/5
+        [HttpGet("{task_id}/{id}")]
+        public async Task<IActionResult> Get(string task_id, int id)
+        {
+            var container = CloudStorage.GetContainer(null);
+            var dirpath = container.GetDirectoryReference($"tasks/{task_id}/images");
+            var blob = dirpath.GetBlockBlobReference($"{id}.json");
+            var content = await blob.DownloadTextAsyncExceptionNull();
+            return Content(content);
+            //return "value";
         }
 
         // POST: api/Image
@@ -68,9 +128,17 @@ namespace WebUI.Controllers
 
         // GET: api/Image/5
         [HttpGet("GetAllPaths/{prefix}", Name = "GetAllPaths")]
-        public string GetAllPaths(string prefix)
+        public async Task<IActionResult> GetAllPaths(string prefix)
         {
-            return prefix;
+            var container = CloudStorage.GetContainer(null);
+            var dirpath = container.GetDirectoryReference(prefix);
+            var dic =await dirpath.GetAllFiles();
+            var lst = new List<string>();
+            foreach( var pair in dic)
+            {
+                lst.Add(pair.Key);
+            }
+            return Content(lst.ToString(), "application/json");
         }
 
         // GET: api/Image/GetCurrent
