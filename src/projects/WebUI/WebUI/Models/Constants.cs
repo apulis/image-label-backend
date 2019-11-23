@@ -12,6 +12,8 @@ namespace WebUI.Models
         public const string JsontagUser = "User";
         public const string JsontagRole = "Role";
         public const string JsontagAuthorization = "Authorization";
+        public const string JsontagClaim = "Claim";
+        public const string JsontagClaimAllList = "ClaimList";
 
         public static string[] RoleNames = { "Admin", "User", "Guest" };
 

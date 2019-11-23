@@ -1,4 +1,4 @@
-﻿@model Heavy.Web.ViewModels.UserRoleViewModel
+﻿@model WebUI.ViewModels.UserRoleViewModel
 
 @{
     ViewBag.Title = "从角色移除用户";
@@ -9,7 +9,7 @@
 <form asp-action="DeleteUserFromRole" method="post">
     <input type="hidden" name="roleId" value="@Model.RoleId" />
 
-    <select class="form-control" style="width: 300px; display: inline;" asp-for="UserName" asp-items="@(new SelectList(Model.Users))">
+    <select class="form-control" style="width: 300px; display: inline;" asp-for="Email" asp-items="@(new SelectList(Model.Users))">
         <option> -- 请选择一个用户 -- </option>
     </select>
 

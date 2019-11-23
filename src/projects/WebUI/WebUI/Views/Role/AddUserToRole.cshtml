@@ -1,4 +1,4 @@
-﻿@model Heavy.Web.ViewModels.UserRoleViewModel
+﻿@model WebUI.ViewModels.UserRoleViewModel
 
 @{
     ViewBag.Title = "添加用户到角色";
@@ -9,10 +9,10 @@
 <form asp-action="AddUserToRole" method="post">
     <input type="hidden" name="roleId" value="@Model.RoleId" />
     <div class="form-group row">
-        <label asp-for="UserName" class="col-sm-2"></label>
+        <label asp-for="Email" class="col-sm-2"></label>
         <div class="col-sm-10">
-            <input class="form-control" asp-for="UserName">
-            <span class="invalid" asp-validation-for="UserName"></span>
+            <input class="form-control" asp-for="Email">
+            <span class="invalid" asp-validation-for="Email"></span>
         </div>
     </div>
 

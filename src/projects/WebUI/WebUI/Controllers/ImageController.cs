@@ -9,6 +9,7 @@ using Common.Extensions;
 using Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -25,23 +26,60 @@ namespace WebUI.Controllers
     public class ImageController : ControllerBase
     {
         private readonly ILogger _logger;
+        private readonly UserManager<IdentityUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
 
-        public ImageController(ILoggerFactory logger)
+        public ImageController(ILoggerFactory logger, UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager)
         {
             // _tokenCache = tokenCache;
             _logger = logger.CreateLogger("ImageController");
-
+            this.userManager = userManager;
+            this.roleManager = roleManager;
         }
 
         // GET: api/Image
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<List<string>> Get()
         {
-            var container = CloudStorage.GetContainer("cdn","private",null,null);
-            var dirpath = container.GetDirectoryReference("tasks");
+            var containerPrivate = CloudStorage.GetContainer("cdn","private",null,null);
+
+            var dirpath = containerPrivate.GetDirectoryReference("tasks");
             var blob = dirpath.GetBlockBlobReference("index.json");
-            var content =await blob.DownloadTextAsync();
-            return Content(content);
+            var content =await blob.DownloadGenericObjectAsync();
+            List<string> taskList = new List<string>();
+            var allTask = JsonUtils.GetJToken("tasks", content) as JArray;
+
+            var container = CloudStorage.GetContainer(null);
+            var taskpath = container.GetDirectoryReference("index");
+            var taskBlob = taskpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+            var json = await taskBlob.DownloadGenericObjectAsync();
+            var addAuth = JsonUtils.GetJToken(Constants.JsontagClaim, json);
+            var addAuthObj = addAuth == null ? null : addAuth as JObject;
+            IdentityUser user = await userManager.GetUserAsync(HttpContext.User);
+            if (!Object.ReferenceEquals(addAuthObj, null))
+            {
+                foreach (var pair in addAuthObj)
+                {
+                    if (pair.Key == user.Email)
+                    {
+                        var ClaimArray = pair.Value as JArray;
+                        foreach (var claim in ClaimArray)
+                        {
+                            taskList.Add(claim.ToString());
+                        }
+                    }
+                }
+            }
+            List<string> selfTaskList = new List<string>();
+            foreach (var task in allTask)
+            {
+                var taskObj = task as JObject;
+                if (taskList.Contains(taskObj["name"].ToString()))
+                {
+                    selfTaskList.Add(taskObj["name"].ToString());
+                }
+            }
+            return selfTaskList;
             //return new string[] { "value1", "value2" };
 
         }

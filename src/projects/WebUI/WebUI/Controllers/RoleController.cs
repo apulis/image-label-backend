@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using Heavy.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +11,9 @@ using Utils.Json;
 using WebUI.Azure;
 using WebUI.Models;
 using WebUI.Utils;
+using WebUI.ViewModels;
 
-namespace Heavy.Web.Controllers
+namespace WebUI.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class RoleController : Controller
@@ -186,12 +186,12 @@ namespace Heavy.Web.Controllers
                     var peopleArray = pair.Value as JArray;
                     foreach (var onepeople in peopleArray)
                     {
-                        if (String.Compare(onepeople.ToString(), userRoleViewModel.UserName, true) == 0)
+                        if (String.Compare(onepeople.ToString(), userRoleViewModel.Email, true) == 0)
                         {
                             return RedirectToAction("EditRole", new { id = role.Id });
                         }
                     }
-                    peopleArray.Add(userRoleViewModel.UserName);
+                    peopleArray.Add(userRoleViewModel.Email);
                     await authBlob.UploadGenericObjectAsync(json);
                 }
             }
@@ -256,7 +256,7 @@ namespace Heavy.Web.Controllers
                     var peopleArray = pair.Value as JArray;
                     foreach (var onepeople in peopleArray)
                     {
-                        if (String.Compare(onepeople.ToString(), userRoleViewModel.UserName, true) == 0)
+                        if (String.Compare(onepeople.ToString(), userRoleViewModel.Email, true) == 0)
                         {
                             peopleArray.Remove(onepeople);
                             await authBlob.UploadGenericObjectAsync(json);

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Heavy.Web.Controllers;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using WebUI.Controllers;
 
-namespace Heavy.Web.ViewModels
+namespace WebUI.ViewModels
 {
     public class RoleAddViewModel
     {

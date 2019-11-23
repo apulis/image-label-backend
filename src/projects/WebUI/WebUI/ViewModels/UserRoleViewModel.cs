@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using System.Collections.Generic;
 
-namespace Heavy.Web.ViewModels
+namespace WebUI.ViewModels
 {
     public class UserRoleViewModel
     {
@@ -13,7 +9,7 @@ namespace Heavy.Web.ViewModels
             Users = new List<string>();
         }
 
-        public string UserName { get; set; }
+        public string Email { get; set; }
         public string RoleId { get; set; }
 
         public List<string> Users { get; set; }
