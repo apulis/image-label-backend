@@ -43,7 +43,7 @@ namespace WebUI.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            await GetRole(); 
+            await GetRole();
             return View();
         }
 

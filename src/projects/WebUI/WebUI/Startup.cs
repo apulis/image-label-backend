@@ -38,7 +38,10 @@ namespace WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSession();
+            services.AddSession(o =>
+            {
+                o.Cookie.IsEssential = true;
+            });
 
             var dbFile = Configuration["Data:FileName"];
             var dbPath = Configuration["Data:Path"];
@@ -93,6 +96,11 @@ namespace WebUI
                                  .RequireAuthenticatedUser()
                                  .Build();
                 config.Filters.Add(new AuthorizeFilter(policy));
+                config.CacheProfiles.Add("Default", new CacheProfile
+                {
+                    Location = ResponseCacheLocation.Client,
+                    Duration = 60*3, 
+                });
             })
                 .AddRazorPagesOptions(options =>
                 {

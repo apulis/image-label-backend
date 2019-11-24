@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Azure;
@@ -18,8 +21,7 @@ using IdentityUser = Microsoft.AspNetCore.Identity.IdentityUser;
 
 namespace WebUI.Controllers
 {
-    //[Authorize(Roles = "Administrators")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     public class ClaimController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
@@ -28,7 +30,7 @@ namespace WebUI.Controllers
         {
             _userManager = userManager;
         }
-
+        
         // [RequireHttps]
         public async Task<IActionResult> Index()
         {
@@ -60,49 +62,63 @@ namespace WebUI.Controllers
 
         public async Task<IActionResult> ManageClaims(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            var configAuthorization = Config.App.GetJToken(Constants.JsontagClaim) as JObject;
-            var container = CloudStorage.GetContainer(null);
-            var dirpath = container.GetDirectoryReference("index");
-            var configBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
-            var json = await configBlob.DownloadGenericObjectAsync();
-            var addClaim = JsonUtils.GetJToken(Constants.JsontagClaim, json);
-            var addClaimObj = addClaim == null ? null : addClaim as JObject;
+            List<string> claimList = new List<string>();
             var userClaimViewModel = new UserClaimViewModel
             {
                 user_id = id,
                 claims = new List<string>()
             };
-
-            if (!Object.ReferenceEquals(addClaimObj, null))
+            byte[] encodedClaimListFromSession = HttpContext.Session.Get("user_claim_list");
+            if (encodedClaimListFromSession != null)
             {
-                addClaimObj.Merge(configAuthorization, new JsonMergeSettings
-                {
-                    MergeArrayHandling = MergeArrayHandling.Union
-                });
+                string deserializedString = Encoding.UTF8.GetString(encodedClaimListFromSession);
+                claimList = JsonConvert.DeserializeObject<List<string>>(deserializedString);
             }
-            if (!Object.ReferenceEquals(addClaimObj, null))
+            else
             {
-                foreach (var pair in addClaimObj)
+                var user = await _userManager.FindByIdAsync(id);
+                var configAuthorization = Config.App.GetJToken(Constants.JsontagClaim) as JObject;
+                var container = CloudStorage.GetContainer(null);
+                var dirpath = container.GetDirectoryReference("index");
+                var configBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+                var json = await configBlob.DownloadGenericObjectAsync();
+                var addClaim = JsonUtils.GetJToken(Constants.JsontagClaim, json);
+                var addClaimObj = addClaim == null ? null : addClaim as JObject;
+                if (!Object.ReferenceEquals(addClaimObj, null))
                 {
-                    if (pair.Key == user.Email)
+                    addClaimObj.Merge(configAuthorization, new JsonMergeSettings
                     {
-                        var claimsArray = pair.Value as JArray;
-                        foreach (var oneclaim in claimsArray)
-                        {
-                            userClaimViewModel.claims.Add(oneclaim.ToString());
-                        }
-                    }
-
+                        MergeArrayHandling = MergeArrayHandling.Union
+                    });
                 }
-            }
+                if (!Object.ReferenceEquals(addClaimObj, null))
+                {
+                    foreach (var pair in addClaimObj)
+                    {
+                        if (pair.Key == user.Email)
+                        {
+                            var claimsArray = pair.Value as JArray;
+                            foreach (var oneclaim in claimsArray)
+                            {
+                                claimList.Add(oneclaim.ToString());
+                            }
+                        }
 
+                    }
+                }
+                var serializedString = JsonConvert.SerializeObject(claimList);
+                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                HttpContext.Session.Set("user_claim_list", encodedUserList);
+            }
+            userClaimViewModel.claims = claimList;
             return View(userClaimViewModel);
         }
 
         [HttpPost]
         public async Task<IActionResult> RemoveClaim(string id, string claim)
         {
+            List<string> claimList = new List<string>();
+            List<string> claims = new List<string>();
             var user = await _userManager.FindByIdAsync(id);
             var container = CloudStorage.GetContainer(null);
             var dirpath = container.GetDirectoryReference("index");
@@ -128,6 +144,26 @@ namespace WebUI.Controllers
                             {
                                 claimsArray.Remove(oneclaim);
                                 await configBlob.UploadGenericObjectAsync(json);
+                                byte[] encodedUserListFromSession = HttpContext.Session.Get("user_claim_list");
+                                if (encodedUserListFromSession != null)
+                                {
+                                    string deserializedString = Encoding.UTF8.GetString(encodedUserListFromSession);
+                                    claimList = JsonConvert.DeserializeObject<List<string>>(deserializedString);
+                                    claimList.Remove(oneclaim.ToString());
+                                    var serializedString = JsonConvert.SerializeObject(claimList);
+                                    byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                                    HttpContext.Session.Set("user_claim_list", encodedUserList);
+                                }
+                                byte[] encodedAllClaimListFromSession = HttpContext.Session.Get("all_claim_list");
+                                if (encodedAllClaimListFromSession != null)
+                                {
+                                    string deserializedString = Encoding.UTF8.GetString(encodedAllClaimListFromSession);
+                                    claims = JsonConvert.DeserializeObject<List<string>>(deserializedString);
+                                    claims.Add(claim);
+                                    var serializedString = JsonConvert.SerializeObject(claims);
+                                    byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                                    HttpContext.Session.Set("all_claim_list", encodedUserList);
+                                }
                                 break;
                             }
                         }
@@ -173,47 +209,69 @@ namespace WebUI.Controllers
 
                 }
             }
-
+            List<string> claims = new List<string>();
             if (!flag)
             {
                 addClaimObj.Add(addClaimViewModel.ClaimName);
                 await configBlob.UploadGenericObjectAsync(json);
+                byte[] encodedUserListFromSession = HttpContext.Session.Get("all_claim_list");
+                if (encodedUserListFromSession != null)
+                {
+                    string deserializedString = Encoding.UTF8.GetString(encodedUserListFromSession);
+                    claims = JsonConvert.DeserializeObject<List<string>>(deserializedString);
+                    claims.Add(addClaimViewModel.ClaimName);
+                    var serializedString = JsonConvert.SerializeObject(claims);
+                    byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                    HttpContext.Session.Set("role_user_list_only_blob", encodedUserList);
+                }
             }
 
             return RedirectToAction("Index");
         }
         public async Task<IActionResult> AddClaimTouser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            var container = CloudStorage.GetContainer(null);
-            var dirpath = container.GetDirectoryReference("index");
-            var authBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
-            var json = await authBlob.DownloadGenericObjectAsync();
-            var addClaim = JsonUtils.GetJToken(Constants.JsontagClaim, json);
-            var addClaimList = JsonUtils.GetJToken(Constants.JsontagClaimAllList, json);
-            var addClaimObj = addClaim == null ? null : addClaim as JObject;
-            var addClaimListObj = addClaimList == null ? null : addClaimList as JArray;
             List<string> claims = new List<string>();
-            foreach (var one in addClaimListObj)
+            byte[] encodedUserListFromSession = HttpContext.Session.Get("all_claim_list");
+            if (encodedUserListFromSession != null)
             {
-                claims.Add(one.ToString());
+                string deserializedString = Encoding.UTF8.GetString(encodedUserListFromSession);
+                claims = JsonConvert.DeserializeObject<List<string>>(deserializedString);
             }
-            if (!Object.ReferenceEquals(addClaimObj, null))
+            else
             {
-                foreach (var pair in addClaimObj)
+                var user = await _userManager.FindByIdAsync(id);
+                var container = CloudStorage.GetContainer(null);
+                var dirpath = container.GetDirectoryReference("index");
+                var authBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+                var json = await authBlob.DownloadGenericObjectAsync();
+                var addClaim = JsonUtils.GetJToken(Constants.JsontagClaim, json);
+                var addClaimList = JsonUtils.GetJToken(Constants.JsontagClaimAllList, json);
+                var addClaimObj = addClaim == null ? null : addClaim as JObject;
+                var addClaimListObj = addClaimList == null ? null : addClaimList as JArray;
+                foreach (var one in addClaimListObj)
                 {
-                    if (pair.Key == user.Email)
+                    claims.Add(one.ToString());
+                }
+                if (!Object.ReferenceEquals(addClaimObj, null))
+                {
+                    foreach (var pair in addClaimObj)
                     {
-                        var claimList = pair.Value as JArray;
-                        foreach (var one in claimList)
+                        if (pair.Key == user.Email)
                         {
-                            if (claims.Contains(one.ToString()))
+                            var claimList = pair.Value as JArray;
+                            foreach (var one in claimList)
                             {
-                                claims.Remove(one.ToString());
+                                if (claims.Contains(one.ToString()))
+                                {
+                                    claims.Remove(one.ToString());
+                                }
                             }
                         }
                     }
                 }
+                var serializedString = JsonConvert.SerializeObject(claims);
+                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                HttpContext.Session.Set("all_claim_list", encodedUserList);
             }
             var vm = new AddClaimViewModel
             {
@@ -233,6 +291,8 @@ namespace WebUI.Controllers
             var configBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var addAuth = JsonUtils.GetJToken(Constants.JsontagClaim, json);
+            List<string> claims = new List<string>();
+            List<string> claimList = new List<string>();
             if (addAuth == null)
             {
                 json.Add(Constants.JsontagClaim, new JObject());
@@ -253,6 +313,27 @@ namespace WebUI.Controllers
                             var peopleArray = pair.Value as JArray;
                             peopleArray.Add(addClaimViewModel.ClaimName);
                             await configBlob.UploadGenericObjectAsync(json);
+                            byte[] encodedAllClaimListFromSession = HttpContext.Session.Get("all_claim_list");
+                            byte[] encodedUserClaimListFromSession = HttpContext.Session.Get("user_claim_list");
+                            if (encodedAllClaimListFromSession != null)
+                            {
+                                string deserializedString = Encoding.UTF8.GetString(encodedAllClaimListFromSession);
+                                claims = JsonConvert.DeserializeObject<List<string>>(deserializedString);
+                                claims.Remove(addClaimViewModel.ClaimName);
+                                var serializedString = JsonConvert.SerializeObject(claims);
+                                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                                HttpContext.Session.Set("all_claim_list", encodedUserList);
+                            }
+                            if (encodedUserClaimListFromSession != null)
+                            {
+                                string deserializedString = Encoding.UTF8.GetString(encodedUserClaimListFromSession);
+                                claimList = JsonConvert.DeserializeObject<List<string>>(deserializedString);
+                                claimList.Add(addClaimViewModel.ClaimName);
+                                var serializedString = JsonConvert.SerializeObject(claimList);
+                                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
+                                HttpContext.Session.Set("user_claim_list", encodedUserList);
+                            }
+                            break;
                         }
                     }
                 }

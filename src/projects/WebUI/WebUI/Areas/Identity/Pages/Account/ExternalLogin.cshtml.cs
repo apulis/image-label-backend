@@ -120,6 +120,13 @@ namespace WebUI.Areas.Identity.Pages.Account
                     Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                 };
             }
+            else if(info.Principal.HasClaim(c => c.Type == ClaimTypes.Name))
+            {
+                Input = new InputModel
+                {
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Name)
+                };
+            }
             // Get the information about the user from the external login provider
 
             var result = new IdentityResult();

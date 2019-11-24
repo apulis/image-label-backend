@@ -39,6 +39,7 @@ namespace WebUI.Controllers
 
         // GET: api/Image
         [HttpGet]
+        [ResponseCache(CacheProfileName = "Default")]
         public async Task<List<string>> Get()
         {
             var containerPrivate = CloudStorage.GetContainer("cdn","private",null,null);
