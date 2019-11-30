@@ -7,14 +7,7 @@
 <h2>@ViewBag.Title</h2>
 
 <form method="post">
-
-    <div class="form-group row">
-        <label asp-for="Id" class="col-sm-2"></label>
-        <div class="col-sm-10">
-            <input class="form-control" asp-for="Id" readonly>
-            <span class="invalid" asp-validation-for="Id"></span>
-        </div>
-    </div>
+    <input class="form-control" asp-for="Id" type="hidden">
 
     <div class="form-group row">
         <label asp-for="RoleName" class="col-sm-2"></label>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Common.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,7 @@ using WebUI.Azure;
 using WebUI.Models;
 using WebUI.Utils;
 using WebUI.ViewModels;
+using AzureService = WebUI.Services.AzureService;
 
 namespace WebUI.Controllers
 {
@@ -84,19 +86,17 @@ namespace WebUI.Controllers
                 RoleName = role.Name,
                 Users = new List<string>()
             };
-            List<string> userList = new List<string>(); 
-            byte[] encodedUserListFromSession = HttpContext.Session.Get("role_user_list");
-            if (encodedUserListFromSession != null)
+            List<string> userList = new List<string>();
+
+            var re = SessionOps.GetSessionList<string>(HttpContext.Session.Get($"role_{id}_user_list"));
+            if (re != null)
             {
-                string serializedString = Encoding.UTF8.GetString(encodedUserListFromSession);
-                userList = JsonConvert.DeserializeObject<List<string>>(serializedString);
+                userList = re;
             }
             else
             {
                 var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
-                var container = CloudStorage.GetContainer(null);
-                var dirpath = container.GetDirectoryReference("index");
-                var authBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+                var authBlob = AzureService.GetBlob(null, "index", WebUIConfig.AppInfoConfigFile);
                 var json = await authBlob.DownloadGenericObjectAsync();
                 var addAuth = JsonUtils.GetJToken(Constants.JsontagAuthorization, json);
                 var addAuthObj = addAuth == null ? null : addAuth as JObject;
@@ -121,10 +121,7 @@ namespace WebUI.Controllers
                         }
                     }
                 }
-                var serializedString = JsonConvert.SerializeObject(userList);
-                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
-                HttpContext.Session.Set("role_user_list", encodedUserList);
-
+                SessionOps.SetSession($"role_{id}_user_list", userList,HttpContext.Session);
             }
             roleEditViewModel.Users = userList;
             return View(roleEditViewModel);
@@ -191,13 +188,15 @@ namespace WebUI.Controllers
         public async Task<IActionResult> AddUserToRole(UserRoleViewModel userRoleViewModel)
         {
             var role = await _roleManager.FindByIdAsync(userRoleViewModel.RoleId);
-            var container = CloudStorage.GetContainer(null);
-            var dirpath = container.GetDirectoryReference("index");
-            var authBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+            var user =await _userManager.FindByEmailAsync(userRoleViewModel.Email);
+            if (user == null)
+            {
+
+            }
+            var authBlob = AzureService.GetBlob(null, "index", WebUIConfig.AppInfoConfigFile);
             var json = await authBlob.DownloadGenericObjectAsync();
             var addAuth = JsonUtils.GetJToken(Constants.JsontagAuthorization, json);
             var addAuthObj = addAuth == null ? null : addAuth as JObject;
-            List<string> userList = new List<string>();
             foreach (var pair in addAuthObj)
             {
                 if (pair.Key == role.Name)
@@ -209,13 +208,12 @@ namespace WebUI.Controllers
                         {
                             return RedirectToAction("EditRole", new { id = role.Id });
                         }
-                        userList.Add(onepeople.ToString());
                     }
+                    await _userManager.AddToRoleAsync(user, role.Name);
                     peopleArray.Add(userRoleViewModel.Email);
-                    userList.Add(userRoleViewModel.Email);
-                    var serializedString = JsonConvert.SerializeObject(userList);
-                    byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
-                    HttpContext.Session.Set("role_user_list", encodedUserList);
+                    SessionOps.AddSession<string>($"role_{userRoleViewModel.RoleId}_user_list", userRoleViewModel.Email,
+                        HttpContext.Session.Get($"role_{userRoleViewModel.RoleId}_user_list"),
+                        HttpContext.Session);
                     await authBlob.UploadGenericObjectAsync(json);
                 }
             }
@@ -237,17 +235,14 @@ namespace WebUI.Controllers
             };
 
             List<string> userList = new List<string>();
-            byte[] encodedUserListFromSession = HttpContext.Session.Get("role_user_list");
-            if (encodedUserListFromSession != null)
+            var re = SessionOps.GetSessionList<string>(HttpContext.Session.Get($"role_{roleId}_user_list"));
+            if (re != null)
             {
-                string serializedString = Encoding.UTF8.GetString(encodedUserListFromSession);
-                userList = JsonConvert.DeserializeObject<List<string>>(serializedString);
+                userList = re;
             }
             else
             {
-                var container = CloudStorage.GetContainer(null);
-                var dirpath = container.GetDirectoryReference("index");
-                var authBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+                var authBlob = AzureService.GetBlob(null, "index", WebUIConfig.AppInfoConfigFile);
                 var json = await authBlob.DownloadGenericObjectAsync();
                 var addAuth = JsonUtils.GetJToken(Constants.JsontagAuthorization, json);
                 var addAuthObj = addAuth == null ? null : addAuth as JObject;
@@ -266,9 +261,7 @@ namespace WebUI.Controllers
                         }
                     }
                 }
-                var serializedString = JsonConvert.SerializeObject(userList);
-                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
-                HttpContext.Session.Set("role_user_list", encodedUserList);
+                SessionOps.SetSession($"role_{roleId}_user_list", userList,HttpContext.Session);
             }
             vm.Users = userList;
             return View(vm);
@@ -279,10 +272,7 @@ namespace WebUI.Controllers
         public async Task<IActionResult> DeleteUserFromRole(UserRoleViewModel userRoleViewModel)
         {
             var role = await _roleManager.FindByIdAsync(userRoleViewModel.RoleId);
-            var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
-            var container = CloudStorage.GetContainer(null);
-            var dirpath = container.GetDirectoryReference("index");
-            var authBlob = dirpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+            var authBlob = AzureService.GetBlob(null, "index", WebUIConfig.AppInfoConfigFile);
             var json = await authBlob.DownloadGenericObjectAsync();
             var addAuth = JsonUtils.GetJToken(Constants.JsontagAuthorization, json);
             var addAuthObj = addAuth == null ? null : addAuth as JObject;
@@ -296,18 +286,16 @@ namespace WebUI.Controllers
                     {
                         if (String.Compare(onepeople.ToString(), userRoleViewModel.Email, true) == 0)
                         {
+                            var user = await _userManager.FindByEmailAsync(userRoleViewModel.Email);
+                            if (user!=null)
+                            {
+                                await _userManager.RemoveFromRoleAsync(user, role.Name);
+                            }
                             peopleArray.Remove(onepeople);
                             await authBlob.UploadGenericObjectAsync(json);
-                            byte[] encodedUserListFromSession = HttpContext.Session.Get("role_user_list");
-                            if (encodedUserListFromSession != null)
-                            {
-                                string deserializedString = Encoding.UTF8.GetString(encodedUserListFromSession);
-                                userList = JsonConvert.DeserializeObject<List<string>>(deserializedString);
-                                userList.Remove(onepeople.ToString());
-                                var serializedString = JsonConvert.SerializeObject(userList);
-                                byte[] encodedUserList = Encoding.UTF8.GetBytes(serializedString);
-                                HttpContext.Session.Set("role_user_list", encodedUserList);
-                            }
+                            SessionOps.RemoveSession<string>($"role_{userRoleViewModel.RoleId}_user_list", onepeople.ToString(),
+                                HttpContext.Session.Get($"role_{userRoleViewModel.RoleId}_user_list"),
+                                HttpContext.Session);
                             break;
                         }
                     }

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Utils.Json;
 using WebUI.Azure;
 using WebUI.Utils;
+using Common.Utils;
+using AzureService = WebUI.Services.AzureService;
 
 namespace WebUI.Models
 {
@@ -16,10 +18,7 @@ namespace WebUI.Models
         public async Task<string> FindRole( IdentityUser user)
         {
             var configAuthorization = Config.App.GetJToken(Constants.JsontagAuthorization) as JObject;
-            // Additional authentication from cloud
-            var container = CloudStorage.GetContainer(null);
-            var dirPath = container.GetDirectoryReference("index");
-            var authBlob = dirPath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
+            var authBlob = AzureService.GetBlob(null, "index", WebUIConfig.AppInfoConfigFile);
             var json = await authBlob.DownloadGenericObjectAsync();
             var addAuth = JsonUtils.GetJToken(Constants.JsontagAuthorization, json);
             var addAuthObj = addAuth == null ? null : addAuth as JObject; 
@@ -30,7 +29,7 @@ namespace WebUI.Models
                     MergeArrayHandling = MergeArrayHandling.Union
                 });
             }
-            if ( !Object.ReferenceEquals(configAuthorization, null) )
+            if ( !Object.ReferenceEquals(configAuthorization, null))
             {
                 // Console.WriteLine($"Check Authorization of {user.Email} against {configAuthorization}");
                 foreach( var pair in configAuthorization)

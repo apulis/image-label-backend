@@ -73,15 +73,18 @@
                             <li><a asp-area="" asp-controller="RemoteSensing" asp-action="EditMap">Edit Map </a></li>
                         </ul>
                     </li>
-                    <li class="dropdown" is-admin='(SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))'>
+
+                    <li class="dropdown" condition='(SignInManager.IsSignedIn(User) && (User.IsInRole("Admin")||User.IsInRole("User")))'>
                         <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            管理<span class="caret"></span>
+                            Manage<span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Claim" asp-action="Index">Claim管理</a></li>
-                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Role" asp-action="Index">角色管理</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Index" condition='User.IsInRole("Admin")'>User Manage</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Index" condition='(User.IsInRole("Admin")||User.IsInRole("User"))'>Account Manage</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Role" asp-action="Index" condition='User.IsInRole("Admin")'>Role Manage</a></li>
                         </ul>
                     </li>
+
                 </ul>
                 <partial name="_LoginPartial" />
             </div>

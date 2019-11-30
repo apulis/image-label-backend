@@ -13,7 +13,7 @@ namespace Utils.Json
         public static JToken GetJToken(string entryname, JToken token)
         {
             if (String.IsNullOrEmpty(entryname))
-                return token;
+                return null;
             else
             {
                 if (Object.ReferenceEquals(token, null))

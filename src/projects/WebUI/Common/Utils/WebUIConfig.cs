@@ -16,6 +16,8 @@ namespace WebUI.Models
         public const string AppInfoConfigFile = "configApp.json";
         public const string OrderConfigFile = "configOrder.json";
         public static string _configFolder = "config";
+        public static string mapFile = "mapping.json";
+        public static string membershipFile = "membership.json";
 
         public static string ConfigDirectory {
             get

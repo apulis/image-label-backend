@@ -43,9 +43,10 @@ namespace WebUI.Areas.Identity.Pages.Account
 
         public class InputModel
         {
-            [Required]
             [EmailAddress]
             public string Email { get; set; }
+
+            public string Name { get; set; }
         }
 
         public IActionResult OnGetAsync()
@@ -117,14 +118,16 @@ namespace WebUI.Areas.Identity.Pages.Account
             {
                 Input = new InputModel
                 {
-                    Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Email),
+                    Name = info.Principal.FindFirstValue(ClaimTypes.Name)
                 };
             }
             else if(info.Principal.HasClaim(c => c.Type == ClaimTypes.Name))
             {
                 Input = new InputModel
                 {
-                    Email = info.Principal.FindFirstValue(ClaimTypes.Name)
+                    Name = info.Principal.FindFirstValue(ClaimTypes.Name),
+                    Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                 };
             }
             // Get the information about the user from the external login provider
@@ -132,19 +135,19 @@ namespace WebUI.Areas.Identity.Pages.Account
             var result = new IdentityResult();
             if (ModelState.IsValid)
             {
-                var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
+                var user = new IdentityUser { UserName = Input.Name, Email = Input.Email };
                 
-                if (!String.IsNullOrEmpty(Input.Email))
+                //if (!String.IsNullOrEmpty(Input.Email))
                 {
                     // Find roles 
                     var role = await RoleManager.Current.FindRole(user);
-                    if (String.IsNullOrEmpty(role))
-                    {
-                        ModelState.AddModelError(Constants.JsontagAuthorization, "The user is unauthorized");
-                    }
-                    else {
+                    //if (String.IsNullOrEmpty(role))
+                    //{
+                    //    ModelState.AddModelError(Constants.JsontagAuthorization, "The user is unauthorized");
+                    //}
+                    //else {
 
-                        if (bCreate)
+                    if (bCreate)
                         {
                             _logger.LogInformation($"Create user: {user}");
                             result = await _userManager.CreateAsync(user);
@@ -164,17 +167,26 @@ namespace WebUI.Areas.Identity.Pages.Account
 
                             }
                             _logger.LogInformation($"Add role \"{role}\" to {user}");
-                            await _userManager.AddToRoleAsync(user, role);
+                            if (role != null)
+                            {
+                                await _userManager.AddToRoleAsync(user, role);
+                            }
+                            
                         }
                         _logger.LogInformation($"User role is set to {role}");
-                        HttpContext.Session.SetString(Constants.JsontagRole, role);
+                        if (role != null)
+                        {
+                            HttpContext.Session.SetString(Constants.JsontagRole, role);
+                        }
+                        
 
                         return Redirect(returnUrl);
-                    }
-                } else
-                {
-                    ModelState.AddModelError("Identity", "Unable to parse the identity of this user.");
-                }
+                    //}
+                } 
+                //else
+                //{
+                //    ModelState.AddModelError("Identity", "Unable to parse the identity of this user.");
+                //}
                  
                 foreach (var error in result.Errors)
                 {

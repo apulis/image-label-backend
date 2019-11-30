@@ -6,6 +6,7 @@ namespace WebUI.ViewModels
     {
         public string user_id { get; set; }
         public string ClaimName { get; set; }
-        public List<string> claims { get; set; }
+        public string accountId { get; set; }
+        public List<UserClaimViewModel> claims { get; set; }
     }
 }

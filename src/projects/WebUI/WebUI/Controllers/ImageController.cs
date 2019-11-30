@@ -1,118 +1,103 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Common.Extensions;
 using Common.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Azure;
 using WebUI.Models;
+using WebUI.Services;
 
 
 namespace WebUI.Controllers
 {
-    [Authorize(Roles = "Admin,User")]
-    [Route("api/[controller]")]
+    //[Authorize(Roles = "Admin,User")]
+    [Route("api/tasks")]
     [ApiController]
+    [EnableCors("dev-use")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ImageController : ControllerBase
     {
         private readonly ILogger _logger;
         private readonly UserManager<IdentityUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
 
-        public ImageController(ILoggerFactory logger, UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager)
+        public ImageController(ILoggerFactory logger, UserManager<IdentityUser> userManager,RoleManager<IdentityRole> roleManager,SignInManager<IdentityUser> signInManager)
         {
             // _tokenCache = tokenCache;
             _logger = logger.CreateLogger("ImageController");
             this.userManager = userManager;
             this.roleManager = roleManager;
+            _signInManager = signInManager;
         }
 
         // GET: api/Image
         [HttpGet]
-        [ResponseCache(CacheProfileName = "Default")]
-        public async Task<List<string>> Get()
+        public async Task<IActionResult> Get()
         {
-            var containerPrivate = CloudStorage.GetContainer("cdn","private",null,null);
-
-            var dirpath = containerPrivate.GetDirectoryReference("tasks");
-            var blob = dirpath.GetBlockBlobReference("index.json");
-            var content =await blob.DownloadGenericObjectAsync();
-            List<string> taskList = new List<string>();
-            var allTask = JsonUtils.GetJToken("tasks", content) as JArray;
-
-            var container = CloudStorage.GetContainer(null);
-            var taskpath = container.GetDirectoryReference("index");
-            var taskBlob = taskpath.GetBlockBlobReference(WebUIConfig.AppInfoConfigFile);
-            var json = await taskBlob.DownloadGenericObjectAsync();
-            var addAuth = JsonUtils.GetJToken(Constants.JsontagClaim, json);
-            var addAuthObj = addAuth == null ? null : addAuth as JObject;
-            IdentityUser user = await userManager.GetUserAsync(HttpContext.User);
-            if (!Object.ReferenceEquals(addAuthObj, null))
-            {
-                foreach (var pair in addAuthObj)
-                {
-                    if (pair.Key == user.Email)
-                    {
-                        var ClaimArray = pair.Value as JArray;
-                        foreach (var claim in ClaimArray)
-                        {
-                            taskList.Add(claim.ToString());
-                        }
-                    }
-                }
-            }
-            List<string> selfTaskList = new List<string>();
-            foreach (var task in allTask)
-            {
-                var taskObj = task as JObject;
-                if (taskList.Contains(taskObj["name"].ToString()))
-                {
-                    selfTaskList.Add(taskObj["name"].ToString());
-                }
-            }
-            return selfTaskList;
-            //return new string[] { "value1", "value2" };
-
+            var userId = HttpContext.User.Identity.Name;
+            var tasks = await AzureService.FindUserTasks(userId, HttpContext.Session);
+            return Content(tasks.ToString());
         }
 
         // get: api/image/5
         [HttpGet("{task_id}")]
         public async Task<IActionResult> Get(string task_id)
         {
-            var container = CloudStorage.GetContainer(null);
-            var dirpath = container.GetDirectoryReference($"tasks/{task_id}");
-            var blob = dirpath.GetBlockBlobReference("list.json");
-            var content = await blob.DownloadTextAsync();
-            return Content(content);
-            //return "value";
+            var userId = HttpContext.User.Identity.Name;
+            var content =await AzureService.FindUserOneTaskInfo(userId, HttpContext.Session, task_id);
+            return Content(content.ToString());
         }
 
         // GET: api/Image/5
         [HttpGet("{task_id}/{id}")]
         public async Task<IActionResult> Get(string task_id, int id)
         {
-            var container = CloudStorage.GetContainer(null);
-            var dirpath = container.GetDirectoryReference($"tasks/{task_id}/images");
-            var blob = dirpath.GetBlockBlobReference($"{id}.json");
-            var content = await blob.DownloadTextAsyncExceptionNull();
-            return Content(content);
-            //return "value";
+            var userId = HttpContext.User.Identity.Name;
+            var content = new JObject();
+            if (await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id))
+            {
+                var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
+                var json = await blob.DownloadGenericObjectAsync();
+                if (json != null)
+                {
+                    content = json;
+                }
+            }
+            return Content(content.ToString());
         }
 
         // POST: api/Image
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpPost("{task_id}/{id}")]
+        public async Task<bool> Post(string task_id, int id,[FromBody] string value)
         {
+            var userId = HttpContext.User.Identity.Name;
+            if (await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id))
+            {
+                var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
+                var json = JsonConvert.DeserializeObject<JObject>(value);
+                //await blob.UploadGenericObjectAsync(json);
+                return true;
+            }
+            return false;
         }
 
         // PUT: api/Image/5
