@@ -1,0 +1,36 @@
+﻿@model WebUI.ViewModels.DataSetViewModel
+
+@{
+    ViewBag.Title = "编辑dataSets的用户";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<table class="table">
+    <thead class="thead-dark">
+    <tr>
+        <th scope="col">用户名称</th>
+        <th scope="col">操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model.Users)
+    {
+        <tr>
+            <td scope="row">@user</td>
+            <td>
+                <form asp-action="RemoveUser" asp-route-userId="@user" asp-route-id="@Model.GUid" asp-route-dataSetId="@Model.dataSetId"
+                      method="post" style="white-space: nowrap;">
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('确认删除？')">
+                        删除
+                    </button>
+                </form>
+
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<a asp-action="AddUserToDataSet" asp-route-id="@Model.GUid" asp-route-dataSetId="@Model.dataSetId" class="btn btn-primary">为DataSet添加用户</a>
+<a asp-action="ManageAccount" asp-route-id="@Model.GUid" class="btn btn-secondary">返回DataSet列表</a>

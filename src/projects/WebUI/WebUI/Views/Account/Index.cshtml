@@ -1,0 +1,36 @@
+﻿@model IEnumerable<WebUI.ViewModels.AccountViewModel>
+
+@{
+    ViewBag.Title = "Account列表";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<table class="table">
+    <thead class="thead-dark">
+    <tr>
+        @*<th scope="col">Account GUid</th>*@
+        <th scope="col">Account Name</th>
+        <th scope="col">操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var r in Model)
+    {
+        <tr>
+            @*<th scope="row">@r.GUid</th>*@
+            <td>@r.Name</td>
+            <td>
+                <form asp-action="DeleteAccount" asp-route-id="@r.GUid" method="post">
+                    <a asp-action="ManageAccount" asp-route-id="@r.GUid" class="btn btn-primary">管理Account</a>
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('确认删除？')" condition='User.IsInRole("Admin")'>
+                        删除
+                    </button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<a asp-action="AddClaim"  class="btn btn-primary" condition='User.IsInRole("Admin")'>新建Account</a>

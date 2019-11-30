@@ -1,0 +1,40 @@
+﻿@using WebUI.ViewModels
+@model WebUI.ViewModels.DataSetViewModel
+
+@{
+    ViewBag.Title = "添加DataSet";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form method="post">
+    <input asp-for="GUid" type="hidden" name="GUid" value="@Model.GUid" />
+    
+    <div class="form-group row">
+        <label asp-for="dataSetId" class="col-sm-2"></label>
+        <div class="col-sm-10">
+            <input class="form-control" asp-for="dataSetId">
+            <span class="invalid" asp-validation-for="dataSetId"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label asp-for="Name" class="col-sm-2"></label>
+        <div class="col-sm-10">
+            <input class="form-control" asp-for="Name">
+            <span class="invalid" asp-validation-for="Name"></span>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label asp-for="dataSetType" class="col-sm-2"></label>
+        <select class="form-control" style="width: 300px;" asp-for="dataSetType" asp-items="Html.GetEnumSelectList<DataSetViewModel.DataSetType>()">
+            <option> -- choose a data type -- </option>
+        </select>
+    </div>
+
+    <div class="invalid" asp-validation-summary="ModelOnly"></div>
+
+        <button type="submit" class="btn btn-primary">提交</button>
+        <a asp-action="Index" class="btn btn-secondary">返回列表</a>
+</form>

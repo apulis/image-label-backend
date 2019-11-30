@@ -1,0 +1,18 @@
+﻿@model WebUI.ViewModels.AddClaimViewModel
+
+@{
+    ViewBag.Title = "为用户添加Account";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-action="AddClaimTouser" method="post">
+    <input type="hidden" name="user_id" value="@Model.user_id" />
+
+    <select class="form-control" style="width: 300px; display: inline;" asp-for="accountId" asp-items="@(new SelectList(Model.claims,"GUid","Name"))">
+        <option> -- 请选择一个Account -- </option>
+    </select>
+
+    <button class="btn btn-primary" type="submit">添加</button>
+    <a class="btn btn-secondary" asp-action="ManageClaims" asp-route-id="@Model.user_id">返回</a>
+</form>

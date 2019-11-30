@@ -1,0 +1,36 @@
+﻿@model WebUI.ViewModels.AccountViewModel
+
+@{
+    ViewBag.Title = "编辑Account的dataSets";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<table class="table">
+    <thead class="thead-dark">
+    <tr>
+        <th scope="col">data set名称</th>
+        <th scope="col">操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var one in Model.DataSets)
+    {
+        <tr>
+            <td scope="row">@one.Name</td>
+            <td>
+                <form asp-action="RemoveDataSet" asp-route-dataSetId="@one.dataSetId" asp-route-id="@Model.GUid" method="post" style="white-space: nowrap;">
+                    <a asp-action="ManageDataSet" asp-route-id="@Model.GUid" asp-route-dataSetId="@one.dataSetId" class="btn btn-primary">管理dataset</a>
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('确认删除？')">
+                        删除
+                    </button>
+                </form>
+
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<a asp-action="AddDataSet" asp-route-id="@Model.GUid" class="btn btn-primary">新建DataSet</a>
+<a asp-action="Index" class="btn btn-secondary" condition='User.IsInRole("Admin")'>返回Account列表</a>

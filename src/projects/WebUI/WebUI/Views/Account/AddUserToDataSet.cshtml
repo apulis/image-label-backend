@@ -1,0 +1,19 @@
+﻿@model WebUI.ViewModels.DataSetViewModel
+
+@{
+    ViewBag.Title = "为Dataset添加用户";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-action="AddUserToDataSet" method="post">
+    <input type="hidden" asp-for="GUid" value="@Model.GUid" />
+    <input type="hidden" asp-for="dataSetId" value="@Model.dataSetId" />
+
+    <select class="form-control" style="width: 300px; display: inline;" asp-for="AddUser" asp-items="@(new SelectList(Model.Users))">
+        <option> -- 请选择一个用户 -- </option>
+    </select>
+
+    <button class="btn btn-primary" type="submit">添加</button>
+    <a class="btn btn-secondary" asp-action="ManageDataSet" asp-route-id="@Model.GUid" asp-route-dataSetId="@Model.dataSetId">返回</a>
+</form>
