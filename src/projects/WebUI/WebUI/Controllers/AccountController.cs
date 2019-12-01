@@ -479,41 +479,53 @@ namespace WebUI.Controllers
 
                 var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
                 var userJson = await blob.DownloadGenericObjectAsync();
-                var dataSets = JsonUtils.GetJToken("dataSets", userJson) as JObject;
-                bool userFlag = false;
-                if (!Object.ReferenceEquals(dataSets, null))
+                if(Object.ReferenceEquals(userJson, null))
                 {
-                    var dataSetArray = JsonUtils.GetJToken(dataSetViewModel.GUid, dataSets) as JArray;
-                    if(!Object.ReferenceEquals(dataSetArray, null))
-                    {
-                        foreach (var o in dataSetArray)
+                    var obj = new JObject
                         {
-                            if (o.ToString() == dataSetViewModel.dataSetId)
+                            { "dataSets",new JObject{{ dataSetViewModel.GUid, new JArray { dataSetViewModel.dataSetId } }} }
+                        };
+                    await blob.UploadGenericObjectAsync(obj);
+                }
+                else
+                {
+                    var dataSets = JsonUtils.GetJToken("dataSets", userJson) as JObject;
+                    bool userFlag = false;
+                    if (!Object.ReferenceEquals(dataSets, null))
+                    {
+                        var dataSetArray = JsonUtils.GetJToken(dataSetViewModel.GUid, dataSets) as JArray;
+                        if (!Object.ReferenceEquals(dataSetArray, null))
+                        {
+                            foreach (var o in dataSetArray)
                             {
-                                userFlag = true;
+                                if (o.ToString() == dataSetViewModel.dataSetId)
+                                {
+                                    userFlag = true;
+                                }
+                            }
+                            if (!userFlag)
+                            {
+                                dataSetArray.Add(dataSetViewModel.dataSetId);
+                                await blob.UploadGenericObjectAsync(userJson);
                             }
                         }
-                        if (!userFlag)
+                        else
                         {
-                            dataSetArray.Add(dataSetViewModel.dataSetId);
+                            dataSets.Add(dataSetViewModel.GUid, new JArray { dataSetViewModel.dataSetId });
                             await blob.UploadGenericObjectAsync(userJson);
                         }
                     }
                     else
                     {
-                        dataSets.Add(dataSetViewModel.GUid, new JArray {dataSetViewModel.dataSetId});
+                        var obj = new JObject
+                        {
+                            { dataSetViewModel.GUid, new JArray { dataSetViewModel.dataSetId } }
+                        };
+                        userJson.Add("dataSets", obj);
                         await blob.UploadGenericObjectAsync(userJson);
                     }
                 }
-                else
-                {
-                    var obj = new JObject
-                    {
-                        { dataSetViewModel.GUid, new JArray { dataSetViewModel.dataSetId } }
-                    };
-                    userJson.Add("dataSets", obj);
-                    await blob.UploadGenericObjectAsync(userJson);
-                }
+                
                 HttpContext.Session.Remove($"user_{user.Email}_tasks_list");
                 HttpContext.Session.Remove($"user_{user.Email}_task_{dataSetViewModel.dataSetId}_list");
                 HttpContext.Session.Remove($"user_{user.Email}_task_{dataSetViewModel.dataSetId}_permission");

@@ -84,6 +84,11 @@ namespace WebUI.Controllers
         }
         public async Task<IActionResult> Token()
         {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (!user.EmailConfirmed)
+            {
+                return Redirect("/Identity/Account/Manage");
+            }
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecurityKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var claims = new[]
@@ -97,10 +102,8 @@ namespace WebUI.Controllers
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds);
 
-            return Ok(new
-            {
-                token = new JwtSecurityTokenHandler().WriteToken(token)
-            });
+            var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
+            return Redirect($"{_configuration["FontEndUrl"]}?token={tokenGenerate}");
         }
     }
 }

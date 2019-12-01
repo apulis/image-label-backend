@@ -55,7 +55,7 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var tasks = await AzureService.FindUserTasks(userId, HttpContext.Session);
-            return Content(tasks.ToString());
+            return Content(Base64Ops.Base64Encode(tasks.ToString()));
         }
 
         // get: api/image/5
@@ -64,7 +64,7 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var content =await AzureService.FindUserOneTaskInfo(userId, HttpContext.Session, task_id);
-            return Content(content.ToString());
+            return Content(Base64Ops.Base64Encode(content.ToString()));
         }
 
         // GET: api/Image/5
@@ -82,7 +82,7 @@ namespace WebUI.Controllers
                     content = json;
                 }
             }
-            return Content(content.ToString());
+            return Content(Base64Ops.Base64Encode(content.ToString()));
         }
 
         // POST: api/Image
@@ -191,7 +191,6 @@ namespace WebUI.Controllers
             }
             return lst; 
         }
-
 
 
         // Post: api/Image/SetCurrent

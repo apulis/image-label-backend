@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace WebUI.Services
 {
-    public class EmailSender : IEmailSender
+    public class EmailSenderService : IEmailSender
     {
         // Our private configuration variables
         private string host;
@@ -15,7 +15,7 @@ namespace WebUI.Services
         private string password;
 
         // Get our parameterized configuration
-        public EmailSender(string host, int port, bool enableSSL, string userName, string password)
+        public EmailSenderService(string host, int port, bool enableSSL, string userName, string password)
         {
             this.host = host;
             this.port = port;

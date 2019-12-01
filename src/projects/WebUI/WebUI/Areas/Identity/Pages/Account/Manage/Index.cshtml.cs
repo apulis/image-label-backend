@@ -69,7 +69,11 @@ namespace WebUI.Areas.Identity.Pages.Account.Manage
             };
 
             IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
-
+            if (!IsEmailConfirmed)
+            {
+                ModelState.AddModelError(string.Empty, "Please confirm your email to continue!");
+            }
+            
             return Page();
         }
 

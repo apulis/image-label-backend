@@ -86,7 +86,10 @@ namespace WebUI
             }); */
 
 
-            services.AddIdentity<IdentityUser, IdentityRole>()
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+                {
+                    //options.SignIn.RequireConfirmedEmail = true;
+                })
                 // Authorization
                 // .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -106,8 +109,8 @@ namespace WebUI
                     };
                 });
 
-            services.AddTransient<IEmailSender, EmailSender>(i =>
-                new EmailSender(
+            services.AddTransient<IEmailSender, EmailSenderService>(i =>
+                new EmailSenderService(
                     Configuration["EmailSender:Host"],
                     Configuration.GetValue<int>("EmailSender:Port"),
                     Configuration.GetValue<bool>("EmailSender:EnableSSL"),
