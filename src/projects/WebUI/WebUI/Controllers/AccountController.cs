@@ -361,7 +361,6 @@ namespace WebUI.Controllers
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{User_id}", "membership.json");
             var userJson = await blob.DownloadGenericObjectAsync();
             var dataSets = JsonUtils.GetJToken("dataSets", userJson);
-            bool flag = false;
             if (!Object.ReferenceEquals(dataSets, null))
             {
                 var dataSetObj = dataSets as JObject;

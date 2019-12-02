@@ -99,7 +99,7 @@ namespace WebUI.Controllers
                 issuer: "apulis-china-infra01.sigsus.cn",
                 audience: "apulis-china-infra01.sigsus.cn",
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
+                expires: DateTime.Now.AddDays(1),
                 signingCredentials: creds);
 
             var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);

@@ -11,9 +11,9 @@
     <input asp-for="GUid" type="hidden" name="GUid" value="@Model.GUid" />
     
     <div class="form-group row">
-        <label asp-for="dataSetId" class="col-sm-2"></label>
+        <label asp-for="dataSetId" class="col-sm-2">GUID</label>
         <div class="col-sm-10">
-            <input class="form-control" asp-for="dataSetId">
+            <input class="form-control" asp-for="dataSetId" placeholder="如果已有数据集GUid，则填写该GUid，如果是新数据集，不用填写该栏，将自动生成">
             <span class="invalid" asp-validation-for="dataSetId"></span>
         </div>
     </div>
@@ -31,6 +31,7 @@
         <select class="form-control" style="width: 300px;" asp-for="dataSetType" asp-items="Html.GetEnumSelectList<DataSetViewModel.DataSetType>()">
             <option> -- choose a data type -- </option>
         </select>
+        <span class="invalid" asp-validation-for="dataSetType"></span>
     </div>
 
     <div class="invalid" asp-validation-summary="ModelOnly"></div>

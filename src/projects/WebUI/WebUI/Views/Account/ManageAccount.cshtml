@@ -9,6 +9,7 @@
 <table class="table">
     <thead class="thead-dark">
     <tr>
+        <th scope="col">data set GUid</th>
         <th scope="col">data set名称</th>
         <th scope="col">操作</th>
     </tr>
@@ -17,6 +18,7 @@
     @foreach (var one in Model.DataSets)
     {
         <tr>
+            <td scope="row">@one.dataSetId</td>
             <td scope="row">@one.Name</td>
             <td>
                 <form asp-action="RemoveDataSet" asp-route-dataSetId="@one.dataSetId" asp-route-id="@Model.GUid" method="post" style="white-space: nowrap;">

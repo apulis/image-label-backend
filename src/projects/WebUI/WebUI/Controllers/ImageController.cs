@@ -29,7 +29,7 @@ using WebUI.Services;
 namespace WebUI.Controllers
 {
     //[Authorize(Roles = "Admin,User")]
-    [Route("api/tasks")]
+    [Route("api/[controller]")]
     [ApiController]
     [EnableCors("dev-use")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -55,7 +55,7 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var tasks = await AzureService.FindUserTasks(userId, HttpContext.Session);
-            return Content(Base64Ops.Base64Encode(tasks.ToString()));
+            return Content(Base64Ops.Base64Encode(tasks.JObjectToString()));
         }
 
         // get: api/image/5
@@ -64,7 +64,7 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var content =await AzureService.FindUserOneTaskInfo(userId, HttpContext.Session, task_id);
-            return Content(Base64Ops.Base64Encode(content.ToString()));
+            return Content(Base64Ops.Base64Encode(content.JObjectToString()));
         }
 
         // GET: api/Image/5
@@ -72,32 +72,32 @@ namespace WebUI.Controllers
         public async Task<IActionResult> Get(string task_id, int id)
         {
             var userId = HttpContext.User.Identity.Name;
-            var content = new JObject();
-            if (await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id))
+            Response re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id);
+            if (re.Code==200)
             {
                 var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
                 var json = await blob.DownloadGenericObjectAsync();
                 if (json != null)
                 {
-                    content = json;
+                    re.Data = json;
                 }
             }
-            return Content(Base64Ops.Base64Encode(content.ToString()));
+            return Content(Base64Ops.Base64Encode(re.JObjectToString()));
         }
 
         // POST: api/Image
         [HttpPost("{task_id}/{id}")]
-        public async Task<bool> Post(string task_id, int id,[FromBody] string value)
+        public async Task<IActionResult> Post(string task_id, int id,[FromBody] string value)
         {
             var userId = HttpContext.User.Identity.Name;
-            if (await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id))
+            Response re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id);
+            if (re.Code == 200)
             {
                 var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
-                var json = JsonConvert.DeserializeObject<JObject>(value);
+                var json = JsonConvert.DeserializeObject<JObject>(Base64Ops.Base64Decode(value));
                 //await blob.UploadGenericObjectAsync(json);
-                return true;
             }
-            return false;
+            return Content(Base64Ops.Base64Encode(re.JObjectToString()));
         }
 
         // PUT: api/Image/5

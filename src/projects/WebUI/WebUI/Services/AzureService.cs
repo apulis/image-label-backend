@@ -121,12 +121,12 @@ namespace WebUI.Services
 
         }
 
-        public static async Task<JObject> FindUserTasks(string userId, ISession session)
+        public static async Task<Response> FindUserTasks(string userId, ISession session)
         {
             JObject tasks = new JObject();
             if (userId == null)
             {
-                return tasks;
+                return new Response{Code = 401,Msg = "Not UserId",Data = tasks};
             }
             var result = SessionOps.GetSession<JObject>(session.Get($"user_{userId}_tasks_list"));
             if (result != null)
@@ -156,14 +156,14 @@ namespace WebUI.Services
                 }
                 SessionOps.SetSession($"user_{userId}_tasks_list", tasks, session);
             }
-            return tasks;
+            return new Response { Code = 200, Msg = "ok", Data = tasks };
         }
-        public static async Task<JObject> FindUserOneTaskInfo(string userId, ISession session,string taskId)
+        public static async Task<Response> FindUserOneTaskInfo(string userId, ISession session,string taskId)
         {
             var content = new JObject();
             if (userId == null)
             {
-                return content;
+                return new Response { Code = 401, Msg = "Not UserId", Data = content };
             }
             var result = SessionOps.GetSession<JObject>(session.Get($"user_{userId}_task_{taskId}_list"));
             if (result != null)
@@ -172,7 +172,8 @@ namespace WebUI.Services
             }
             else
             {
-                if (await FindUserHasThisTask(userId, session, taskId))
+                Response re = await FindUserHasThisTask(userId, session, taskId);
+                if (re.Code==200)
                 {
                     var blob = GetBlob(null, $"tasks/{taskId}", "list.json");
                     var json = await blob.DownloadGenericObjectAsync();
@@ -183,30 +184,30 @@ namespace WebUI.Services
                 }
                 SessionOps.SetSession($"user_{userId}_task_{taskId}_list", content, session);
             }
-            return content;
+            return new Response { Code = 200, Msg = "ok", Data = content };
         }
 
-        public static async Task<bool> FindUserHasThisTask(string userId, ISession session, string taskId)
+        public static async Task<Response> FindUserHasThisTask(string userId, ISession session, string taskId)
         {
-            var flag = false;
+            int code = 401;
             if (userId == null)
             {
-                return flag;
+                return new Response { Code = code, Msg = "Not UserId"};
             }
             var result = SessionOps.GetSession<string>(session.Get($"user_{userId}_task_{taskId}_permission"));
             if (result != null)
             {
                 if (result == "true")
                 {
-                    flag = true;
+                    code = 200;
                 }
             }
             else
             {
-                JObject tasks = await FindUserTasks(userId, session);
-                if (JsonUtils.GetJToken(taskId, tasks) != null)
+                Response tasks = await FindUserTasks(userId, session);
+                if (JsonUtils.GetJToken(taskId, tasks.Data) != null)
                 {
-                    flag = true;
+                    code = 200;
                     SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "true", session);
                 }
                 else
@@ -214,7 +215,7 @@ namespace WebUI.Services
                     SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "false", session);
                 }
             }
-            return flag;
+            return new Response { Code = code, Msg = "ok" };
 
         }
     }
