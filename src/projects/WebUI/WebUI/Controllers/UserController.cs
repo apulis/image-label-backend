@@ -36,30 +36,36 @@ namespace WebUI.Controllers
         // [RequireHttps]
         public async Task<IActionResult> Index()
         {
-            var users = await _userManager.Users.Where(user=>user.EmailConfirmed).ToListAsync();
-            return View(users);
+            List<UserEmailViewModel> userList = new List<UserEmailViewModel>();
+            var userBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var userJson = await userBlob.DownloadGenericObjectAsync();
+            if (!Object.ReferenceEquals(userJson, null))
+            {
+                foreach (var pair in userJson)
+                {
+                    var oneUser = pair.Value as JObject;
+                    userList.Add(new UserEmailViewModel { email = oneUser["email"].ToString(), userId = pair.Key });
+                }
+            }
+            return View(userList);
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user != null)
+            var userBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var userJson = await userBlob.DownloadGenericObjectAsync();
+            if (!Object.ReferenceEquals(userJson, null))
             {
-                var result = await _userManager.DeleteAsync(user);
-                if (result.Succeeded)
+                foreach (var pair in userJson)
                 {
-                    return RedirectToAction("Index");
+                    if (pair.Key == id)
+                    {
+                        userJson.Remove(id);
+                    }
                 }
-
-                ModelState.AddModelError(string.Empty, "删除用户时发生错误");
             }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "用户找不到");
-            }
-
-            return View("Index", await _userManager.Users.ToListAsync());
+            return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> ManageClaims(string id)
@@ -70,9 +76,7 @@ namespace WebUI.Controllers
                 user_id = id,
                 claims = new List<UserClaimViewModel>()
             };
-            var user = await _userManager.FindByIdAsync(id);
-            var user_id = await AzureService.FindUserId(user);
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{user_id}", WebUIConfig.membershipFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{id}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var accounts = JsonUtils.GetJToken(Constants.JsontagAccount, json);
             if (accounts == null)
@@ -96,9 +100,7 @@ namespace WebUI.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveClaim(string id, string accountId)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            var user_id = await AzureService.FindUserId(user);
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{user_id}", WebUIConfig.membershipFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{id}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var accounts = JsonUtils.GetJToken(Constants.JsontagAccount, json);
 
@@ -143,7 +145,7 @@ namespace WebUI.Controllers
                         {
                             foreach (var one in users)
                             {
-                                if (one.ToString() == user_id)
+                                if (one.ToString() == id)
                                 {
                                     users.Remove(one);
                                     break;
@@ -160,9 +162,7 @@ namespace WebUI.Controllers
         public async Task<IActionResult> AddClaimToUser(string id)
         {
             List<UserClaimViewModel> claims = new List<UserClaimViewModel>();
-            var user = await _userManager.FindByIdAsync(id);
-            var user_id = await AzureService.FindUserId(user);
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{user_id}", WebUIConfig.membershipFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{id}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var accounts = JsonUtils.GetJToken(Constants.JsontagAccount, json);
 
@@ -172,7 +172,7 @@ namespace WebUI.Controllers
             {
                 foreach (var one in accountJson)
                 {
-                    claims.Add(new UserClaimViewModel(){GUid = one.Key.ToString(),Name = one.Value["name"].ToString()});
+                    claims.Add(new UserClaimViewModel(){GUid = one.Key,Name = one.Value["name"].ToString()});
                 }
             }
             var AccountArray = accounts == null ? null : accounts as JArray;
@@ -203,9 +203,7 @@ namespace WebUI.Controllers
         [HttpPost]
         public async Task<IActionResult> AddClaimToUser(AddClaimViewModel addClaimViewModel)
         {
-            var user = await _userManager.FindByIdAsync(addClaimViewModel.user_id);
-            var user_id = await AzureService.FindUserId(user);
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{user_id}", WebUIConfig.membershipFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{addClaimViewModel.user_id}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var accounts = JsonUtils.GetJToken(Constants.JsontagAccount, json);
             if (accounts == null)
@@ -234,11 +232,11 @@ namespace WebUI.Controllers
                         var users = JsonUtils.GetJToken("users", obj) as JArray;
                         if (Object.ReferenceEquals(users, null))
                         {
-                            obj.Add("users", new JArray { user_id });
+                            obj.Add("users", new JArray { addClaimViewModel.user_id });
                         }
                         else
                         {
-                            users.Add(user_id);
+                            users.Add(addClaimViewModel.user_id);
                         }
                         await blob.UploadGenericObjectAsync(accJson);
                     }

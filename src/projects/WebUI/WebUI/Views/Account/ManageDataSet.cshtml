@@ -17,9 +17,9 @@
     @foreach (var user in Model.Users)
     {
         <tr>
-            <td scope="row">@user</td>
+            <td scope="row">@user.email</td>
             <td>
-                <form asp-action="RemoveUser" asp-route-userId="@user" asp-route-id="@Model.GUid" asp-route-dataSetId="@Model.dataSetId"
+                <form asp-action="RemoveUser" asp-route-userId="@user.userId" asp-route-id="@Model.GUid" asp-route-dataSetId="@Model.dataSetId"
                       method="post" style="white-space: nowrap;">
                     <button type="submit" class="btn btn-danger"
                             onclick="return confirm('确认删除？')">

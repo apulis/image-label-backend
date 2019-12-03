@@ -48,40 +48,102 @@ namespace WebUI.Services
 
             return null;
         }
-        public static async Task<string> FindUserId(IdentityUser user)
+
+        public static async Task CreateUserId(string openId,string email)
         {
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{user.Email}", WebUIConfig.mapFile);
+            var newUserId =await FindUserId(email);
+            if (String.IsNullOrEmpty(newUserId))
+            {
+                newUserId = Guid.NewGuid().ToString().ToUpper();
+            }
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{openId}", WebUIConfig.mapFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
             if (userId == null)
             {
+                userId = newUserId;
                 var obj = new JObject
                 {
-                    {Constants.JsontagUserId, Guid.NewGuid().ToString()},
-                    {"name", user.UserName }
+                    { Constants.JsontagUserId, userId},
+                    {"email", email}
                 };
                 await configBlob.UploadGenericObjectAsync(obj);
             }
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", "info.json");
+
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
             var userJson = await blob.DownloadGenericObjectAsync();
-            var email = JsonUtils.GetJToken("email", userJson);
-            if (email == null)
+            if (userJson == null)
             {
                 var obj = new JObject
                 {
-                    { "email", user.Email }
+                    { userId.ToString(), new JObject(){{"email",email},{"id",openId}} }
                 };
                 await blob.UploadGenericObjectAsync(obj);
             }
+            else
+            {
+                var emailF = JsonUtils.GetJToken(userId.ToString(), userJson) as JObject;
+                if (emailF == null)
+                {
+                    userJson.Add(userId.ToString(), new JObject() {{"email", email}, {"id", openId}});
+                    await blob.UploadGenericObjectAsync(userJson);
+                }
+            }
+
+            var emailBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "email.json");
+            var emailJson = await emailBlob.DownloadGenericObjectAsync();
+            if (emailJson == null)
+            {
+                var obj = new JObject
+                {
+                    { email, new JObject(){{"userId", userId.ToString() } } }
+                };
+                await emailBlob.UploadGenericObjectAsync(obj);
+            }
+            else
+            {
+                var emailF = JsonUtils.GetJToken(email, emailJson) as JObject;
+                if (emailF == null)
+                {
+                    emailJson.Add(email, new JObject() { { "userId", userId.ToString() } });
+                    await emailBlob.UploadGenericObjectAsync(emailJson);
+                }
+            }
+
+        }
+        public static async Task<string> FindUserId(IdentityUser user)
+        {
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{user.Id}", WebUIConfig.mapFile);
+            var json = await configBlob.DownloadGenericObjectAsync();
+            var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
             return (string)userId;
         }
         public static async Task<string> FindUserEmail(string userId)
         {
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", "info.json");
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
             var userJson = await blob.DownloadGenericObjectAsync();
-            var email = JsonUtils.GetJToken("email", userJson);
-            return (string)email;
+            var obj = JsonUtils.GetJToken(userId, userJson) as JObject;
+            string email = null;
+            if (!Object.ReferenceEquals(obj, null))
+            {
+                email = obj["email"].ToString();
+            }
+
+            return email;
         }
+
+        public static async Task<string> FindUserId(string email)
+        {
+            var emailBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "email.json");
+            var emailJson = await emailBlob.DownloadGenericObjectAsync();
+            var emailF = JsonUtils.GetJToken(email, emailJson) as JObject;
+            if (emailF != null)
+            {
+                return emailF["userId"].ToString();
+            }
+            return null;
+        }
+
         public static async Task<string> FindAccountName(string accountId)
         {
             string Name = null;

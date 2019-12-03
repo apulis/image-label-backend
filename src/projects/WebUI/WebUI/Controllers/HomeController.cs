@@ -61,7 +61,6 @@ namespace WebUI.Controllers
         public async Task<IActionResult> About()
         {
             ViewData["Message"] = "Your application description page.";
-
             return View();
         }
 
@@ -84,8 +83,8 @@ namespace WebUI.Controllers
         }
         public async Task<IActionResult> Token()
         {
-            var user = await _userManager.GetUserAsync(HttpContext.User);
-            if (!user.EmailConfirmed)
+            var userId = await AzureService.FindUserId(await _userManager.GetUserAsync(HttpContext.User));
+            if (userId==null)
             {
                 return Redirect("/Identity/Account/Manage");
             }
@@ -93,7 +92,7 @@ namespace WebUI.Controllers
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name, await AzureService.FindUserId(await _userManager.GetUserAsync(HttpContext.User)))
+                new Claim(ClaimTypes.Name, userId)
             };
             var token = new JwtSecurityToken(
                 issuer: "apulis-china-infra01.sigsus.cn",

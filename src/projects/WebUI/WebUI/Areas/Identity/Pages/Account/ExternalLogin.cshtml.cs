@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using WebUI.Models;
+using WebUI.Services;
 
 namespace WebUI.Areas.Identity.Pages.Account
 {
@@ -47,6 +48,8 @@ namespace WebUI.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             public string Name { get; set; }
+
+            public string Id { get; set; }
         }
 
         public IActionResult OnGetAsync()
@@ -125,14 +128,16 @@ namespace WebUI.Areas.Identity.Pages.Account
                 Input = new InputModel
                 {
                     Email = email,
-                    Name = name
-                };
+                    Name = name,
+                    Id = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
+            };
             }
             else if(info.Principal.HasClaim(c => c.Type == ClaimTypes.Name))
             {
                 Input = new InputModel
                 {
                     Name = info.Principal.FindFirstValue(ClaimTypes.Name),
+                    Id = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier),
                     Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                 };
             }
@@ -141,7 +146,7 @@ namespace WebUI.Areas.Identity.Pages.Account
             var result = new IdentityResult();
             if (ModelState.IsValid)
             {
-                var user = new IdentityUser { UserName = Input.Name, Email = Input.Email };
+                var user = new IdentityUser { UserName = Input.Name, Email = Input.Email,Id = Input.Id};
 
                 //if (!String.IsNullOrEmpty(Input.Email))
                 {
@@ -165,6 +170,10 @@ namespace WebUI.Areas.Identity.Pages.Account
                                 {
                                     _logger.LogInformation($"Add Login succeed ");
                                     await _signInManager.SignInAsync(user, isPersistent: false);
+                                    if (user.Email != null)
+                                    {
+                                        await AzureService.CreateUserId(user.Id, user.Email);
+                                    }
                                 }
                                 else
                                 {

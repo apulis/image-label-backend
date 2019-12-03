@@ -15,7 +15,7 @@
             <span class="invalid" asp-validation-for="Email"></span>
         </div>
     </div>
-
+    <div class="invalid" asp-validation-summary="ModelOnly"></div>
     <button class="btn btn-primary" type="submit">添加</button>
     <a class="btn btn-secondary" asp-action="EditRole" asp-route-id="@Model.RoleId">返回</a>
 </form>

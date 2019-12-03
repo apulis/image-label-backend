@@ -52,7 +52,7 @@ namespace WebUI.Controllers
                     }
                     else
                     {
-                        accountList = await AzureService.GetUserAccountIdList(await AzureService.FindUserId(await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier))));
+                        accountList = await AzureService.GetUserAccountIdList(await AzureService.FindUserId(await _userManager.GetUserAsync(HttpContext.User)));
                         if (accountList != null)
                         {
                             if (accountList.Contains(oneAccount.Key))
@@ -93,7 +93,7 @@ namespace WebUI.Controllers
                 {
                     { "name", accountViewModel.Name }
                 };
-                obj.Add(Guid.NewGuid().ToString(), accountObj);
+                obj.Add(Guid.NewGuid().ToString().ToUpper(), accountObj);
                 await accountBlob.UploadGenericObjectAsync(obj);
             }
             else
@@ -102,7 +102,7 @@ namespace WebUI.Controllers
                 {
                     { "name", accountViewModel.Name }
                 };
-                allAccounts.Add(Guid.NewGuid().ToString(), Obj);
+                allAccounts.Add(Guid.NewGuid().ToString().ToUpper(), Obj);
                 await accountBlob.UploadGenericObjectAsync(allAccounts);
             }
             return RedirectToAction("Index");
@@ -254,6 +254,7 @@ namespace WebUI.Controllers
             {
                 return View(dataSetViewModel);
             }
+
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{dataSetViewModel.GUid}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json) as JObject;
@@ -262,7 +263,7 @@ namespace WebUI.Controllers
                 var obj = new JObject();
                 var DataSetObj = new JObject();
                 var newObj = new JObject();
-                DataSetObj.Add(dataSetViewModel.dataSetId??Guid.NewGuid().ToString(), newObj);
+                DataSetObj.Add(dataSetViewModel.dataSetId??Guid.NewGuid().ToString().ToUpper(), newObj);
                 newObj.Add("name",dataSetViewModel.Name);
                 newObj.Add("type", dataSetViewModel.dataSetType.ToString());
                 obj.Add("dataSets", DataSetObj);
@@ -273,7 +274,7 @@ namespace WebUI.Controllers
                 var infoObj = JsonUtils.GetJToken(dataSetViewModel.dataSetId, allAccounts);
                 if (infoObj == null)
                 {
-                    var dataSetId = dataSetViewModel.dataSetId ?? Guid.NewGuid().ToString();
+                    var dataSetId = dataSetViewModel.dataSetId ?? Guid.NewGuid().ToString().ToUpper();
                     allAccounts.Add(dataSetId, new JObject
                     {
                         {"name", dataSetViewModel.Name },
@@ -281,18 +282,23 @@ namespace WebUI.Controllers
                     });
                     await accountBlob.UploadGenericObjectAsync(json);
                 }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "DataSet GUid had existed!!!");
+                    return View(dataSetViewModel);
+                }
             }
             return RedirectToAction("ManageAccount", new {id=dataSetViewModel.GUid});
         }
 
         public async Task<IActionResult> ManageDataSet(string id ,string dataSetId)
         {
-            List<string> userList = new List<string>();
+            List<UserEmailViewModel> userList = new List<UserEmailViewModel>();
             var vm = new DataSetViewModel()
             {
                 GUid = id,
                 dataSetId = dataSetId,
-                Users = new List<string>()
+                Users = new List<UserEmailViewModel>()
             };
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{id}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -315,7 +321,7 @@ namespace WebUI.Controllers
                         foreach (var one in array)
                         {
                             var email = await AzureService.FindUserEmail(one.ToString());
-                            userList.Add(email);
+                            userList.Add(new UserEmailViewModel { userId = one.ToString(),email = email});
                         }
                     }
                 }
@@ -325,10 +331,8 @@ namespace WebUI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoveUser(string id, string dataSetId, string userId)//userId=email
+        public async Task<IActionResult> RemoveUser(string id, string dataSetId, string userId)
         {
-            var user = await _userManager.FindByEmailAsync(userId);
-            var User_id = await AzureService.FindUserId(user);
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{id}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
@@ -345,20 +349,20 @@ namespace WebUI.Controllers
                         var UserArray = JsonUtils.GetJToken("users", obj) as JArray;
                         foreach (var one in UserArray)
                         {
-                            if (String.Compare(one.ToString(), User_id, true) == 0)
+                            if (String.Compare(one.ToString(), userId, true) == 0)
                             {
                                 UserArray.Remove(one);
                                 await accountBlob.UploadGenericObjectAsync(json);
-                                HttpContext.Session.Remove($"user_{user.Email}_tasks_list");
-                                HttpContext.Session.Remove($"user_{user.Email}_task_{dataSetId}_list");
-                                HttpContext.Session.Remove($"user_{user.Email}_task_{dataSetId}_permission");
+                                HttpContext.Session.Remove($"user_{userId}_tasks_list");
+                                HttpContext.Session.Remove($"user_{userId}_task_{dataSetId}_list");
+                                HttpContext.Session.Remove($"user_{userId}_task_{dataSetId}_permission");
                                 break;
                             }
                         }
                     }
                 }
             }
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{User_id}", "membership.json");
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
             var userJson = await blob.DownloadGenericObjectAsync();
             var dataSets = JsonUtils.GetJToken("dataSets", userJson);
             if (!Object.ReferenceEquals(dataSets, null))
@@ -385,17 +389,25 @@ namespace WebUI.Controllers
         }
         public async Task<IActionResult> AddUserToDataSet(string id,string dataSetId)
         {
-            List<string> userList = new List<string>();
-
+            List<UserEmailViewModel> userList = new List<UserEmailViewModel>();
+            List<string> userIdList = new List<string>();
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{id}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
             var AccountObject = allAccounts == null ? null : allAccounts as JObject;
-            var users = _userManager.Users.Where(user=>user.EmailConfirmed).ToList();
-            foreach (var one in users)
+
+            var userBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var userJson = await userBlob.DownloadGenericObjectAsync();
+            if (!Object.ReferenceEquals(userJson, null))
             {
-                userList.Add(one.Email);
+                foreach (var pair in userJson)
+                {
+                    var oneUser = pair.Value as JObject;
+                    userList.Add(new UserEmailViewModel{ email = oneUser["email"].ToString(),userId = pair.Key});
+                    userIdList.Add(pair.Key);
+                }
             }
+               
 
             if (!Object.ReferenceEquals(AccountObject, null))
             {
@@ -409,8 +421,8 @@ namespace WebUI.Controllers
                         {
                             foreach (var o in array)
                             {
-                                var email =await AzureService.FindUserEmail(o.ToString());
-                                userList.Remove(email);
+                                var index = userIdList.IndexOf(o.ToString());
+                                userList.RemoveAt(index);
                             }
                         }
                         
@@ -436,8 +448,6 @@ namespace WebUI.Controllers
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
             var AccountObject = allAccounts == null ? null : allAccounts as JObject;
             bool flag = false;
-            var user = await _userManager.FindByEmailAsync(dataSetViewModel.AddUser);
-            var userId = await AzureService.FindUserId(user);
 
             foreach (var pair in AccountObject)
             {
@@ -449,7 +459,7 @@ namespace WebUI.Controllers
                     {
                         foreach (var one in array)
                         {
-                            if (String.Compare(one.ToString(), userId, true) == 0)
+                            if (String.Compare(one.ToString(), dataSetViewModel.AddUser, true) == 0)
                             {
                                 flag = true;
                                 break;
@@ -464,19 +474,19 @@ namespace WebUI.Controllers
                 var array = JsonUtils.GetJToken("users", dataSetObj) as JArray;
                 if (!Object.ReferenceEquals(array, null))
                 {
-                    array.Add(userId);
+                    array.Add(dataSetViewModel.AddUser);
                 }
                 else
                 {
                     var newArray = new JArray
                     {
-                        userId
+                        dataSetViewModel.AddUser
                     };
                     dataSetObj.Add("users", newArray);
                 }
                 await accountBlob.UploadGenericObjectAsync(json);
 
-                var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
+                var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{dataSetViewModel.AddUser}", "membership.json");
                 var userJson = await blob.DownloadGenericObjectAsync();
                 if(Object.ReferenceEquals(userJson, null))
                 {
@@ -525,9 +535,9 @@ namespace WebUI.Controllers
                     }
                 }
                 
-                HttpContext.Session.Remove($"user_{user.Email}_tasks_list");
-                HttpContext.Session.Remove($"user_{user.Email}_task_{dataSetViewModel.dataSetId}_list");
-                HttpContext.Session.Remove($"user_{user.Email}_task_{dataSetViewModel.dataSetId}_permission");
+                HttpContext.Session.Remove($"user_{dataSetViewModel.AddUser}_tasks_list");
+                HttpContext.Session.Remove($"user_{dataSetViewModel.AddUser}_task_{dataSetViewModel.dataSetId}_list");
+                HttpContext.Session.Remove($"user_{dataSetViewModel.AddUser}_task_{dataSetViewModel.dataSetId}_permission");
             }
 
             return RedirectToAction("ManageDataSet", new { id = dataSetViewModel.GUid, dataSetId = dataSetViewModel.dataSetId });

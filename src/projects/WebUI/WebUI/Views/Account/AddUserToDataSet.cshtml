@@ -10,7 +10,7 @@
     <input type="hidden" asp-for="GUid" value="@Model.GUid" />
     <input type="hidden" asp-for="dataSetId" value="@Model.dataSetId" />
 
-    <select class="form-control" style="width: 300px; display: inline;" asp-for="AddUser" asp-items="@(new SelectList(Model.Users))">
+    <select class="form-control" style="width: 300px; display: inline;" asp-for="AddUser" asp-items="@(new SelectList(Model.Users,"userId","email"))">
         <option> -- 请选择一个用户 -- </option>
     </select>
 

@@ -188,10 +188,11 @@ namespace WebUI.Controllers
         public async Task<IActionResult> AddUserToRole(UserRoleViewModel userRoleViewModel)
         {
             var role = await _roleManager.FindByIdAsync(userRoleViewModel.RoleId);
-            var user =await _userManager.FindByEmailAsync(userRoleViewModel.Email);
-            if (user == null)
-            {
 
+            if (await AzureService.FindUserId(userRoleViewModel.Email)==null)
+            {
+                ModelState.AddModelError(string.Empty, "Email not exist!  Please confirm your email.");
+                return View(userRoleViewModel);
             }
             var authBlob = AzureService.GetBlob(null, "index", WebUIConfig.AppInfoConfigFile);
             var json = await authBlob.DownloadGenericObjectAsync();
@@ -209,7 +210,11 @@ namespace WebUI.Controllers
                             return RedirectToAction("EditRole", new { id = role.Id });
                         }
                     }
-                    await _userManager.AddToRoleAsync(user, role.Name);
+                    var user =await _userManager.FindByEmailAsync(userRoleViewModel.Email);
+                    if (user!=null)
+                    {
+                        await _userManager.AddToRoleAsync(user, role.Name);
+                    }
                     peopleArray.Add(userRoleViewModel.Email);
                     SessionOps.AddSession<string>($"role_{userRoleViewModel.RoleId}_user_list", userRoleViewModel.Email,
                         HttpContext.Session.Get($"role_{userRoleViewModel.RoleId}_user_list"),

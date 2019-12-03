@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityUser>
+﻿@model IEnumerable<WebUI.ViewModels.UserEmailViewModel>
 
 @{
     ViewBag.Title = "用户列表";
@@ -9,7 +9,6 @@
 <table class="table">
     <thead class="thead-dark">
     <tr>
-        <th scope="col">用户Name</th>
         <th scope="col">用户Email</th>
         <th scope="col">操作</th>
     </tr>
@@ -18,11 +17,10 @@
     @foreach (var r in Model)
     {
         <tr>
-            <th scope="row">@r.UserName</th>
-            <td>@r.Email</td>
+            <th scope="row">@r.email</th>
             <td>
-                <form asp-action="DeleteUser" asp-route-id="@r.Id" method="post">
-                    <a asp-action="ManageClaims" asp-route-id="@r.Id" class="btn btn-primary">管理Account</a>
+                <form asp-action="DeleteUser" asp-route-id="@r.userId" method="post">
+                    <a asp-action="ManageClaims" asp-route-id="@r.userId" class="btn btn-primary">管理Account</a>
                     @*<button type="submit" class="btn btn-danger"
                             onclick="return confirm('确认删除？')">
                         删除

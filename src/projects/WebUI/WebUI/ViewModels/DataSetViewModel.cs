@@ -10,7 +10,7 @@ namespace WebUI.ViewModels
         public string GUid { get; set; }
         public string Name { get; set; }
         public string dataSetId { get; set; }
-        public List<string> Users { get; set; }
+        public List<UserEmailViewModel> Users { get; set; }
         public DataSetType dataSetType { get; set; }
 
         public string AddUser { get; set; }
