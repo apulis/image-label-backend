@@ -102,7 +102,7 @@ namespace WebUI.Controllers
                 signingCredentials: creds);
 
             var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
-            return Redirect($"{_configuration["FontEndUrl"]}?token={tokenGenerate}");
+            return Redirect($"{_configuration["FontEndUrl"]}/?token={tokenGenerate}");
         }
     }
 }
