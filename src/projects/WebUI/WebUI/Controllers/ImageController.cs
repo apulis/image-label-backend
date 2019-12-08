@@ -94,8 +94,16 @@ namespace WebUI.Controllers
             if (re.Code == 200)
             {
                 var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
-                var json = JsonConvert.DeserializeObject<JObject>(Base64Ops.Base64Decode(value));
-                //await blob.UploadGenericObjectAsync(json);
+                try
+                {
+                    var json = JsonConvert.DeserializeObject<JObject>(Base64Ops.Base64Decode(value));
+                    //await blob.UploadGenericObjectAsync(json);
+                }
+                catch (Exception e)
+                {
+                    re.Code = 500;
+                    re.Msg = e.Message;
+                }
             }
             return Content(Base64Ops.Base64Encode(re.JObjectToString()));
         }
