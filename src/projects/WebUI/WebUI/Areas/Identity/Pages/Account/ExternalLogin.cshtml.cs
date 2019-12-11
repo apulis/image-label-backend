@@ -119,7 +119,7 @@ namespace WebUI.Areas.Identity.Pages.Account
             LoginProvider = info.LoginProvider;
             if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
             {
-                var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+                var name = info.Principal.FindFirstValue(ClaimTypes.Email);
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
                 if (name == null)
                 {
@@ -132,11 +132,11 @@ namespace WebUI.Areas.Identity.Pages.Account
                     Id = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
             };
             }
-            else if(info.Principal.HasClaim(c => c.Type == ClaimTypes.Name))
+            else if(info.Principal.HasClaim(c => c.Type == ClaimTypes.NameIdentifier))
             {
                 Input = new InputModel
                 {
-                    Name = info.Principal.FindFirstValue(ClaimTypes.Name),
+                    Name = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier),
                     Id = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier),
                     Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                 };
