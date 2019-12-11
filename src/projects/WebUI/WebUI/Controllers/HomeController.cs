@@ -102,6 +102,11 @@ namespace WebUI.Controllers
                 signingCredentials: creds);
 
             var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
+            HttpContext.Response.Cookies.Append("token", tokenGenerate, new CookieOptions
+            {
+                Expires = DateTime.Now.AddDays(1),
+                Domain = "apulis-china-infra01.sigsus.cn"
+            });
             return Redirect($"{_configuration["FontEndUrl"]}/?token={tokenGenerate}");
         }
     }

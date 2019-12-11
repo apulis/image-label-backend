@@ -97,7 +97,7 @@ namespace WebUI.Controllers
                 try
                 {
                     var json = JsonConvert.DeserializeObject<JObject>(Base64Ops.Base64Decode(value));
-                    //await blob.UploadGenericObjectAsync(json);
+                    await blob.UploadGenericObjectAsync(json);
                 }
                 catch (Exception e)
                 {
