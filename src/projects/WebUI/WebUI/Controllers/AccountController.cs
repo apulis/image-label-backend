@@ -422,6 +422,7 @@ namespace WebUI.Controllers
                             foreach (var o in array)
                             {
                                 var index = userIdList.IndexOf(o.ToString());
+                                userIdList.RemoveAt(index);
                                 userList.RemoveAt(index);
                             }
                         }
