@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using WebUI.Services;
+using WebUI.ViewModels;
 
 namespace WebUI.Areas.Identity.Pages.Account
 {
@@ -39,7 +40,7 @@ namespace WebUI.Areas.Identity.Pages.Account
                 throw new InvalidOperationException($"Error confirming email for user with ID '{userId}':");
             }
 
-            await AzureService.CreateUserId(user.Id, user.Email);
+            await AzureService.CreateUserId(new UserInfoViewModel(){Id=user.Id,Email=user.Email});
             return Page();
         }
     }

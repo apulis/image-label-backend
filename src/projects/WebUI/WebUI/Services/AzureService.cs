@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Azure;
@@ -49,14 +51,14 @@ namespace WebUI.Services
             return null;
         }
 
-        public static async Task CreateUserId(string openId,string email)
+        public static async Task CreateUserId(UserInfoViewModel userInfoViewModel)
         {
-            var newUserId =await FindUserId(email);
+            var newUserId =await FindUserIdByOpenId(userInfoViewModel.Id);
             if (String.IsNullOrEmpty(newUserId))
             {
                 newUserId = Guid.NewGuid().ToString().ToUpper();
             }
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{openId}", WebUIConfig.mapFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{userInfoViewModel.Id}", WebUIConfig.mapFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
             if (userId == null)
@@ -65,7 +67,8 @@ namespace WebUI.Services
                 var obj = new JObject
                 {
                     { Constants.JsontagUserId, userId},
-                    {"email", email}
+                    {"email", userInfoViewModel.Email},
+                    {"name", userInfoViewModel.Name}
                 };
                 await configBlob.UploadGenericObjectAsync(obj);
             }
@@ -76,7 +79,7 @@ namespace WebUI.Services
             {
                 var obj = new JObject
                 {
-                    { userId.ToString(), new JObject(){{"email",email},{"id",openId}} }
+                    { userId.ToString(), new JObject(){{"email", userInfoViewModel.Email},{"id", userInfoViewModel.Id } } }
                 };
                 await blob.UploadGenericObjectAsync(obj);
             }
@@ -85,35 +88,42 @@ namespace WebUI.Services
                 var emailF = JsonUtils.GetJToken(userId.ToString(), userJson) as JObject;
                 if (emailF == null)
                 {
-                    userJson.Add(userId.ToString(), new JObject() {{"email", email}, {"id", openId}});
+                    userJson.Add(userId.ToString(), new JObject() {{"email", userInfoViewModel.Email}, {"id", userInfoViewModel.Id } });
                     await blob.UploadGenericObjectAsync(userJson);
                 }
             }
 
             var emailBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "email.json");
-            var emailJson = await emailBlob.DownloadGenericObjectAsync();
-            if (emailJson == null)
-            {
-                var obj = new JObject
-                {
-                    { email, new JObject(){{"userId", userId.ToString() } } }
-                };
-                await emailBlob.UploadGenericObjectAsync(obj);
-            }
-            else
-            {
-                var emailF = JsonUtils.GetJToken(email, emailJson) as JObject;
-                if (emailF == null)
-                {
-                    emailJson.Add(email, new JObject() { { "userId", userId.ToString() } });
-                    await emailBlob.UploadGenericObjectAsync(emailJson);
-                }
-            }
+            //var emailJson = await emailBlob.DownloadGenericObjectAsync();
+            //if (emailJson == null)
+            //{
+            //    var obj = new JObject
+            //    {
+            //        { email, new JObject(){{"userId", userId.ToString() } } }
+            //    };
+            //    await emailBlob.UploadGenericObjectAsync(obj);
+            //}
+            //else
+            //{
+            //    var emailF = JsonUtils.GetJToken(email, emailJson) as JObject;
+            //    if (emailF == null)
+            //    {
+            //        emailJson.Add(email, new JObject() { { "userId", userId.ToString() } });
+            //        await emailBlob.UploadGenericObjectAsync(emailJson);
+            //    }
+            //}
 
         }
         public static async Task<string> FindUserId(IdentityUser user)
         {
             var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{user.Id}", WebUIConfig.mapFile);
+            var json = await configBlob.DownloadGenericObjectAsync();
+            var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
+            return (string)userId;
+        }
+        public static async Task<string> FindUserIdByOpenId(string openId)
+        {
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{openId}", WebUIConfig.mapFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
             return (string)userId;
@@ -237,12 +247,26 @@ namespace WebUI.Services
                 Response re = await FindUserHasThisTask(userId, session, taskId);
                 if (re.Code==200)
                 {
-                    var blob = GetBlob(null, $"tasks/{taskId}", "list.json");
+                    var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
                     var json = await blob.DownloadGenericObjectAsync();
-                    if (json != null)
+                    var logs = Json.GetJToken("commitLog", json);
+                    var taskLog = Json.GetJToken(taskId, logs) as JArray;
+                    List<int> idList = new List<int>();
+                    if (taskLog != null)
                     {
-                        content = json;
+                        foreach (var one in taskLog)
+                        {
+                            var oneObj = one as JObject;
+                            idList.Add(int.Parse(oneObj["id"].ToString()));
+                        }
                     }
+
+                    int nextTaskId =await GetNextTaskId(taskId, userId);
+                    if (nextTaskId != 0)
+                    {
+                        idList.Add(nextTaskId);
+                    }
+                    content = new JObject { { "ImgIDs", JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeObject(idList)) } };
                 }
                 SessionOps.SetSession($"user_{userId}_task_{taskId}_list", content, session);
             }
@@ -279,6 +303,51 @@ namespace WebUI.Services
             }
             return new Response { Code = code, Msg = "ok" };
 
+        }
+
+        public static async Task<int> GetNextTaskId(string taskId,string userId)
+        {
+            var blob = GetBlob("cdn", "private", null, null, $"tasks/{taskId}", "commit.json");
+            var json = await blob.DownloadGenericObjectAsync() as JObject;
+            if (!Object.ReferenceEquals(json, null))
+            {
+                foreach (var pair in json)
+                {
+                    var one = pair.Value as JObject;
+                    var status = Json.GetJToken("status", one).ToString();
+                    var getUserId = Json.GetJToken("userId", one).ToString();
+                    if (status == "normal")
+                    {
+                        await UpdateTaskStatus(one,"lock", userId);
+                        await blob.UploadGenericObjectAsync(json);
+                        return int.Parse(pair.Key);
+                    }
+                    else if(status == "lock" && getUserId == userId)
+                    {
+                        return int.Parse(pair.Key);
+                    }
+                }
+            }
+
+            return 0;
+        }
+
+        public static async Task UpdateTaskStatus(JObject obj,string targetStatus,string userId=null)
+        {
+            obj["status"] = targetStatus;
+            if (userId != null)
+            {
+                obj["userId"] = userId;
+            }
+        }
+
+        public static async Task UpdateTaskStatusToBlob(string task_id,int id,string userId, string targetStatus)
+        {
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{task_id}", "commit.json");
+            var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            var taskObj = Json.GetJToken(id.ToString(), taskJson) as JObject;
+            await UpdateTaskStatus(taskObj, targetStatus, userId);
+            await taskBlob.UploadGenericObjectAsync(taskJson);
         }
     }
 }

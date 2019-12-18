@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using WebUI.Models;
 using WebUI.Services;
+using WebUI.ViewModels;
 
 namespace WebUI.Areas.Identity.Pages.Account
 {
@@ -33,7 +34,7 @@ namespace WebUI.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
-        public InputModel Input { get; set; }
+        public UserInfoViewModel Input { get; set; }
 
         public string LoginProvider { get; set; }
 
@@ -41,16 +42,6 @@ namespace WebUI.Areas.Identity.Pages.Account
 
         [TempData]
         public string ErrorMessage { get; set; }
-
-        public class InputModel
-        {
-            [EmailAddress]
-            public string Email { get; set; }
-
-            public string Name { get; set; }
-
-            public string Id { get; set; }
-        }
 
         public IActionResult OnGetAsync()
         {
@@ -125,7 +116,7 @@ namespace WebUI.Areas.Identity.Pages.Account
                 {
                     name = email;
                 }
-                Input = new InputModel
+                Input = new UserInfoViewModel
                 {
                     Email = email,
                     Name = name,
@@ -134,7 +125,7 @@ namespace WebUI.Areas.Identity.Pages.Account
             }
             else if(info.Principal.HasClaim(c => c.Type == ClaimTypes.NameIdentifier))
             {
-                Input = new InputModel
+                Input = new UserInfoViewModel
                 {
                     Name = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier),
                     Id = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier),
@@ -172,7 +163,7 @@ namespace WebUI.Areas.Identity.Pages.Account
                                     await _signInManager.SignInAsync(user, isPersistent: false);
                                     if (user.Email != null)
                                     {
-                                        await AzureService.CreateUserId(user.Id, user.Email);
+                                        await AzureService.CreateUserId(Input);
                                     }
                                 }
                                 else

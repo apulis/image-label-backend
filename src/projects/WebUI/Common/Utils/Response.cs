@@ -10,7 +10,6 @@ namespace Common.Utils
         public int Code { get; set; }
         public string Msg { get; set; }
         public JObject Data { get; set; }
-
         public string JObjectToString()
         {
             var obj = new JObject

@@ -96,7 +96,9 @@ namespace WebUI.Controllers
                 var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
                 try
                 {
+
                     var json = JsonConvert.DeserializeObject<JObject>(Base64Ops.Base64Decode(value));
+                    await AzureService.UpdateTaskStatusToBlob(task_id, id, userId,"commit");
                     await blob.UploadGenericObjectAsync(json);
                 }
                 catch (Exception e)
@@ -107,6 +109,23 @@ namespace WebUI.Controllers
             }
             return Content(Base64Ops.Base64Encode(re.JObjectToString()));
         }
+
+        [HttpGet("{taskId}/next")]
+        public async Task<IActionResult> GetNext(string taskId)
+        {
+            var userId = HttpContext.User.Identity.Name;
+            Response re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, taskId);
+            if (re.Code == 200)
+            {
+                int nextTaskId = await AzureService.GetNextTaskId(taskId, userId);
+                if (nextTaskId != 0)
+                {
+                    re.Data = new JObject{"next", nextTaskId};
+                }
+            }
+            return Content(Base64Ops.Base64Encode(re.JObjectToString()));
+        }
+
 
         // PUT: api/Image/5
         [HttpPut("{id}")]
