@@ -121,7 +121,7 @@ namespace WebUI.Controllers
                 myDictionary.Add("client_secret", _configuration["Authentication:Microsoft:ClientSecret"]);
                 myDictionary.Add("code", code);
                 myDictionary.Add("grant_type", "authorization_code");
-                myDictionary.Add("redirect_uri", "https://localhost:44326/api/login/microsoft");
+                myDictionary.Add("redirect_uri", returnUrl+"/api/login/microsoft");
                 return Post("https://login.microsoftonline.com/common/oauth2/token", myDictionary);
             }
 
@@ -151,7 +151,7 @@ namespace WebUI.Controllers
         [HttpGet("{signinType}")]
         public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null)
         {
-            returnUrl = returnUrl ?? Url.Content("https://localhost:44326/");
+            returnUrl = returnUrl ?? Url.Content($"{_configuration["BackEndUrl"]}");
             if (remoteError != null)
             {
                 return Redirect($"{_configuration["FontEndUrl"]}");
