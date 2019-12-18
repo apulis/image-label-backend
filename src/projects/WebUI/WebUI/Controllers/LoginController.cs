@@ -100,7 +100,7 @@ namespace WebUI.Controllers
             }
             return result;
         }
-        private string getToken(string signinType,string code,string returnUrl)
+        private string getToken(string signinType,string code)
         {
             if (signinType == "wechat")
             {
@@ -111,17 +111,12 @@ namespace WebUI.Controllers
             }
             if(signinType == "microsoft")
             {
-                string _url = "https://login.microsoftonline.com/common/oauth2/token" +
-                              _configuration["Authentication:Microsoft:ClientId"] + "&client_secret=" +
-                              _configuration["Authentication:Microsoft:ClientSecret"] + "&code=" + code + "&grant_type=authorization_code"
-                                  + "&resource=https%3A%2F%2Fservice.contoso.com%2F" +
-                                "&redirect_uri=" + returnUrl;
                 Dictionary<string, string> myDictionary = new Dictionary<string, string>();
                 myDictionary.Add("client_id", _configuration["Authentication:Microsoft:ClientId"]);
                 myDictionary.Add("client_secret", _configuration["Authentication:Microsoft:ClientSecret"]);
                 myDictionary.Add("code", code);
                 myDictionary.Add("grant_type", "authorization_code");
-                myDictionary.Add("redirect_uri", returnUrl+"/api/login/microsoft");
+                myDictionary.Add("redirect_uri", $"{_configuration["BackEndUrl"]}/api/login/microsoft");
                 return Post("https://login.microsoftonline.com/common/oauth2/token", myDictionary);
             }
 
@@ -151,12 +146,11 @@ namespace WebUI.Controllers
         [HttpGet("{signinType}")]
         public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null)
         {
-            returnUrl = returnUrl ?? Url.Content($"{_configuration["BackEndUrl"]}");
             if (remoteError != null)
             {
                 return Redirect($"{_configuration["FontEndUrl"]}");
             }
-            string tokenStr = getToken(signinType,code, returnUrl);
+            string tokenStr = getToken(signinType,code);
             if (tokenStr == null)
             {
                 return Redirect($"{_configuration["FontEndUrl"]}");
