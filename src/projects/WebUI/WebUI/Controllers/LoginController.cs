@@ -143,16 +143,16 @@ namespace WebUI.Controllers
         }
 
         [HttpGet("{signinType}")]
-        public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null)
+        public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null,string state=null)
         {
             if (remoteError != null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}");
+                return Redirect($"{_configuration["FontEndUrl"]}/login");
             }
             string tokenStr = getToken(signinType,code);
             if (tokenStr == null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}");
+                return Redirect($"{_configuration["FontEndUrl"]}/login");
             }
             var json = JsonConvert.DeserializeObject<JObject> (tokenStr);
             string access_token = JsonUtils.GetJToken("access_token", json).ToString();
@@ -161,7 +161,7 @@ namespace WebUI.Controllers
 
             string infoStr = getUserInfo(signinType,access_token, openid);
             var infoJson = JsonConvert.DeserializeObject<JObject>(infoStr);
-            if (infoJson.GetValue("mail") != null)
+            if (signinType=="microsoft")
             {
                 var name = infoJson.GetValue("displayName").ToString();
                 var email = infoJson.GetValue("mail").ToString();
@@ -177,8 +177,12 @@ namespace WebUI.Controllers
                     LoginType = signinType
                 };
             }
-            else if(infoJson.GetValue("openid") != null)
+            else if(signinType == "wechat")
             {
+                if (state == null)
+                {
+                    return Redirect($"{_configuration["FontEndUrl"]}/login");
+                }
                 Input = new UserInfoViewModel
                 {
                     Name = infoJson.GetValue("nickname").ToString(),
@@ -190,11 +194,11 @@ namespace WebUI.Controllers
 
             if (Input != null)
             {
-                await AzureService.CreateUserId(Input);
+                await AzureService.CreateUserId(Input, state);
                 var userId = await AzureService.FindUserIdByOpenId(Input.Id);
                 if (userId == null)
                 {
-                    return Redirect($"{_configuration["FontEndUrl"]}");
+                    return Redirect($"{_configuration["FontEndUrl"]}/login");
                 }
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecurityKey"]));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -212,8 +216,7 @@ namespace WebUI.Controllers
                 var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
                 return Redirect($"{_configuration["FontEndUrl"]}/?token={tokenGenerate}");
             }
-            return Redirect($"{_configuration["FontEndUrl"]}");
-
+            return Redirect($"{_configuration["FontEndUrl"]}/login");
         }
     }
 }

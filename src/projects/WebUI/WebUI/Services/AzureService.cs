@@ -51,14 +51,28 @@ namespace WebUI.Services
             return null;
         }
 
-        public static async Task CreateUserId(UserInfoViewModel userInfoViewModel)
+        public static async Task CreateUserId(UserInfoViewModel userInfoViewModel,string microsoftId=null)
         {
             var newUserId =await FindUserIdByOpenId(userInfoViewModel.Id);
             if (String.IsNullOrEmpty(newUserId))
             {
-                newUserId = Guid.NewGuid().ToString().ToUpper();
+                if (userInfoViewModel.LoginType != "microsoft" && microsoftId != null)
+                {
+                    newUserId = microsoftId;
+                    var newblob = GetBlob("cdn", "private", null, null, $"user", "list.json");
+                    var newUserJson = await newblob.DownloadGenericObjectAsync();
+                    var newObj = JsonUtils.GetJToken(newUserId, newUserJson) as JObject;
+                    if (newObj == null)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    newUserId = Guid.NewGuid().ToString().ToUpper();
+                }
             }
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user-login/{userInfoViewModel.Id}", WebUIConfig.mapFile);
+            var configBlob = GetBlob("cdn", "private", null, null, $"user-login/{userInfoViewModel.Id}", WebUIConfig.mapFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
             if (userId == null)
@@ -71,7 +85,7 @@ namespace WebUI.Services
                 await configBlob.UploadGenericObjectAsync(obj);
             }
 
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
             var userJson = await blob.DownloadGenericObjectAsync();
             if (userJson == null)
             {
@@ -81,7 +95,7 @@ namespace WebUI.Services
                     {
                         {$"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id },
                         {"email", userInfoViewModel.Email},
-                        {"name", userInfoViewModel.Name}
+                        {$"{userInfoViewModel.LoginType}Name", userInfoViewModel.Name}
                     } }
                 };
                 await blob.UploadGenericObjectAsync(obj);
@@ -91,10 +105,14 @@ namespace WebUI.Services
                 var emailF = JsonUtils.GetJToken(userId.ToString(), userJson) as JObject;
                 if (emailF == null)
                 {
+                    if (userInfoViewModel.LoginType != "microsoft")
+                    {
+                        return;
+                    }
                     userJson.Add(userId.ToString(), new JObject
                     {
                         {"email", userInfoViewModel.Email}, {$"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id },
-                        {"name", userInfoViewModel.Name}
+                        {$"{userInfoViewModel.LoginType}Name", userInfoViewModel.Name}
                     });
                     await blob.UploadGenericObjectAsync(userJson);
                 }
@@ -104,6 +122,8 @@ namespace WebUI.Services
                     if (id == null)
                     {
                         emailF.Add($"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id);
+                        emailF.Add($"{userInfoViewModel.LoginType}Name", userInfoViewModel.Name);
+                        await blob.UploadGenericObjectAsync(userJson);
                     }
                 }
             }
