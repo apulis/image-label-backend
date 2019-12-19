@@ -58,11 +58,8 @@ namespace WebUI.Services
             {
                 if (userInfoViewModel.LoginType != "microsoft" && microsoftId != null)
                 {
-                    newUserId = microsoftId;
-                    var newblob = GetBlob("cdn", "private", null, null, $"user", "list.json");
-                    var newUserJson = await newblob.DownloadGenericObjectAsync();
-                    var newObj = JsonUtils.GetJToken(newUserId, newUserJson) as JObject;
-                    if (newObj == null)
+                    newUserId = await FindUserIdByOpenId(microsoftId);
+                    if (newUserId == null)
                     {
                         return;
                     }
