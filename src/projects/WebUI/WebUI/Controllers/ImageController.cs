@@ -72,17 +72,17 @@ namespace WebUI.Controllers
         public async Task<IActionResult> Get(string task_id, int id)
         {
             var userId = HttpContext.User.Identity.Name;
-            Response re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id);
-            if (re.Code==200)
+            bool re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id);
+            if (re)
             {
                 var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
                 var json = await blob.DownloadGenericObjectAsync();
                 if (json != null)
                 {
-                    re.Data = json;
+                    return Content(new Response { Successful = "true", Msg = "ok", Data = json }.JObjectToString());
                 }
             }
-            return Content(Base64Ops.Base64Encode(re.JObjectToString()));
+            return Content(new Response { Successful = "true", Msg = "user don't has this dataset", Data = null }.JObjectToString());
         }
 
         // POST: api/Image
@@ -90,8 +90,8 @@ namespace WebUI.Controllers
         public async Task<IActionResult> Post(string task_id, int id,[FromBody] string value)
         {
             var userId = HttpContext.User.Identity.Name;
-            Response re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id);
-            if (re.Code == 200)
+            bool re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, task_id);
+            if (re)
             {
                 var blob = AzureService.GetBlob(null, $"tasks/{task_id}/images", $"{id}.json");
                 try
@@ -103,27 +103,26 @@ namespace WebUI.Controllers
                 }
                 catch (Exception e)
                 {
-                    re.Code = 500;
-                    re.Msg = e.Message;
+                    return Content(new Response { Successful = "false", Msg = e.Message, Data = null }.JObjectToString());
                 }
             }
-            return Content(Base64Ops.Base64Encode(re.JObjectToString()));
+            return Content(new Response { Successful = "true", Msg = "ok", Data = null }.JObjectToString());
         }
 
         [HttpGet("{taskId}/next")]
         public async Task<IActionResult> GetNext(string taskId)
         {
             var userId = HttpContext.User.Identity.Name;
-            Response re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, taskId);
-            if (re.Code == 200)
+            bool re = await AzureService.FindUserHasThisTask(userId, HttpContext.Session, taskId);
+            if (re)
             {
                 int nextTaskId = await AzureService.GetNextTaskId(taskId, userId);
-                if (nextTaskId != 0)
+                if (nextTaskId != -1)
                 {
-                    re.Data = new JObject{"next", nextTaskId};
+                    return Content(new Response { Successful = "true", Msg = "ok", Data = new JObject { "next", nextTaskId }}.JObjectToString());
                 }
             }
-            return Content(Base64Ops.Base64Encode(re.JObjectToString()));
+            return Content(new Response { Successful = "true", Msg = "no next id", Data = null }.JObjectToString());
         }
 
 

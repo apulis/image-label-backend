@@ -36,7 +36,6 @@ namespace WebUI.Controllers
 
         public string LoginProvider { get; set; }
 
-
         public LoginController(ILoggerFactory logger, IConfiguration configuration, SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager)
         {
             _configuration = configuration;
@@ -174,7 +173,8 @@ namespace WebUI.Controllers
                 {
                     Email = email,
                     Name = name,
-                    Id = infoJson.GetValue("id").ToString()
+                    Id = infoJson.GetValue("id").ToString(),
+                    LoginType = signinType
                 };
             }
             else if(infoJson.GetValue("openid") != null)
@@ -183,8 +183,9 @@ namespace WebUI.Controllers
                 {
                     Name = infoJson.GetValue("nickname").ToString(),
                     Id = infoJson.GetValue("openid").ToString(),
-                    Email = JsonUtils.GetJToken("email", json) == null ? null : JsonUtils.GetJToken("email", json).ToString()
-            };
+                    Email = JsonUtils.GetJToken("email", json) == null ? null : JsonUtils.GetJToken("email", json).ToString(),
+                    LoginType = signinType
+                };
             }
 
             if (Input != null)

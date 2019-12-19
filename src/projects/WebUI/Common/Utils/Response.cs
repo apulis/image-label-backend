@@ -7,16 +7,16 @@ namespace Common.Utils
 {
     public class Response
     {
-        public int Code { get; set; }
+        public string Successful { get; set; }
         public string Msg { get; set; }
         public JObject Data { get; set; }
         public string JObjectToString()
         {
             var obj = new JObject
             {
-                {"Code", Code},
-                {"Msg", Msg},
-                {"Data", Data}
+                {"successful", Successful},
+                {"msg", Msg},
+                {"data", Data}
             };
             return obj.ToString();
 

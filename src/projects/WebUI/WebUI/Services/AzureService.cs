@@ -67,8 +67,6 @@ namespace WebUI.Services
                 var obj = new JObject
                 {
                     { Constants.JsontagUserId, userId},
-                    {"email", userInfoViewModel.Email},
-                    {"name", userInfoViewModel.Name}
                 };
                 await configBlob.UploadGenericObjectAsync(obj);
             }
@@ -79,7 +77,12 @@ namespace WebUI.Services
             {
                 var obj = new JObject
                 {
-                    { userId.ToString(), new JObject(){{"email", userInfoViewModel.Email},{"id", userInfoViewModel.Id } } }
+                    { userId.ToString(), new JObject
+                    {
+                        {$"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id },
+                        {"email", userInfoViewModel.Email},
+                        {"name", userInfoViewModel.Name}
+                    } }
                 };
                 await blob.UploadGenericObjectAsync(obj);
             }
@@ -88,31 +91,22 @@ namespace WebUI.Services
                 var emailF = JsonUtils.GetJToken(userId.ToString(), userJson) as JObject;
                 if (emailF == null)
                 {
-                    userJson.Add(userId.ToString(), new JObject() {{"email", userInfoViewModel.Email}, {"id", userInfoViewModel.Id } });
+                    userJson.Add(userId.ToString(), new JObject
+                    {
+                        {"email", userInfoViewModel.Email}, {$"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id },
+                        {"name", userInfoViewModel.Name}
+                    });
                     await blob.UploadGenericObjectAsync(userJson);
                 }
+                else
+                {
+                    var id = JsonUtils.GetJToken($"{userInfoViewModel.LoginType}Id", emailF);
+                    if (id == null)
+                    {
+                        emailF.Add($"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id);
+                    }
+                }
             }
-
-            var emailBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "email.json");
-            //var emailJson = await emailBlob.DownloadGenericObjectAsync();
-            //if (emailJson == null)
-            //{
-            //    var obj = new JObject
-            //    {
-            //        { email, new JObject(){{"userId", userId.ToString() } } }
-            //    };
-            //    await emailBlob.UploadGenericObjectAsync(obj);
-            //}
-            //else
-            //{
-            //    var emailF = JsonUtils.GetJToken(email, emailJson) as JObject;
-            //    if (emailF == null)
-            //    {
-            //        emailJson.Add(email, new JObject() { { "userId", userId.ToString() } });
-            //        await emailBlob.UploadGenericObjectAsync(emailJson);
-            //    }
-            //}
-
         }
         public static async Task<string> FindUserId(IdentityUser user)
         {
@@ -130,16 +124,12 @@ namespace WebUI.Services
         }
         public static async Task<string> FindUserEmail(string userId)
         {
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
-            var userJson = await blob.DownloadGenericObjectAsync();
-            var obj = JsonUtils.GetJToken(userId, userJson) as JObject;
-            string email = null;
+            var obj = await FindUserInfo(userId);
             if (!Object.ReferenceEquals(obj, null))
             {
-                email = obj["email"].ToString();
+                return obj["email"].ToString();
             }
-
-            return email;
+            return null;
         }
 
         public static async Task<string> FindUserId(string email)
@@ -173,6 +163,17 @@ namespace WebUI.Services
             return Name;
         }
 
+        public static async Task<JObject> FindUserInfo(string userId)
+        {
+            var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var userJson = await blob.DownloadGenericObjectAsync();
+            var obj = JsonUtils.GetJToken(userId, userJson) as JObject;
+            if (!Object.ReferenceEquals(obj, null))
+            {
+                return obj;
+            }
+            return null;
+        }
         public static async Task<JToken> FindDataSetInfo(string accountId,string dataSetId)
         {
             var blob = GetBlob("cdn", "private", null, null, $"account/{accountId}", "membership.json");
@@ -198,7 +199,7 @@ namespace WebUI.Services
             JObject tasks = new JObject();
             if (userId == null)
             {
-                return new Response{Code = 401,Msg = "Not UserId",Data = tasks};
+                return new Response{Successful = "false",Msg = "Not UserId",Data = tasks};
             }
             var result = SessionOps.GetSession<JObject>(session.Get($"user_{userId}_tasks_list"));
             if (result != null)
@@ -228,14 +229,14 @@ namespace WebUI.Services
                 }
                 SessionOps.SetSession($"user_{userId}_tasks_list", tasks, session);
             }
-            return new Response { Code = 200, Msg = "ok", Data = tasks };
+            return new Response { Successful = "true", Msg = "ok", Data = tasks };
         }
         public static async Task<Response> FindUserOneTaskInfo(string userId, ISession session,string taskId)
         {
             var content = new JObject();
             if (userId == null)
             {
-                return new Response { Code = 401, Msg = "Not UserId", Data = content };
+                return new Response { Successful = "false", Msg = "Not UserId", Data = content };
             }
             var result = SessionOps.GetSession<JObject>(session.Get($"user_{userId}_task_{taskId}_list"));
             if (result != null)
@@ -244,8 +245,8 @@ namespace WebUI.Services
             }
             else
             {
-                Response re = await FindUserHasThisTask(userId, session, taskId);
-                if (re.Code==200)
+                bool re = await FindUserHasThisTask(userId, session, taskId);
+                if (re)
                 {
                     var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
                     var json = await blob.DownloadGenericObjectAsync();
@@ -270,22 +271,21 @@ namespace WebUI.Services
                 }
                 SessionOps.SetSession($"user_{userId}_task_{taskId}_list", content, session);
             }
-            return new Response { Code = 200, Msg = "ok", Data = content };
+            return new Response { Successful = "true", Msg = "ok", Data = content };
         }
 
-        public static async Task<Response> FindUserHasThisTask(string userId, ISession session, string taskId)
+        public static async Task<bool> FindUserHasThisTask(string userId, ISession session, string taskId)
         {
-            int code = 401;
             if (userId == null)
             {
-                return new Response { Code = code, Msg = "Not UserId"};
+                return false;
             }
             var result = SessionOps.GetSession<string>(session.Get($"user_{userId}_task_{taskId}_permission"));
             if (result != null)
             {
                 if (result == "true")
                 {
-                    code = 200;
+                    return true;
                 }
             }
             else
@@ -293,16 +293,12 @@ namespace WebUI.Services
                 Response tasks = await FindUserTasks(userId, session);
                 if (JsonUtils.GetJToken(taskId, tasks.Data) != null)
                 {
-                    code = 200;
                     SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "true", session);
+                    return true;
                 }
-                else
-                {
-                    SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "false", session);
-                }
+                SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "false", session);
             }
-            return new Response { Code = code, Msg = "ok" };
-
+            return false;
         }
 
         public static async Task<int> GetNextTaskId(string taskId,string userId)
