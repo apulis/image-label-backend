@@ -51,79 +51,130 @@ namespace WebUI.Services
             return null;
         }
 
-        public static async Task CreateUserId(UserInfoViewModel userInfoViewModel,string microsoftId=null)
+        public static async Task<int> GenUserId()
         {
-            var newUserId =await FindUserIdByOpenId(userInfoViewModel.Id);
-            if (String.IsNullOrEmpty(newUserId))
-            {
-                if (userInfoViewModel.LoginType != "microsoft" && microsoftId != null)
-                {
-                    newUserId = await FindUserIdByOpenId(microsoftId);
-                    if (newUserId == null)
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    newUserId = Guid.NewGuid().ToString().ToUpper();
-                }
-            }
-            var configBlob = GetBlob("cdn", "private", null, null, $"user-login/{userInfoViewModel.Id}", WebUIConfig.mapFile);
-            var json = await configBlob.DownloadGenericObjectAsync();
-            var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
-            if (userId == null)
-            {
-                userId = newUserId;
-                var obj = new JObject
-                {
-                    { Constants.JsontagUserId, userId},
-                };
-                await configBlob.UploadGenericObjectAsync(obj);
-            }
-
-            var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var blob = GetBlob("cdn", "private", null, null, $"user", "id.json");
             var userJson = await blob.DownloadGenericObjectAsync();
             if (userJson == null)
             {
+                await blob.UploadGenericObjectAsync(new JObject{{ "maxId", 1000 } });
+                return 1000;
+            }
+            var maxId = (int)JsonUtils.GetJToken("maxId", userJson);
+            await blob.UploadGenericObjectAsync(new JObject { { "maxId", maxId + 1 } });
+            return maxId + 1;
+        }
+        public static async Task<string> CreateUserId(UserInfoViewModel userInfoViewModel)
+        {
+            var userId =await FindUserIdByOpenId(userInfoViewModel.Id);
+            if (string.IsNullOrEmpty(userId))
+            {
+                userId = Guid.NewGuid().ToString().ToUpper();
+                var configBlob = GetBlob("cdn", "private", null, null, $"user-login/{userInfoViewModel.Id}", WebUIConfig.mapFile);
                 var obj = new JObject
                 {
-                    { userId.ToString(), new JObject
-                    {
-                        {$"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id },
-                        {"email", userInfoViewModel.Email},
-                        {$"{userInfoViewModel.LoginType}Name", userInfoViewModel.Name}
-                    } }
+                    { Constants.JsontagUserId, userId}
                 };
-                await blob.UploadGenericObjectAsync(obj);
-            }
-            else
-            {
-                var emailF = JsonUtils.GetJToken(userId.ToString(), userJson) as JObject;
-                if (emailF == null)
+                await configBlob.UploadGenericObjectAsync(obj);
+
+                var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
+                var userJson = await blob.DownloadGenericObjectAsync();
+                if (userJson == null)
                 {
-                    if (userInfoViewModel.LoginType != "microsoft")
+                    var newObj = new JObject
                     {
-                        return;
-                    }
-                    userJson.Add(userId.ToString(), new JObject
-                    {
-                        {"email", userInfoViewModel.Email}, {$"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id },
-                        {$"{userInfoViewModel.LoginType}Name", userInfoViewModel.Name}
-                    });
-                    await blob.UploadGenericObjectAsync(userJson);
+                        { userId, new JObject
+                        {
+                            {"id",await GenUserId()},
+                            {"loginId", userInfoViewModel.Id },
+                            {"email", userInfoViewModel.Email},
+                            {"name", userInfoViewModel.Name},
+                            {"loginType",userInfoViewModel.LoginType },
+                            {"externalLoginMessage",new JObject() }
+                        } }
+                    };
+                    await blob.UploadGenericObjectAsync(newObj);
                 }
                 else
                 {
-                    var id = JsonUtils.GetJToken($"{userInfoViewModel.LoginType}Id", emailF);
-                    if (id == null)
+                    var emailF = JsonUtils.GetJToken(userId, userJson) as JObject;
+                    if (emailF == null)
                     {
-                        emailF.Add($"{userInfoViewModel.LoginType}Id", userInfoViewModel.Id);
-                        emailF.Add($"{userInfoViewModel.LoginType}Name", userInfoViewModel.Name);
+                        userJson.Add(userId, new JObject
+                        {
+                            {"id",await GenUserId()},
+                            {"loginId", userInfoViewModel.Id },
+                            {"email", userInfoViewModel.Email},
+                            {"name", userInfoViewModel.Name},
+                            {"loginType",userInfoViewModel.LoginType },
+                            {"externalLoginMessage",new JObject() }
+                        });
                         await blob.UploadGenericObjectAsync(userJson);
                     }
                 }
             }
+            return userId;
+        }
+        public static async Task<string> BindLogin(UserInfoViewModel userInfoViewModel)
+        {
+            var userId = await FindUserIdByOpenId(userInfoViewModel.BindId);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return "用户要绑定的账号不存在";
+            }
+            //当前登录方式的对应信息
+            var configBlob = GetBlob("cdn", "private", null, null, $"user-login/{userInfoViewModel.Id}", WebUIConfig.mapFile);
+            var prevObj =await configBlob.DownloadGenericObjectAsync();
+            var prevUserId = JsonUtils.GetJToken(Constants.JsontagUserId, prevObj)?.ToString();
+            if (prevUserId == userId)
+            {
+                return "已经绑定过了";
+            }
+            var obj = new JObject
+            {
+                { Constants.JsontagUserId, userId}
+            };
+            await configBlob.UploadGenericObjectAsync(obj);
+
+            var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var userJson = await blob.DownloadGenericObjectAsync();
+            var emailF = JsonUtils.GetJToken(userId, userJson) as JObject;
+            if (emailF == null)
+            {
+                return "用户要绑定的账号不存在";
+            }
+            var currObj = JsonUtils.GetJToken("externalLoginMessage", emailF) as JObject;
+            if (prevUserId == null)
+            {
+                currObj.Add(
+                    userInfoViewModel.LoginType, new JObject()
+                    {
+                        {"id", await GenUserId()},
+                        {"loginId", userInfoViewModel.Id},
+                        {"email", userInfoViewModel.Email},
+                        {"name", userInfoViewModel.Name},
+                        {"prevUserId",prevUserId }
+                    });
+            }
+            else
+            {
+                var prevUserObj = JsonUtils.GetJToken(prevUserId, userJson) as JObject;
+                currObj.Add(userInfoViewModel.LoginType,new JObject()
+                {
+                    {"id",prevUserObj["id"]},
+                    {"loginId", prevUserObj["loginId"]},
+                    {"email", prevUserObj["email"]},
+                    {"name",prevUserObj["name"]},
+                    {"prevUserId",prevUserId }
+                });
+                var prevLoginMsg = JsonUtils.GetJToken("externalLoginMessage", prevUserObj) as JObject;
+                foreach (var one in prevLoginMsg)
+                {
+                    currObj.Add(one.Key, one.Value as JObject);
+                }
+            }
+            await blob.UploadGenericObjectAsync(userJson);
+            return "绑定成功";
         }
         public static async Task<string> FindUserId(IdentityUser user)
         {

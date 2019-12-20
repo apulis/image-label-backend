@@ -14,6 +14,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Text;
+using Common.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -141,7 +143,6 @@ namespace WebUI.Controllers
             return null;
 
         }
-
         [HttpGet("{signinType}")]
         public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null,string state=null)
         {
@@ -155,9 +156,9 @@ namespace WebUI.Controllers
                 return Redirect($"{_configuration["FontEndUrl"]}/login");
             }
             var json = JsonConvert.DeserializeObject<JObject> (tokenStr);
-            string access_token = JsonUtils.GetJToken("access_token", json).ToString();
-            string refresh_token = JsonUtils.GetJToken("refresh_token", json).ToString();
-            string openid = JsonUtils.GetJToken("openid", json)==null?null: JsonUtils.GetJToken("openid", json).ToString();
+            string access_token = Json.GetJToken("access_token", json).ToString();
+            string refresh_token = Json.GetJToken("refresh_token", json).ToString();
+            string openid = Json.GetJToken("openid", json)?.ToString();
 
             string infoStr = getUserInfo(signinType,access_token, openid);
             var infoJson = JsonConvert.DeserializeObject<JObject>(infoStr);
@@ -179,23 +180,18 @@ namespace WebUI.Controllers
             }
             else if(signinType == "wechat")
             {
-                if (state == null)
-                {
-                    return Redirect($"{_configuration["FontEndUrl"]}/login");
-                }
                 Input = new UserInfoViewModel
                 {
                     Name = infoJson.GetValue("nickname").ToString(),
-                    Id = infoJson.GetValue("openid").ToString(),
-                    Email = JsonUtils.GetJToken("email", json) == null ? null : JsonUtils.GetJToken("email", json).ToString(),
+                    Id = infoJson.GetValue("unionid").ToString(),
+                    Email = JsonUtils.GetJToken("email", json)?.ToString(),
                     LoginType = signinType
                 };
             }
 
             if (Input != null)
             {
-                await AzureService.CreateUserId(Input, state);
-                var userId = await AzureService.FindUserIdByOpenId(Input.Id);
+                var userId = await AzureService.CreateUserId(Input);
                 if (userId == null)
                 {
                     return Redirect($"{_configuration["FontEndUrl"]}/login");
@@ -217,6 +213,62 @@ namespace WebUI.Controllers
                 return Redirect($"{_configuration["FontEndUrl"]}/?token={tokenGenerate}");
             }
             return Redirect($"{_configuration["FontEndUrl"]}/login");
+        }
+
+        [HttpGet("bind/{signinType}")]
+        public async Task<IActionResult> Bind(string signinType, string returnUrl = null, string remoteError = null,string code = null, string state = null)
+        {
+            if (remoteError != null|| state==null)
+            {
+                return Redirect($"{_configuration["FontEndUrl"]}/account/info");
+            }
+            string tokenStr = getToken(signinType, code);
+            if (tokenStr == null)
+            {
+                return Redirect($"{_configuration["FontEndUrl"]}/account/info ");
+            }
+            var json = JsonConvert.DeserializeObject<JObject>(tokenStr);
+            string access_token = Json.GetJToken("access_token", json).ToString();
+            string refresh_token = Json.GetJToken("refresh_token", json).ToString();
+            string openid = Json.GetJToken("openid", json)?.ToString();
+
+            string infoStr = getUserInfo(signinType, access_token, openid);
+            var infoJson = JsonConvert.DeserializeObject<JObject>(infoStr);
+            if (signinType == "microsoft")
+            {
+                var name = infoJson.GetValue("displayName").ToString();
+                var email = infoJson.GetValue("mail").ToString();
+                if (name == null)
+                {
+                    name = email;
+                }
+                Input = new UserInfoViewModel
+                {
+                    Email = email,
+                    Name = name,
+                    Id = infoJson.GetValue("id").ToString(),
+                    LoginType = signinType,
+                    BindId = state
+                };
+            }
+            else if (signinType == "wechat")
+            {
+                Input = new UserInfoViewModel
+                {
+                    Name = infoJson.GetValue("nickname").ToString(),
+                    Id = infoJson.GetValue("unionid").ToString(),
+                    Email = JsonUtils.GetJToken("email", json)?.ToString(),
+                    LoginType = signinType,
+                    BindId = state
+                };
+            }
+
+            if (Input != null)
+            {
+                var msg = await AzureService.BindLogin(Input);
+                return Content(new Response { Successful = "true", Msg = msg, Data = null }.JObjectToString());
+            }
+            return Redirect($"{_configuration["FontEndUrl"]}/account/info ");
         }
     }
 }

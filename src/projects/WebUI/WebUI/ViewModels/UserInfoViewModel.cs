@@ -16,6 +16,7 @@ namespace WebUI.ViewModels
         public string Id { get; set; }
 
         public string LoginType { get; set; }
+        public string BindId { get; set; }
 
     }
 }
