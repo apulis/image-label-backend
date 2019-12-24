@@ -75,7 +75,7 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         [HttpDelete("{projectId}")]
-        public async Task<IActionResult> DeleteProject(string projectId)
+        public async Task<IActionResult> DeleteProject(Guid projectId)
         {
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
@@ -87,7 +87,7 @@ namespace WebUI.Controllers
             await blob.DeleteAsync();
             var accblob = AzureService.GetBlob("cdn", "private", null, null, $"account", "index.json");
             var accjson = await accblob.DownloadGenericObjectAsync();
-            var accObj = JsonUtils.GetJToken(projectId, accjson) as JObject;
+            var accObj = JsonUtils.GetJToken(projectId.ToString(), accjson) as JObject;
             if (!Object.ReferenceEquals(accObj, null))
             {
                 foreach (var one in accObj)
@@ -107,7 +107,7 @@ namespace WebUI.Controllers
                                 {
                                     foreach (var o in userArray)
                                     {
-                                        if (o.ToString() == projectId)
+                                        if (o.ToString() == projectId.ToString())
                                         {
                                             userArray.Remove(o);
                                             break;
@@ -117,7 +117,7 @@ namespace WebUI.Controllers
                                 var userObj = JsonUtils.GetJToken("dataSets", userJson) as JObject;
                                 if (!Object.ReferenceEquals(userObj, null))
                                 {
-                                    userObj.Remove(projectId);
+                                    userObj.Remove(projectId.ToString());
                                 }
                                 await userBlob.UploadGenericObjectAsync(userJson);
                             }
@@ -125,7 +125,7 @@ namespace WebUI.Controllers
                     }
                 }
             }
-            accjson.Remove(projectId);
+            accjson.Remove(projectId.ToString());
             await accblob.UploadGenericObjectAsync(accjson);
             HttpContext.Session.Clear();
             return Ok(new Response { Msg = "ok" });
@@ -181,7 +181,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="accountViewModel">新的name和info字段</param>
         [HttpPatch("{projectId}")]
-        public async Task<IActionResult> UpdateProject(string projectId, AddProjectViewModel accountViewModel)
+        public async Task<IActionResult> UpdateProject(Guid projectId, AddProjectViewModel accountViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -195,7 +195,7 @@ namespace WebUI.Controllers
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
-            var accountObj = JsonUtils.GetJToken(projectId, allAccounts) as JObject;
+            var accountObj = JsonUtils.GetJToken(projectId.ToString(), allAccounts) as JObject;
             if (accountObj != null)
             {
                 accountObj["name"] = accountViewModel.Name;
@@ -210,7 +210,7 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         [HttpGet("{projectId}/managers")]
-        public async Task<IActionResult> GetProjectManagers(string projectId)
+        public async Task<IActionResult> GetProjectManagers(Guid projectId)
         {
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
@@ -243,7 +243,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         ///<param name = "userNumber" > 用户唯一标识数字 </param>
         [HttpGet("{projectId}/managers/{userNumber}")]
-        public async Task<IActionResult> CheckProjectManagerExists(string projectId, int userNumber)
+        public async Task<IActionResult> CheckProjectManagerExists(Guid projectId, int userNumber)
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
@@ -278,7 +278,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="userNumbers">用户的唯一标识数字列表</param>
         [HttpPost("{projectId}/managers")]
-        public async Task<IActionResult> AddProjectManager(string projectId,[FromBody]List<int> userNumbers)
+        public async Task<IActionResult> AddProjectManager(Guid projectId,[FromBody]List<int> userNumbers)
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
@@ -311,7 +311,7 @@ namespace WebUI.Controllers
                     }
                     else
                     {
-                        if (!Json.ContainsKey(projectId,accounts))
+                        if (!Json.ContainsKey(projectId.ToString(), accounts))
                         {
                             accounts.Add(projectId);
                             await configBlob.UploadGenericObjectAsync(json);
@@ -354,7 +354,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="userNumber">用户唯一标识数字</param>
         [HttpDelete("{projectId}/managers")]
-        public async Task<IActionResult> DeleteProjectManager(string projectId,[FromBody] int userNumber)
+        public async Task<IActionResult> DeleteProjectManager(Guid projectId,[FromBody] int userNumber)
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
@@ -374,7 +374,7 @@ namespace WebUI.Controllers
             {
                 foreach (var oneAccount in accounts)
                 {
-                    if (String.Compare(oneAccount.ToString(), projectId, true) == 0)
+                    if (String.Compare(oneAccount.ToString(), projectId.ToString(), true) == 0)
                     {
                         accounts.Remove(oneAccount);
                         await configBlob.UploadGenericObjectAsync(json);

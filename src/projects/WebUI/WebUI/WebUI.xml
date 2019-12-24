@@ -4,14 +4,14 @@
         <name>WebUI</name>
     </assembly>
     <members>
-        <member name="M:WebUI.Controllers.DatasetController.GetDatasets(System.String)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDatasets(System.Guid)">
             <remarks>
             获取当前用户的projectId对应的project下的所属数据集
             返回List,数据集列表
             </remarks>
             <param name="projectId">project的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.AddDataset(System.String,WebUI.ViewModels.AddDatasetViewModel)">
+        <member name="M:WebUI.Controllers.DatasetController.AddDataset(System.Guid,WebUI.ViewModels.AddDatasetViewModel)">
             <remarks>
             为project添加数据集,需name、info和type字段，datasetId可选
             关于datasetId字段，如果已存在azure blob上的GUID，则需填写，否则无需填写，将新生成
@@ -19,7 +19,7 @@
             </remarks>
             <param name="projectId">project的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.RemoveDataSet(System.String,System.String)">
+        <member name="M:WebUI.Controllers.DatasetController.RemoveDataSet(System.Guid,System.Guid)">
             <remarks>
             为project删除数据集
             如果成功，返回msg=ok,successful="true"
@@ -27,7 +27,7 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">将要删除dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetUsers(System.String,System.String)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetUsers(System.Guid,System.Guid)">
             <remarks>
             获取project下特定数据集的标注用户列表
             返回用户信息列表
@@ -35,7 +35,7 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.RemoveUser(System.String,System.String,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.RemoveUser(System.Guid,System.Guid,System.Int32)">
             <remarks>
             为project下特定数据集删除指定的标注用户
             如果成功，返回msg=ok,successful="true"
@@ -44,7 +44,7 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="userNumber">将要删除的用户唯一标识数字</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.AddUserToDataSet(System.String,System.String,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.AddUserToDataSet(System.Guid,System.Guid,System.Int32)">
             <remarks>
             为project下特定数据集添加指定number的标注用户
             如果成功，返回msg=ok,successful="true"
@@ -53,7 +53,7 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.CheckUserExists(System.String,System.String,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.CheckUserExists(System.Guid,System.Guid,System.Int32)">
             <remarks>
             检测指定number的标注用户是否已经存在于project下特定数据集
             user already exists!表示用户已经存在于数据集，Cannot find userId!表示找不到该用户number，ok表示可以添加
@@ -68,7 +68,7 @@
             返回List
             </remarks>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.DeleteProject(System.String)">
+        <member name="M:WebUI.Controllers.ProjectController.DeleteProject(System.Guid)">
             <remarks>
             删除一个project
             如果成功，返回msg=ok,successful="true"
@@ -82,7 +82,7 @@
             </remarks>
             <param name="accountViewModel">需name和info字段</param>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.UpdateProject(System.String,WebUI.ViewModels.AddProjectViewModel)">
+        <member name="M:WebUI.Controllers.ProjectController.UpdateProject(System.Guid,WebUI.ViewModels.AddProjectViewModel)">
             <remarks>
             修改一个特定的project
             如果成功，返回msg=ok,successful="true"
@@ -90,14 +90,14 @@
             <param name="projectId">project的GUid</param>
             <param name="accountViewModel">新的name和info字段</param>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.GetProjectManagers(System.String)">
+        <member name="M:WebUI.Controllers.ProjectController.GetProjectManagers(System.Guid)">
             <remarks>
             获取指定的project的项目管理员列表
             返回List用户信息列表
             </remarks>
             <param name="projectId">project的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.CheckProjectManagerExists(System.String,System.Int32)">
+        <member name="M:WebUI.Controllers.ProjectController.CheckProjectManagerExists(System.Guid,System.Int32)">
              <remarks>
              检测用户是否已经是该project的项目管理员
              manager already exists!表示用户已经存在于数据集，Cannot find userId!表示找不到该用户number，ok表示可以添加
@@ -105,7 +105,7 @@
              <param name="projectId">project的GUid</param>
             <param name = "userNumber" > 用户唯一标识数字 </param>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.AddProjectManager(System.String,System.Collections.Generic.List{System.Int32})">
+        <member name="M:WebUI.Controllers.ProjectController.AddProjectManager(System.Guid,System.Collections.Generic.List{System.Int32})">
             <remarks>
             为指定的project添加项目管理员
             如果成功，返回msg=ok,successful="true"
@@ -113,7 +113,7 @@
             <param name="projectId">project的GUid</param>
             <param name="userNumbers">用户的唯一标识数字列表</param>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.DeleteProjectManager(System.String,System.Int32)">
+        <member name="M:WebUI.Controllers.ProjectController.DeleteProjectManager(System.Guid,System.Int32)">
             <remarks>
             为指定的project删除项目管理员
             如果成功，返回msg=ok,successful="true"

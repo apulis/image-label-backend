@@ -8,7 +8,7 @@ namespace WebUI.ViewModels
 {
     public class AddDatasetViewModel
     {
-        public string dataSetId { get; set; }
+        public Guid dataSetId { get; set; }
         [Required]
         public string Name { get; set; }
         [Required]
