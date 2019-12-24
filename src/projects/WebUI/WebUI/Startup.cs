@@ -27,6 +27,7 @@ using WebUI.Utils;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.Swagger;
 using WebUI.Azure;
 using WebUI.Services;
 
@@ -193,8 +194,10 @@ namespace WebUI
             });
 
             services.AddDistributedMemoryCache();
-
-
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
+            });
         }
 
 
@@ -205,8 +208,7 @@ namespace WebUI
             var loggerStorage = loggerFactory.CreateLogger<CloudProvider>();
             // Setting up Cloud Configuration, all other setup should be arranged afterwards. 
             LocalSetting.Setup(loggerStorage);
-
-
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -232,6 +234,11 @@ namespace WebUI
             app.UseForwardedHeaders(forwardedHeadersOptions);
 
             app.UseStaticFiles();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            });
             app.UseCookiePolicy();
 
             app.UseAuthentication();
@@ -244,7 +251,6 @@ namespace WebUI
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-
             CreateRoles(serviceProvider).Wait();
         }
     

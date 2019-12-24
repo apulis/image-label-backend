@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
@@ -35,22 +36,32 @@ namespace WebUI.Services
         {
             var Blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", WebUIConfig.membershipFile);
             var json = await Blob.DownloadGenericObjectAsync();
-            var accounts = JsonUtils.GetJToken("accounts", json);
+            var accounts = JsonUtils.GetJToken("accounts", json) as JArray;
+            List<string> list = new List<string>();
             if (accounts != null)
             {
-                var AccountObj = accounts as JArray;
-                List<string> list = new List<string>();
-                foreach (var account in AccountObj)
+                foreach (var pair in accounts)
                 {
-                    list.Add(account.ToString());
+                    list.Add(pair.ToString());
                 }
-
-                return list;
             }
-
-            return null;
+            return list;
         }
-
+        public static async Task<List<string>> GetUserLabelAccountIdList(string userId)
+        {
+            var Blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", WebUIConfig.membershipFile);
+            var json = await Blob.DownloadGenericObjectAsync();
+            var accounts = JsonUtils.GetJToken("dataSets", json) as JObject;
+            List<string> list = new List<string>();
+            if (accounts != null)
+            {
+                foreach (var account in accounts)
+                {
+                    list.Add(account.Key);
+                }
+            }
+            return list;
+        }
         public static async Task<int> GenUserId()
         {
             var blob = GetBlob("cdn", "private", null, null, $"user", "id.json");
@@ -81,11 +92,12 @@ namespace WebUI.Services
                 var userJson = await blob.DownloadGenericObjectAsync();
                 if (userJson == null)
                 {
+                    var newUserNumber = await GenUserId();
                     var newObj = new JObject
                     {
                         { userId, new JObject
                         {
-                            {"id",await GenUserId()},
+                            {"id",newUserNumber},
                             {"loginId", userInfoViewModel.Id },
                             {"email", userInfoViewModel.Email},
                             {"name", userInfoViewModel.Name},
@@ -94,15 +106,18 @@ namespace WebUI.Services
                         } }
                     };
                     await blob.UploadGenericObjectAsync(newObj);
+                    var numberBlob = GetBlob("cdn", "private", null, null, $"userNumber/{newUserNumber}", "map.json");
+                    await numberBlob.UploadGenericObjectAsync(new JObject{{ "userId", userId } });
                 }
                 else
                 {
                     var emailF = JsonUtils.GetJToken(userId, userJson) as JObject;
                     if (emailF == null)
                     {
+                        var newUserNumber = await GenUserId();
                         userJson.Add(userId, new JObject
                         {
-                            {"id",await GenUserId()},
+                            {"id",newUserNumber},
                             {"loginId", userInfoViewModel.Id },
                             {"email", userInfoViewModel.Email},
                             {"name", userInfoViewModel.Name},
@@ -110,6 +125,8 @@ namespace WebUI.Services
                             {"externalLoginMessage",new JObject() }
                         });
                         await blob.UploadGenericObjectAsync(userJson);
+                        var numberBlob = GetBlob("cdn", "private", null, null, $"userNumber/{newUserNumber}", "map.json");
+                        await numberBlob.UploadGenericObjectAsync(new JObject { "userId", userId });
                     }
                 }
             }
@@ -190,6 +207,14 @@ namespace WebUI.Services
             var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
             return (string)userId;
         }
+
+        public static async Task<string> FindUserIdByNumber(int userNumber)
+        {
+            var numberBlob = GetBlob("cdn", "private", null, null, $"userNumber/{userNumber}", "map.json");
+            var json = await numberBlob.DownloadGenericObjectAsync();
+            var userId = JsonUtils.GetJToken(Constants.JsontagUserId, json);
+            return (string)userId;
+        }
         public static async Task<string> FindUserEmail(string userId)
         {
             var obj = await FindUserInfo(userId);
@@ -236,11 +261,7 @@ namespace WebUI.Services
             var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
             var userJson = await blob.DownloadGenericObjectAsync();
             var obj = JsonUtils.GetJToken(userId, userJson) as JObject;
-            if (!Object.ReferenceEquals(obj, null))
-            {
-                return obj;
-            }
-            return null;
+            return obj;
         }
         public static async Task<JToken> FindDataSetInfo(string accountId,string dataSetId)
         {
@@ -259,7 +280,6 @@ namespace WebUI.Services
                 }
             }
             return null;
-
         }
 
         public static async Task<Response> FindUserTasks(string userId, ISession session)
@@ -412,6 +432,50 @@ namespace WebUI.Services
             var taskObj = Json.GetJToken(id.ToString(), taskJson) as JObject;
             await UpdateTaskStatus(taskObj, targetStatus, userId);
             await taskBlob.UploadGenericObjectAsync(taskJson);
+        }
+
+        public static async Task<string> FindUserRole(string userId)
+        {
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, "user", "role.json");
+            var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            if (!Object.ReferenceEquals(taskJson, null))
+            {
+                foreach (var pair in taskJson)
+                {
+                    var peopleArray = pair.Value as JArray;
+                    foreach (var onepeople in peopleArray)
+                    {
+                        if (String.Compare(onepeople.ToString(), userId, true) == 0)
+                        {
+                            return pair.Key;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        public static async Task<bool> FindUserIsProjectManager(string userId, string projectId)
+        {
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accJson = await accountBlob.DownloadGenericObjectAsync();
+            var admins = JsonUtils.GetJToken("admin", accJson) as JArray;
+            if (admins != null)
+            {
+                if (admins.Contains(userId))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static async Task<JObject> FindDatasetInfo(string projectId, string datasetId)
+        {
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accJson = await accountBlob.DownloadGenericObjectAsync();
+            var datasetObj = JsonUtils.GetJToken("datasets", accJson) as JObject;
+            var infoObj = JsonUtils.GetJToken(datasetId, datasetObj) as JObject;
+            return infoObj;
         }
     }
 }

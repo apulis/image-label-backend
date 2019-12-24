@@ -9,6 +9,9 @@ namespace WebUI.ViewModels
     {
         public string GUid { get; set; }
         public string Name { get; set; }
+        public string Info { get; set; }
+        public string Type { get; set; }
+        public string Role { get; set; }
         public string dataSetId { get; set; }
         public List<UserEmailViewModel> Users { get; set; }
         public DataSetType dataSetType { get; set; }

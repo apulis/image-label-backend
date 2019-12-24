@@ -220,12 +220,12 @@ namespace WebUI.Controllers
         {
             if (remoteError != null|| state==null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}/account/info");
+                return Redirect($"{_configuration["FontEndUrl"]}/account/info?success=false");
             }
             string tokenStr = getToken(signinType, code);
             if (tokenStr == null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}/account/info ");
+                return Redirect($"{_configuration["FontEndUrl"]}/account/info?success=false");
             }
             var json = JsonConvert.DeserializeObject<JObject>(tokenStr);
             string access_token = Json.GetJToken("access_token", json).ToString();
@@ -266,9 +266,9 @@ namespace WebUI.Controllers
             if (Input != null)
             {
                 var msg = await AzureService.BindLogin(Input);
-                return Content(new Response { Successful = "true", Msg = msg, Data = null }.JObjectToString());
+                return Redirect($"{_configuration["FontEndUrl"]}/account/info?success=true");
             }
-            return Redirect($"{_configuration["FontEndUrl"]}/account/info ");
+            return Redirect($"{_configuration["FontEndUrl"]}/account/info?success=false");
         }
     }
 }
