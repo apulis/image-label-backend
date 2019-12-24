@@ -148,12 +148,12 @@ namespace WebUI.Controllers
         {
             if (remoteError != null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}/login");
+                return Redirect($"{_configuration["FontEndUrl"]}/login?error={remoteError}");
             }
             string tokenStr = getToken(signinType,code);
             if (tokenStr == null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}/login");
+                return Redirect($"{_configuration["FontEndUrl"]}/login?error=get-token-failed");
             }
             var json = JsonConvert.DeserializeObject<JObject> (tokenStr);
             string access_token = Json.GetJToken("access_token", json).ToString();
@@ -194,7 +194,7 @@ namespace WebUI.Controllers
                 var userId = await AzureService.CreateUserId(Input);
                 if (userId == null)
                 {
-                    return Redirect($"{_configuration["FontEndUrl"]}/login");
+                    return Redirect($"{_configuration["FontEndUrl"]}/login?error=create-userid-fail");
                 }
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecurityKey"]));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -212,7 +212,7 @@ namespace WebUI.Controllers
                 var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
                 return Redirect($"{_configuration["FontEndUrl"]}/?token={tokenGenerate}");
             }
-            return Redirect($"{_configuration["FontEndUrl"]}/login");
+            return Redirect($"{_configuration["FontEndUrl"]}/login?error=get-message-fail");
         }
 
         [HttpGet("bind/{signinType}")]
