@@ -126,7 +126,7 @@ namespace WebUI.Services
                         });
                         await blob.UploadGenericObjectAsync(userJson);
                         var numberBlob = GetBlob("cdn", "private", null, null, $"userNumber/{newUserNumber}", "map.json");
-                        await numberBlob.UploadGenericObjectAsync(new JObject { "userId", userId });
+                        await numberBlob.UploadGenericObjectAsync(new JObject { { "userId", userId } });
                     }
                 }
             }
