@@ -13,6 +13,7 @@ using WebUI.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.Sqlite;
@@ -196,8 +197,13 @@ namespace WebUI
             services.AddDistributedMemoryCache();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
+                c.SwaggerDoc("v1", new Info { Title = "API docs", Version = "v1" });
+                var basePath = Directory.GetCurrentDirectory();
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(basePath, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
+            
         }
 
 
@@ -237,7 +243,7 @@ namespace WebUI
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API docs V1");
             });
             app.UseCookiePolicy();
 

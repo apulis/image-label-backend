@@ -8,7 +8,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>D:\workstate\RemoteSensing-UI\src\projects\WebUI\WebUI\WebUI.xml</DocumentationFile>
-    <NoWarn>1701;1702；1591</NoWarn>
+    <NoWarn>1701;1702;1591</NoWarn>
+    <OutputPath></OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

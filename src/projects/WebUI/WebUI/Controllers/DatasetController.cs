@@ -21,6 +21,11 @@ namespace WebUI.Controllers
     [ApiController]
     public class DatasetController:ControllerBase
     {
+        /// <remarks>
+        /// 获取当前用户的projectId对应的project下的所属数据集
+        /// 返回List,数据集列表
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
         [HttpGet]
         public async Task<IActionResult> GetDatasets(string projectId)
         {
@@ -66,6 +71,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response().GetJObject("datasets", JToken.FromObject(datasetList)));
         }
+        /// <remarks>
+        /// 为project添加数据集,需name、info和type字段，datasetId可选
+        /// 关于datasetId字段，如果已存在azure blob上的GUID，则需填写，否则无需填写，将新生成
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
         [HttpPost]
         public async Task<IActionResult> AddDataset(string projectId,[FromBody]AddDatasetViewModel dataSetViewModel)
         {
@@ -114,6 +125,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response { Msg = "ok" });
         }
+        /// <remarks>
+        /// 为project删除数据集
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">将要删除dataset的GUid</param>
         [HttpDelete]
         public async Task<IActionResult> RemoveDataSet(string projectId,[FromBody] string dataSetId)
         {
@@ -165,6 +182,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response { Msg = "ok" });
         }
+        /// <remarks>
+        /// 获取project下特定数据集的标注用户列表
+        /// 返回用户信息列表
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/users")]
         public async Task<IActionResult> GetDataSetUsers(string projectId, string dataSetId)
         {
@@ -190,6 +213,13 @@ namespace WebUI.Controllers
             }
             return Ok(new Response().GetJObject("users", JToken.FromObject(userList)));
         }
+        /// <remarks>
+        /// 为project下特定数据集删除指定的标注用户
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="userNumber">将要删除的用户唯一标识数字</param>
         [HttpDelete("{datasetId}/users")]
         public async Task<IActionResult> RemoveUser(string projectId, string dataSetId,[FromBody]int userNumber)
         {
@@ -245,6 +275,13 @@ namespace WebUI.Controllers
             }
             return Ok(new Response { Msg = "ok" });
         }
+        /// <remarks>
+        /// 为project下特定数据集添加指定number的标注用户
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="userNumber">用户唯一标识数字</param>
         [HttpPost("{datasetId}/users")]
         public async Task<IActionResult> AddUserToDataSet(string projectId, string dataSetId,[FromBody]int userNumber)
         {
@@ -318,7 +355,13 @@ namespace WebUI.Controllers
             }
             return Ok(new Response() {Msg = "ok"});
         }
-
+        /// <remarks>
+        /// 检测指定number的标注用户是否已经存在于project下特定数据集
+        /// user already exists!表示用户已经存在于数据集，Cannot find userId!表示找不到该用户number，ok表示可以添加
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="userNumber">用户唯一标识数字</param>
         [HttpGet("{datasetId}/users/{userNumber}")]
         public async Task<IActionResult> CheckUserExists(string projectId, string dataSetId,int userNumber)
         {
