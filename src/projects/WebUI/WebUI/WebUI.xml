@@ -111,7 +111,7 @@
             如果成功，返回msg=ok,successful="true"
             </remarks>
             <param name="projectId">project的GUid</param>
-            <param name="userNumbers">用户数字列表</param>
+            <param name="userNumbers">用户的唯一标识数字列表</param>
         </member>
         <member name="M:WebUI.Controllers.ProjectController.DeleteProjectManager(System.String,System.Int32)">
             <remarks>
@@ -120,6 +120,9 @@
             </remarks>
             <param name="projectId">project的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
+        </member>
+        <member name="M:JwtAuth.MyTokenValicate.ValidateToken(System.String,Microsoft.IdentityModel.Tokens.TokenValidationParameters,Microsoft.IdentityModel.Tokens.SecurityToken@)">
+            验证securityToken
         </member>
     </members>
 </doc>

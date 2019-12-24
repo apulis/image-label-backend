@@ -312,7 +312,7 @@ namespace WebUI.Controllers
             }
             else
             {
-                if (Json.ContainsKey(userId,userIdList))
+                if (!Json.ContainsKey(userId,userIdList))
                 {
                     userIdList.Add(userId);
                     await accountBlob.UploadGenericObjectAsync(json);
@@ -342,7 +342,7 @@ namespace WebUI.Controllers
                     }
                     else
                     {
-                        if (Json.ContainsKey(dataSetId,dataSetArray))
+                        if (!Json.ContainsKey(dataSetId,dataSetArray))
                         {
                             dataSetArray.Add(dataSetId);
                             await blob.UploadGenericObjectAsync(userJson);
@@ -383,7 +383,7 @@ namespace WebUI.Controllers
             var userIdList = JsonUtils.GetJToken("users", datasetInfo) as JArray;
             if (userIdList != null)
             {
-                if (Json.ContainsKey(userId, userIdList))
+                if (!Json.ContainsKey(userId, userIdList))
                 {
                     return Ok(new Response { Msg = "user already exists!" });
                 }

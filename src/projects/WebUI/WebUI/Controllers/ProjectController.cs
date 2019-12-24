@@ -21,6 +21,10 @@ namespace WebUI.Controllers
     [ApiController]
     public class ProjectController:ControllerBase
     {
+        /// <remarks>
+        /// 获取当前用户的所属project列表
+        /// 返回List
+        /// </remarks>
         [HttpGet]
         public async Task<IActionResult> GetProjects()
         {
@@ -65,7 +69,11 @@ namespace WebUI.Controllers
             }
             return Ok(new Response().GetJObject("projects", JToken.FromObject(accounts)));
         }
-
+        /// <remarks>
+        /// 删除一个project
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
         [HttpDelete("{projectId}")]
         public async Task<IActionResult> DeleteProject(string projectId)
         {
@@ -122,6 +130,11 @@ namespace WebUI.Controllers
             HttpContext.Session.Clear();
             return Ok(new Response { Msg = "ok" });
         }
+        /// <remarks>
+        /// 添加一个project
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="accountViewModel">需name和info字段</param>
         [HttpPost]
         public async Task<IActionResult> AddProject([FromBody]AddProjectViewModel accountViewModel)
         {
@@ -161,6 +174,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response { Msg = "ok" });
         }
+        /// <remarks>
+        /// 修改一个特定的project
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="accountViewModel">新的name和info字段</param>
         [HttpPatch("{projectId}")]
         public async Task<IActionResult> UpdateProject(string projectId, AddProjectViewModel accountViewModel)
         {
@@ -185,7 +204,11 @@ namespace WebUI.Controllers
             }
             return Ok(new Response { Msg = "ok" });
         }
-
+        /// <remarks>
+        /// 获取指定的project的项目管理员列表
+        /// 返回List用户信息列表
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
         [HttpGet("{projectId}/managers")]
         public async Task<IActionResult> GetProjectManagers(string projectId)
         {
@@ -213,7 +236,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response().GetJObject("managers", JToken.FromObject(managerList)));
         }
-
+        /// <remarks>
+        /// 检测用户是否已经是该project的项目管理员
+        /// manager already exists!表示用户已经存在于数据集，Cannot find userId!表示找不到该用户number，ok表示可以添加
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        ///<param name = "userNumber" > 用户唯一标识数字 </param>
         [HttpGet("{projectId}/managers/{userNumber}")]
         public async Task<IActionResult> CheckProjectManagerExists(string projectId, int userNumber)
         {
@@ -243,6 +271,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response {Msg = "ok"});
         }
+        /// <remarks>
+        /// 为指定的project添加项目管理员
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="userNumbers">用户的唯一标识数字列表</param>
         [HttpPost("{projectId}/managers")]
         public async Task<IActionResult> AddProjectManager(string projectId,[FromBody]List<int> userNumbers)
         {
@@ -277,7 +311,7 @@ namespace WebUI.Controllers
                     }
                     else
                     {
-                        if (accounts.IndexOf(projectId)!=-1)
+                        if (!Json.ContainsKey(projectId,accounts))
                         {
                             accounts.Add(projectId);
                             await configBlob.UploadGenericObjectAsync(json);
@@ -303,7 +337,7 @@ namespace WebUI.Controllers
                 {
                     foreach (var one in userIdList)
                     {
-                        if (Json.ContainsKey(one, accountsList))
+                        if (!Json.ContainsKey(one, accountsList))
                         {
                             accountsList.Add(one);
                         }
@@ -313,6 +347,12 @@ namespace WebUI.Controllers
             }
             return Ok(new Response{Msg = "add succeed"});
         }
+        /// <remarks>
+        /// 为指定的project删除项目管理员
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="userNumber">用户唯一标识数字</param>
         [HttpDelete("{projectId}/managers")]
         public async Task<IActionResult> DeleteProjectManager(string projectId,[FromBody] int userNumber)
         {
