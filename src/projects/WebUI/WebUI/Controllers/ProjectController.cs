@@ -70,6 +70,11 @@ namespace WebUI.Controllers
         public async Task<IActionResult> DeleteProject(string projectId)
         {
             var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin")
+            {
+                return Ok(new Response {Msg = "You don't have access!"});
+            }
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             await blob.DeleteAsync();
             var accblob = AzureService.GetBlob("cdn", "private", null, null, $"account", "index.json");
@@ -124,6 +129,12 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response{Successful = "true",Msg=ModelState.Values.ToString(),Data= null });
             }
+            var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin")
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
 
@@ -157,6 +168,12 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
+            var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin")
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
             var accountObj = JsonUtils.GetJToken(projectId, allAccounts) as JObject;
@@ -172,6 +189,12 @@ namespace WebUI.Controllers
         [HttpGet("{projectId}/managers")]
         public async Task<IActionResult> GetProjectManagers(string projectId)
         {
+            var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin")
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             List<JObject> managerList = new List<JObject>();
             var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
@@ -194,6 +217,12 @@ namespace WebUI.Controllers
         [HttpGet("{projectId}/managers/{userNumber}")]
         public async Task<IActionResult> CheckProjectManagerExists(string projectId, int userNumber)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin")
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var userId =await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)
             {
@@ -217,6 +246,12 @@ namespace WebUI.Controllers
         [HttpPost("{projectId}/managers")]
         public async Task<IActionResult> AddProjectManager(string projectId,[FromBody]List<int> userNumbers)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin")
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             List<string> userIdList = new List<string>();
             foreach (var userNumber in userNumbers)
             {
@@ -281,6 +316,12 @@ namespace WebUI.Controllers
         [HttpDelete("{projectId}/managers")]
         public async Task<IActionResult> DeleteProjectManager(string projectId,[FromBody] int userNumber)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin")
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)
             {

@@ -73,6 +73,12 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin"|| !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var dataSetId = dataSetViewModel.dataSetId ?? Guid.NewGuid().ToString().ToUpper();
@@ -111,6 +117,12 @@ namespace WebUI.Controllers
         [HttpDelete]
         public async Task<IActionResult> RemoveDataSet(string projectId,[FromBody] string dataSetId)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
@@ -156,6 +168,12 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/users")]
         public async Task<IActionResult> GetDataSetUsers(string projectId, string dataSetId)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             List<JObject> userList = new List<JObject>();
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -175,7 +193,12 @@ namespace WebUI.Controllers
         [HttpDelete("{datasetId}/users")]
         public async Task<IActionResult> RemoveUser(string projectId, string dataSetId,[FromBody]int userNumber)
         {
-
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var datasets = JsonUtils.GetJToken("dataSets", json) as JObject;
@@ -225,6 +248,12 @@ namespace WebUI.Controllers
         [HttpPost("{datasetId}/users")]
         public async Task<IActionResult> AddUserToDataSet(string projectId, string dataSetId,[FromBody]int userNumber)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var userId = await AzureService.FindUserIdByNumber(userNumber);
@@ -293,6 +322,12 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/users/{userNumber}")]
         public async Task<IActionResult> CheckUserExists(string projectId, string dataSetId,int userNumber)
         {
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            {
+                return Ok(new Response { Msg = "You don't have access!" });
+            }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var userId = await AzureService.FindUserIdByNumber(userNumber);
