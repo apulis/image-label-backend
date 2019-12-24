@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using WebUI.ViewModels;
 
-namespace WebUI.ViewModels
+namespace WebUI.Models
 {
-    public class AccountViewModel
+    public class AccountModel
     {
         public string GUid { get; set; }
         public string Name { get; set; }
         public string Info { get; set; }
         public string Role { get; set; }
         public List<UserInfoViewModel> Users { get; set; }
-        public List<DataSetViewModel> DataSets { get; set; }
+        public List<DataSetModel> DataSets { get; set; }
     }
 }

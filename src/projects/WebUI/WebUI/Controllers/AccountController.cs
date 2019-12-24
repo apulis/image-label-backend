@@ -36,7 +36,7 @@ namespace WebUI.Controllers
         // [RequireHttps]
         public async Task<IActionResult> Index()
         {
-            List<AccountViewModel> accounts = new List<AccountViewModel>();
+            List<AccountModel> accounts = new List<AccountModel>();
             List<string> accountList = new List<string>();
             var accountBlob = AzureService.GetBlob("cdn","private",null,null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
@@ -47,7 +47,7 @@ namespace WebUI.Controllers
                     var oneObj = oneAccount.Value as JObject;
                     if (User.IsInRole("Admin"))
                     {
-                        accounts.Add(new AccountViewModel()
+                        accounts.Add(new AccountModel()
                             { GUid = oneAccount.Key, Name = oneObj["name"].ToString() });
                     }
                     else
@@ -57,7 +57,7 @@ namespace WebUI.Controllers
                         {
                             if (accountList.Contains(oneAccount.Key))
                             {
-                                accounts.Add(new AccountViewModel()
+                                accounts.Add(new AccountModel()
                                     { GUid = oneAccount.Key, Name = oneObj["name"].ToString() });
                             }
                         }
@@ -77,7 +77,7 @@ namespace WebUI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddClaim(AccountViewModel accountViewModel)
+        public async Task<IActionResult> AddClaim(AccountModel accountViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -164,11 +164,11 @@ namespace WebUI.Controllers
 
         public async Task<IActionResult> ManageAccount(string id)
         {
-            List<DataSetViewModel> dataSets = new List<DataSetViewModel>();
-            var accountViewModel = new AccountViewModel
+            List<DataSetModel> dataSets = new List<DataSetModel>();
+            var accountViewModel = new AccountModel
             {
                 GUid = id,
-                DataSets = new List<DataSetViewModel>()
+                DataSets = new List<DataSetModel>()
             };
 
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{id}", "membership.json");
@@ -182,7 +182,7 @@ namespace WebUI.Controllers
             var accountListArray = allAccounts as JObject;
             foreach (var oneAccount in accountListArray)
             {
-                dataSets.Add(new DataSetViewModel(){dataSetId = oneAccount.Key,Name = oneAccount.Value["name"].ToString()});
+                dataSets.Add(new DataSetModel(){dataSetId = oneAccount.Key,Name = oneAccount.Value["name"].ToString()});
             }
             accountViewModel.DataSets = dataSets;
             return View(accountViewModel);
@@ -240,7 +240,7 @@ namespace WebUI.Controllers
 
         public IActionResult AddDataSet(string id)
         {
-            var vm = new DataSetViewModel()
+            var vm = new DataSetModel()
             {
                 GUid = id
             };
@@ -248,7 +248,7 @@ namespace WebUI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddDataSet(DataSetViewModel dataSetViewModel)
+        public async Task<IActionResult> AddDataSet(DataSetModel dataSetViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -294,7 +294,7 @@ namespace WebUI.Controllers
         public async Task<IActionResult> ManageDataSet(string id ,string dataSetId)
         {
             List<UserEmailViewModel> userList = new List<UserEmailViewModel>();
-            var vm = new DataSetViewModel()
+            var vm = new DataSetModel()
             {
                 GUid = id,
                 dataSetId = dataSetId,
@@ -431,7 +431,7 @@ namespace WebUI.Controllers
                 }
             }
 
-            var vm = new DataSetViewModel()
+            var vm = new DataSetModel()
             {
                 GUid = id,
                 dataSetId = dataSetId,
@@ -442,7 +442,7 @@ namespace WebUI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddUserToDataSet(DataSetViewModel dataSetViewModel)
+        public async Task<IActionResult> AddUserToDataSet(DataSetModel dataSetViewModel)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{dataSetViewModel.GUid}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();

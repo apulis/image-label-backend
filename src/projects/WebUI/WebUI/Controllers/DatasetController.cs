@@ -26,7 +26,7 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
-            List<DataSetViewModel> datasetList = new List<DataSetViewModel>();
+            List<DatasetViewModel> datasetList = new List<DatasetViewModel>();
             if (role == "admin"|| await AzureService.FindUserIsProjectManager(userId, projectId))
             {
                 var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
@@ -36,7 +36,8 @@ namespace WebUI.Controllers
                 {
                     foreach (var oneAccount in allAccounts)
                     {
-                        datasetList.Add(new DataSetViewModel{ dataSetId = oneAccount.Key, 
+                        datasetList.Add(new DatasetViewModel
+                        { dataSetId = oneAccount.Key, 
                             Name = oneAccount.Value["name"].ToString(),Info = oneAccount.Value["info"].ToString(),
                             Type = oneAccount.Value["type"].ToString(),Role = "admin"
                         });
@@ -53,7 +54,7 @@ namespace WebUI.Controllers
                     foreach (var datasetId in datasets)
                     {
                         var infoObj =await AzureService.FindDatasetInfo(projectId, datasetId.ToString());
-                        datasetList.Add(new DataSetViewModel
+                        datasetList.Add(new DatasetViewModel
                         {
                             dataSetId = datasetId.ToString(),
                             Name = infoObj["name"].ToString(),
@@ -66,7 +67,7 @@ namespace WebUI.Controllers
             return Ok(new Response() { Data = new JObject() { { "datasets", JToken.FromObject(datasetList) } } });
         }
         [HttpPost]
-        public async Task<IActionResult> AddDataset(string projectId,[FromBody]DataSetViewModel dataSetViewModel)
+        public async Task<IActionResult> AddDataset(string projectId,[FromBody]AddDatasetViewModel dataSetViewModel)
         {
             if (!ModelState.IsValid)
             {

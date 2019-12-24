@@ -26,7 +26,7 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
-            List<AccountViewModel> accounts = new List<AccountViewModel>();
+            List<ProjectViewModel> accounts = new List<ProjectViewModel>();
             List<string> accountList = new List<string>();
             List<string> labelAccountList = new List<string>();
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
@@ -38,8 +38,8 @@ namespace WebUI.Controllers
                     var oneObj = oneAccount.Value as JObject;
                     if (role == "admin")
                     {
-                        accounts.Add(new AccountViewModel
-                            { GUid = oneAccount.Key, Name = oneObj["name"].ToString(),Info = oneObj["info"].ToString(),Role="admin"});
+                        accounts.Add(new ProjectViewModel
+                        { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(),Info = oneObj["info"].ToString(),Role="admin"});
                     }
                     else
                     {
@@ -49,15 +49,15 @@ namespace WebUI.Controllers
                         {
                             if (accountList.Contains(oneAccount.Key))
                             {
-                                accounts.Add(new AccountViewModel()
-                                    { GUid = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(),Role ="manager"});
+                                accounts.Add(new ProjectViewModel()
+                                    { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(),Role ="manager"});
                             }
                         }
 
                         if (labelAccountList.Contains(oneAccount.Key))
                         {
-                            accounts.Add(new AccountViewModel
-                                { GUid = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "labeler" });
+                            accounts.Add(new ProjectViewModel
+                            { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "labeler" });
                         }
                     }
 
@@ -118,7 +118,7 @@ namespace WebUI.Controllers
             return Ok(new Response { Msg = "ok" });
         }
         [HttpPost]
-        public async Task<IActionResult> AddProject([FromBody]AccountViewModel accountViewModel)
+        public async Task<IActionResult> AddProject([FromBody]AddProjectViewModel accountViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -151,7 +151,7 @@ namespace WebUI.Controllers
             return Ok(new Response { Msg = "ok" });
         }
         [HttpPatch("{projectId}")]
-        public async Task<IActionResult> UpdateProject(string projectId, AccountViewModel accountViewModel)
+        public async Task<IActionResult> UpdateProject(string projectId, AddProjectViewModel accountViewModel)
         {
             if (!ModelState.IsValid)
             {

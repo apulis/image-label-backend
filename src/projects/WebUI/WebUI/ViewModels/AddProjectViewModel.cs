@@ -5,12 +5,9 @@ using System.Threading.Tasks;
 
 namespace WebUI.ViewModels
 {
-    public class DatasetViewModel
+    public class AddProjectViewModel
     {
-        public string dataSetId { get; set; }
         public string Name { get; set; }
         public string Info { get; set; }
-        public string Type { get; set; }
-        public string Role { get; set; }
     }
 }
