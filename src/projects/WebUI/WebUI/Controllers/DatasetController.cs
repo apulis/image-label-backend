@@ -86,7 +86,7 @@ namespace WebUI.Controllers
             }
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin"|| !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            if (role != "admin"&&!await AzureService.FindUserIsProjectManager(currentUserId, projectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
@@ -136,7 +136,7 @@ namespace WebUI.Controllers
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
@@ -193,7 +193,7 @@ namespace WebUI.Controllers
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
@@ -208,9 +208,18 @@ namespace WebUI.Controllers
                 foreach (var userId in userIdList)
                 {
                     JObject userInfo =await AzureService.FindUserInfo(userId.ToString());
+                    if (userInfo == null)
+                    {
+                        userIdList.Remove(userId);
+                        await accountBlob.UploadGenericObjectAsync(json);
+                        break;
+                    }
                     userList.Add(userInfo);
                 }
             }
+
+            var a = JToken.FromObject(userList);
+            var b = new JArray(userList);
             return Ok(new Response().GetJObject("users", JToken.FromObject(userList)));
         }
         /// <remarks>
@@ -225,7 +234,7 @@ namespace WebUI.Controllers
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
@@ -287,7 +296,7 @@ namespace WebUI.Controllers
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
@@ -322,7 +331,7 @@ namespace WebUI.Controllers
             var userJson = await blob.DownloadGenericObjectAsync();
             if (Object.ReferenceEquals(userJson, null))
             {
-                await blob.UploadGenericObjectAsync(new JObject{{ "dataSets",new JObject{ projectId ,new JArray{ dataSetId } }}});
+                await blob.UploadGenericObjectAsync(new JObject{{ "dataSets",new JObject{ { projectId, new JArray { dataSetId } } }}});
             }
             else
             {
@@ -367,7 +376,7 @@ namespace WebUI.Controllers
         {
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" || !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
@@ -383,7 +392,7 @@ namespace WebUI.Controllers
             var userIdList = JsonUtils.GetJToken("users", datasetInfo) as JArray;
             if (userIdList != null)
             {
-                if (!Json.ContainsKey(userId, userIdList))
+                if (Json.ContainsKey(userId, userIdList))
                 {
                     return Ok(new Response { Msg = "user already exists!" });
                 }

@@ -461,7 +461,7 @@ namespace WebUI.Services
             var admins = JsonUtils.GetJToken("admin", accJson) as JArray;
             if (admins != null)
             {
-                if (admins.Contains(userId))
+                if (Json.ContainsKey(userId,admins))
                 {
                     return true;
                 }
