@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using WebUI.Services;
 
 namespace WebUI.Controllers
@@ -22,7 +23,13 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Identity.Name;
             var obj = await AzureService.FindUserInfo(userId);
-            return Content(new Response { Successful = "true", Msg = "", Data = obj }.JObjectToString());
+            return Ok(new Response().GetJObject("userInfo",JToken.FromObject(obj)));
+        }
+        [HttpGet("userId/{userNumber}")]
+        public async Task<IActionResult> GetUserId(int userNumber)
+        {
+            var userId = await AzureService.FindUserIdByNumber(userNumber);
+            return Ok(new Response().GetJObject("userId", JToken.FromObject(userId)));
         }
     }
 }

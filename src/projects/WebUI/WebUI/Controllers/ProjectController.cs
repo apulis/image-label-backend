@@ -63,7 +63,7 @@ namespace WebUI.Controllers
 
                 }
             }
-            return Ok(new Response(){Data = new JObject(){{ "projects",JToken.FromObject(accounts)} }});
+            return Ok(new Response().GetJObject("projects", JToken.FromObject(accounts)));
         }
 
         [HttpDelete("{projectId}")]
@@ -188,7 +188,7 @@ namespace WebUI.Controllers
                     }
                 }
             }
-            return Ok(new Response() { Data = new JObject() { { "managers", JToken.FromObject(managerList) } } });
+            return Ok(new Response().GetJObject("managers", JToken.FromObject(managerList)));
         }
 
         [HttpGet("{projectId}/managers/{userNumber}")]

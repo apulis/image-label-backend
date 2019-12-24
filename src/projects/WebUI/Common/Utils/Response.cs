@@ -25,7 +25,13 @@ namespace Common.Utils
                 {"data", Data}
             };
             return obj.ToString();
+        }
 
+        public JObject GetJObject(string key,JToken value)
+        {
+            var obj = new JObject() {{"successful", Successful}, {"msg", Msg}};
+            obj.Add(key,value);
+            return obj;
         }
     }
 }

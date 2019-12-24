@@ -64,7 +64,7 @@ namespace WebUI.Controllers
                     }
                 }
             }
-            return Ok(new Response() { Data = new JObject() { { "datasets", JToken.FromObject(datasetList) } } });
+            return Ok(new Response().GetJObject("datasets", JToken.FromObject(datasetList)));
         }
         [HttpPost]
         public async Task<IActionResult> AddDataset(string projectId,[FromBody]AddDatasetViewModel dataSetViewModel)
@@ -170,7 +170,7 @@ namespace WebUI.Controllers
                     userList.Add(userInfo);
                 }
             }
-            return Ok(new Response { Data = new JObject(){{"users",JToken.FromObject(userList)}}});
+            return Ok(new Response().GetJObject("users", JToken.FromObject(userList)));
         }
         [HttpDelete("{datasetId}/users")]
         public async Task<IActionResult> RemoveUser(string projectId, string dataSetId,[FromBody]int userNumber)
