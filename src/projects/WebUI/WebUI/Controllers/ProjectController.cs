@@ -29,42 +29,7 @@ namespace WebUI.Controllers
         public async Task<IActionResult> GetProjects()
         {
             var userId = HttpContext.User.Identity.Name;
-            var role = await AzureService.FindUserRole(userId);
-            List<ProjectViewModel> accounts = new List<ProjectViewModel>();
-            List<string> accountList = new List<string>();
-            List<string> labelAccountList = new List<string>();
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
-            var allAccounts = await accountBlob.DownloadGenericObjectAsync();
-            if (allAccounts != null)
-            {
-                accountList = await AzureService.GetUserAccountIdList(userId);
-                labelAccountList = await AzureService.GetUserLabelAccountIdList(userId);
-                foreach (var oneAccount in allAccounts)
-                {
-                    var oneObj = oneAccount.Value as JObject;
-                    if (role == "admin")
-                    {
-                        accounts.Add(new ProjectViewModel
-                        { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(),Info = oneObj["info"].ToString(),Role="admin"});
-                    }
-                    else
-                    {
-                        if (accountList != null)
-                        {
-                            if (accountList.Contains(oneAccount.Key))
-                            {
-                                accounts.Add(new ProjectViewModel()
-                                    { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(),Role ="manager"});
-                            }
-                        }
-                        if (labelAccountList.Contains(oneAccount.Key)&& accountList!=null&&!accountList.Contains(oneAccount.Key))
-                        {
-                            accounts.Add(new ProjectViewModel
-                            { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "labeler" });
-                        }
-                    }
-                }
-            }
+            List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
             return Ok(new Response().GetJObject("projects", JToken.FromObject(accounts)));
         }
         /// <remarks>

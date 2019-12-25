@@ -478,7 +478,6 @@ namespace WebUI.Services
             }
             return false;
         }
-
         public static async Task<JObject> FindDatasetInfo(string projectId, string datasetId)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
@@ -486,6 +485,47 @@ namespace WebUI.Services
             var datasetObj = JsonUtils.GetJToken("datasets", accJson) as JObject;
             var infoObj = JsonUtils.GetJToken(datasetId, datasetObj) as JObject;
             return infoObj;
+        }
+
+        public static async Task<List<ProjectViewModel>> FindUserRoleDetail(string userId)
+        {
+            var role = await AzureService.FindUserRole(userId);
+            List<ProjectViewModel> accounts = new List<ProjectViewModel>();
+            List<string> accountList = new List<string>();
+            List<string> labelAccountList = new List<string>();
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
+            var allAccounts = await accountBlob.DownloadGenericObjectAsync();
+            if (allAccounts != null)
+            {
+                accountList = await AzureService.GetUserAccountIdList(userId);
+                labelAccountList = await AzureService.GetUserLabelAccountIdList(userId);
+                foreach (var oneAccount in allAccounts)
+                {
+                    var oneObj = oneAccount.Value as JObject;
+                    if (role == "admin")
+                    {
+                        accounts.Add(new ProjectViewModel
+                            { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "admin" });
+                    }
+                    else
+                    {
+                        if (accountList != null)
+                        {
+                            if (accountList.Contains(oneAccount.Key))
+                            {
+                                accounts.Add(new ProjectViewModel()
+                                    { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "manager" });
+                            }
+                        }
+                        if (labelAccountList.Contains(oneAccount.Key) && accountList != null && !accountList.Contains(oneAccount.Key))
+                        {
+                            accounts.Add(new ProjectViewModel
+                                { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "labeler" });
+                        }
+                    }
+                }
+            }
+            return accounts;
         }
     }
 }

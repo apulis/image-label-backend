@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using WebUI.Services;
+using WebUI.ViewModels;
 
 namespace WebUI.Controllers
 {
@@ -22,7 +23,14 @@ namespace WebUI.Controllers
         public async Task<IActionResult> Get()
         {
             var userId = HttpContext.User.Identity.Name;
-            var obj = await AzureService.FindUserInfo(userId);
+            var role = await AzureService.FindUserRole(userId);
+            JObject obj = await AzureService.FindUserInfo(userId);
+            if (role != "admin")
+            {
+                List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
+                obj.Add("role", JToken.FromObject(accounts));
+            }
+            obj.Add("isAdmin", role == "admin");
             return Ok(new Response().GetJObject("userInfo",JToken.FromObject(obj)));
         }
         [HttpGet("userId/{userNumber}")]
