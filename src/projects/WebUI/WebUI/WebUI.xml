@@ -121,5 +121,8 @@
             <param name="projectId">project的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
         </member>
+        <member name="M:WebUI.Services.CustomJwtTokenValicator.ValidateToken(System.String,Microsoft.IdentityModel.Tokens.TokenValidationParameters,Microsoft.IdentityModel.Tokens.SecurityToken@)">
+            验证securityToken
+        </member>
     </members>
 </doc>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -109,7 +110,10 @@ namespace WebUI
                         ValidIssuer = "apulis-china-infra01.sigsus.cn",//Issuer，这两项和前面签发jwt的设置一致
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecurityKey"]))//拿到SecurityKey
                     };
+                    options.SecurityTokenValidators.Clear();
+                    options.SecurityTokenValidators.Add(new CustomJwtTokenValicator());
                 });
+            services.AddSingleton<SecurityTokenHandler,JwtSecurityTokenHandler>();
 
             services.AddTransient<IEmailSender, EmailSenderService>(i =>
                 new EmailSenderService(

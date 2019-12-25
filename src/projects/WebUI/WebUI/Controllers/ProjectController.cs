@@ -37,6 +37,8 @@ namespace WebUI.Controllers
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
             if (allAccounts != null)
             {
+                accountList = await AzureService.GetUserAccountIdList(userId);
+                labelAccountList = await AzureService.GetUserLabelAccountIdList(userId);
                 foreach (var oneAccount in allAccounts)
                 {
                     var oneObj = oneAccount.Value as JObject;
@@ -47,8 +49,6 @@ namespace WebUI.Controllers
                     }
                     else
                     {
-                        accountList = await AzureService.GetUserAccountIdList(userId);
-                        labelAccountList = await AzureService.GetUserLabelAccountIdList(userId);
                         if (accountList != null)
                         {
                             if (accountList.Contains(oneAccount.Key))
@@ -57,14 +57,12 @@ namespace WebUI.Controllers
                                     { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(),Role ="manager"});
                             }
                         }
-
-                        if (labelAccountList.Contains(oneAccount.Key))
+                        if (labelAccountList.Contains(oneAccount.Key)&& accountList!=null&&!accountList.Contains(oneAccount.Key))
                         {
                             accounts.Add(new ProjectViewModel
                             { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "labeler" });
                         }
                     }
-
                 }
             }
             return Ok(new Response().GetJObject("projects", JToken.FromObject(accounts)));
@@ -77,56 +75,74 @@ namespace WebUI.Controllers
         [HttpDelete("{projectId}")]
         public async Task<IActionResult> DeleteProject(Guid projectId)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
                 return Ok(new Response {Msg = "You don't have access!"});
             }
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
-            await blob.DeleteAsync();
-            var accblob = AzureService.GetBlob("cdn", "private", null, null, $"account", "index.json");
+            var accblob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var accjson = await accblob.DownloadGenericObjectAsync();
-            var accObj = JsonUtils.GetJToken(projectId.ToString(), accjson) as JObject;
-            if (!Object.ReferenceEquals(accObj, null))
+            var accObj = JsonUtils.GetJToken(convertProjectId, accjson) as JObject;
+            if (Object.ReferenceEquals(accObj, null))
             {
-                foreach (var one in accObj)
+                return Ok(new Response {Msg = "The project doesn't exists!"});
+            }
+            accjson.Remove(convertProjectId);
+            await accblob.UploadGenericObjectAsync(accjson);
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var adminList = JsonUtils.GetJToken("admin", json) as JArray;
+            var datasets = JsonUtils.GetJToken("dataSets", json) as JObject;
+            var waitUserIdList = new JArray();
+            if (datasets != null)
+            {
+                foreach (var pair in datasets)
                 {
-                    if (one.Key == "users")
+                    var userList = JsonUtils.GetJToken("users", pair.Value as JObject) as JArray;
+                    if (userList != null)
                     {
-                        var users = one.Value as JArray;
-                        if (users != null)
+                        waitUserIdList.Merge(userList, new JsonMergeSettings
                         {
-                            foreach (var user in users)
-                            {
-                                var oneUserId = user.ToString();
-                                var userBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{oneUserId}", "membership.json");
-                                var userJson = await userBlob.DownloadGenericObjectAsync();
-                                var userArray = JsonUtils.GetJToken("accounts", userJson) as JArray;
-                                if (!Object.ReferenceEquals(userArray, null))
-                                {
-                                    foreach (var o in userArray)
-                                    {
-                                        if (o.ToString() == projectId.ToString())
-                                        {
-                                            userArray.Remove(o);
-                                            break;
-                                        }
-                                    }
-                                }
-                                var userObj = JsonUtils.GetJToken("dataSets", userJson) as JObject;
-                                if (!Object.ReferenceEquals(userObj, null))
-                                {
-                                    userObj.Remove(projectId.ToString());
-                                }
-                                await userBlob.UploadGenericObjectAsync(userJson);
-                            }
-                        }
+                            MergeArrayHandling = MergeArrayHandling.Union
+                        });
                     }
                 }
             }
-            accjson.Remove(projectId.ToString());
-            await accblob.UploadGenericObjectAsync(accjson);
+            if (adminList != null)
+            {
+                waitUserIdList.Merge(adminList, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+            }
+            foreach (var user in waitUserIdList)
+            {
+                var oneUserId = user.ToString();
+                var userBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{oneUserId}", "membership.json");
+                var userJson = await userBlob.DownloadGenericObjectAsync();
+                var userArray = JsonUtils.GetJToken("accounts", userJson) as JArray;
+                if (!Object.ReferenceEquals(userArray, null))
+                {
+                    foreach (var o in userArray)
+                    {
+                        if (o.ToString() == convertProjectId)
+                        {
+                            userArray.Remove(o);
+                            await userBlob.UploadGenericObjectAsync(userJson);
+                            break;
+                        }
+                    }
+                }
+                var userObj = JsonUtils.GetJToken("dataSets", userJson) as JObject;
+                if (!Object.ReferenceEquals(userObj, null))
+                {
+                    userObj.Remove(convertProjectId);
+                }
+                await userBlob.UploadGenericObjectAsync(userJson);
+            }
+            await blob.DeleteAsync();
             HttpContext.Session.Clear();
             return Ok(new Response { Msg = "ok" });
         }
@@ -187,6 +203,7 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
+            var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
@@ -195,7 +212,7 @@ namespace WebUI.Controllers
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
-            var accountObj = JsonUtils.GetJToken(projectId.ToString(), allAccounts) as JObject;
+            var accountObj = JsonUtils.GetJToken(convertProjectId, allAccounts) as JObject;
             if (accountObj != null)
             {
                 accountObj["name"] = accountViewModel.Name;
@@ -212,6 +229,7 @@ namespace WebUI.Controllers
         [HttpGet("{projectId}/managers")]
         public async Task<IActionResult> GetProjectManagers(Guid projectId)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
@@ -219,7 +237,7 @@ namespace WebUI.Controllers
                 return Ok(new Response { Msg = "You don't have access!" });
             }
             List<JObject> managerList = new List<JObject>();
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", WebUIConfig.membershipFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var accounts = JsonUtils.GetJToken("admin", json);
             if (accounts != null)
@@ -245,6 +263,7 @@ namespace WebUI.Controllers
         [HttpGet("{projectId}/managers/{userNumber}")]
         public async Task<IActionResult> CheckProjectManagerExists(Guid projectId, int userNumber)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
@@ -256,7 +275,7 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response {Msg = "Cannot find userId!"});
             }
-            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", WebUIConfig.membershipFile);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
             var json = await configBlob.DownloadGenericObjectAsync();
             var accounts = JsonUtils.GetJToken("admin", json) as JArray;
             if (accounts != null)
@@ -280,6 +299,7 @@ namespace WebUI.Controllers
         [HttpPost("{projectId}/managers")]
         public async Task<IActionResult> AddProjectManager(Guid projectId,[FromBody]List<int> userNumbers)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
@@ -300,27 +320,27 @@ namespace WebUI.Controllers
                 var accounts = JsonUtils.GetJToken("accounts", json) as JArray;
                 if (json == null)
                 {
-                    await configBlob.UploadGenericObjectAsync(new JObject{{ "accounts", new JArray{ projectId } } });
+                    await configBlob.UploadGenericObjectAsync(new JObject{{ "accounts", new JArray{ convertProjectId } } });
                 }
                 else
                 {
                     if(accounts == null)
                     {
-                        json.Add("accounts", new JArray() {projectId});
+                        json.Add("accounts", new JArray() { convertProjectId });
                         await configBlob.UploadGenericObjectAsync(json);
                     }
                     else
                     {
-                        if (!Json.ContainsKey(projectId.ToString(), accounts))
+                        if (!Json.ContainsKey(convertProjectId, accounts))
                         {
-                            accounts.Add(projectId);
+                            accounts.Add(convertProjectId);
                             await configBlob.UploadGenericObjectAsync(json);
                         }
                     }
                 }
                 
             }
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", WebUIConfig.membershipFile);
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
             var accJson = await blob.DownloadGenericObjectAsync();
             if (accJson == null)
             {
@@ -356,6 +376,7 @@ namespace WebUI.Controllers
         [HttpDelete("{projectId}/managers")]
         public async Task<IActionResult> DeleteProjectManager(Guid projectId,[FromBody] int userNumber)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
@@ -374,7 +395,7 @@ namespace WebUI.Controllers
             {
                 foreach (var oneAccount in accounts)
                 {
-                    if (String.Compare(oneAccount.ToString(), projectId.ToString(), true) == 0)
+                    if (String.Compare(oneAccount.ToString(), convertProjectId, true) == 0)
                     {
                         accounts.Remove(oneAccount);
                         await configBlob.UploadGenericObjectAsync(json);
@@ -382,7 +403,7 @@ namespace WebUI.Controllers
                     }
                 }
             }
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", WebUIConfig.membershipFile);
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
             var accJson = await blob.DownloadGenericObjectAsync();
             var accountsList = JsonUtils.GetJToken("admin", accJson) as JArray;
             if (accountsList != null)

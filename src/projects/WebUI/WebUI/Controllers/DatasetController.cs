@@ -30,12 +30,13 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDatasets(Guid projectId)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList = new List<DatasetViewModel>();
-            if (role == "admin"|| await AzureService.FindUserIsProjectManager(userId, projectId.ToString()))
+            if (role == "admin"|| await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
-                var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+                var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
                 var accJson = await accountBlob.DownloadGenericObjectAsync();
                 var allAccounts = JsonUtils.GetJToken("dataSets", accJson) as JObject;
                 if (allAccounts != null)
@@ -54,12 +55,12 @@ namespace WebUI.Controllers
                 var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", WebUIConfig.membershipFile);
                 var json = await configBlob.DownloadGenericObjectAsync();
                 var accounts = JsonUtils.GetJToken("dataSets", json) as JObject;
-                var datasets = JsonUtils.GetJToken(projectId.ToString(), accounts) as JArray;
+                var datasets = JsonUtils.GetJToken(convertProjectId, accounts) as JArray;
                 if (datasets != null)
                 {
                     foreach (var datasetId in datasets)
                     {
-                        var infoObj =await AzureService.FindDatasetInfo(projectId.ToString(), datasetId.ToString());
+                        var infoObj =await AzureService.FindDatasetInfo(convertProjectId, datasetId.ToString());
                         datasetList.Add(new DatasetViewModel
                         {
                             dataSetId = datasetId.ToString(),
@@ -85,13 +86,14 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
+            var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin"&&!await AzureService.FindUserIsProjectManager(currentUserId, projectId.ToString()))
+            if (role != "admin"&&!await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var dataSetId = dataSetViewModel.dataSetId.ToString();
             if (dataSetId == "00000000-0000-0000-0000-000000000000")
@@ -139,13 +141,15 @@ namespace WebUI.Controllers
         [HttpDelete]
         public async Task<IActionResult> RemoveDataSet(Guid projectId,[FromBody] Guid dataSetId)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId.ToString()))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
             var AccountArray = allAccounts == null ? null : allAccounts as JObject;
@@ -153,7 +157,7 @@ namespace WebUI.Controllers
             {
                 foreach (var oneclaim in AccountArray)
                 {
-                    if (String.Compare(oneclaim.Key, dataSetId.ToString(), true) == 0)
+                    if (String.Compare(oneclaim.Key, convertDataSetId, true) == 0)
                     {
                         var obj = oneclaim.Value as JObject;
                         var userArray = JsonUtils.GetJToken("users", obj) as JArray;
@@ -164,12 +168,12 @@ namespace WebUI.Controllers
                                 var blob = AzureService.GetBlob("cdn", "private", null, null, $"user/{user}", "membership.json");
                                 var userJson = await blob.DownloadGenericObjectAsync();
                                 var dataSetObj = JsonUtils.GetJToken("dataSets", userJson) as JObject;
-                                var accArray = JsonUtils.GetJToken(projectId.ToString(), dataSetObj) as JArray;
+                                var accArray = JsonUtils.GetJToken(convertProjectId, dataSetObj) as JArray;
                                 if (accArray != null)
                                 {
                                     foreach (var one in accArray)
                                     {
-                                        if (one.ToString() == dataSetId.ToString())
+                                        if (one.ToString() == convertDataSetId)
                                         {
                                             accArray.Remove(one);
                                             await blob.UploadGenericObjectAsync(userJson);
@@ -196,17 +200,19 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/users")]
         public async Task<IActionResult> GetDataSetUsers(Guid projectId, Guid dataSetId)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId.ToString()))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
             List<JObject> userList = new List<JObject>();
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var datasetObj = JsonUtils.GetJToken("dataSets", json) as JObject;
-            var datasetInfo = JsonUtils.GetJToken(dataSetId.ToString(), datasetObj) as JObject;
+            var datasetInfo = JsonUtils.GetJToken(convertDataSetId, datasetObj) as JObject;
             var userIdList = JsonUtils.GetJToken("users", datasetInfo) as JArray;
             if (userIdList != null)
             {
@@ -237,16 +243,18 @@ namespace WebUI.Controllers
         [HttpDelete("{datasetId}/users")]
         public async Task<IActionResult> RemoveUser(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId.ToString()))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var datasets = JsonUtils.GetJToken("dataSets", json) as JObject;
-            var datasetInfo = JsonUtils.GetJToken(dataSetId.ToString(), datasets) as JObject;
+            var datasetInfo = JsonUtils.GetJToken(convertDataSetId, datasets) as JObject;
             var userIdList = JsonUtils.GetJToken("users", datasetInfo) as JArray;
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             if (!Object.ReferenceEquals(userIdList, null))
@@ -258,8 +266,8 @@ namespace WebUI.Controllers
                         userIdList.Remove(one);
                         await accountBlob.UploadGenericObjectAsync(json);
                         HttpContext.Session.Remove($"user_{userId}_tasks_list");
-                        HttpContext.Session.Remove($"user_{userId}_task_{dataSetId}_list");
-                        HttpContext.Session.Remove($"user_{userId}_task_{dataSetId}_permission");
+                        HttpContext.Session.Remove($"user_{userId}_task_{convertDataSetId}_list");
+                        HttpContext.Session.Remove($"user_{userId}_task_{convertDataSetId}_permission");
                         break;
                     }
                 }
@@ -272,12 +280,12 @@ namespace WebUI.Controllers
                 var dataSetObj = dataSets as JObject;
                 foreach (var one in dataSetObj)
                 {
-                    if (one.Key == projectId.ToString())
+                    if (one.Key == convertProjectId)
                     {
                         var dataSetArray = one.Value as JArray;
                         foreach (var o in dataSetArray)
                         {
-                            if (o.ToString() == dataSetId.ToString())
+                            if (o.ToString() == convertDataSetId)
                             {
                                 dataSetArray.Remove(o);
                                 await blob.UploadGenericObjectAsync(userJson);
@@ -299,13 +307,15 @@ namespace WebUI.Controllers
         [HttpPost("{datasetId}/users")]
         public async Task<IActionResult> AddUserToDataSet(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId.ToString()))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             if (json == null)
@@ -313,7 +323,7 @@ namespace WebUI.Controllers
                 return Ok(new Response() {Msg = "not dataset"});
             }
             var datasets = JsonUtils.GetJToken("dataSets", json) as JObject;
-            var datasetInfo = JsonUtils.GetJToken(dataSetId.ToString(), datasets) as JObject;
+            var datasetInfo = JsonUtils.GetJToken(convertDataSetId, datasets) as JObject;
             if (datasetInfo == null)
             {
                 return Ok(new Response() { Msg = "not datasetId" });
@@ -336,36 +346,36 @@ namespace WebUI.Controllers
             var userJson = await blob.DownloadGenericObjectAsync();
             if (Object.ReferenceEquals(userJson, null))
             {
-                await blob.UploadGenericObjectAsync(new JObject{{ "dataSets",new JObject{ { projectId.ToString(), new JArray { dataSetId } } }}});
+                await blob.UploadGenericObjectAsync(new JObject{{ "dataSets",new JObject{ { convertProjectId, new JArray { convertDataSetId } } }}});
             }
             else
             {
                 var dataSets = JsonUtils.GetJToken("dataSets", userJson) as JObject;
                 if (Object.ReferenceEquals(dataSets, null))
                 {
-                    userJson.Add("dataSets", new JObject {{ projectId.ToString(), new JArray { dataSetId } } });
+                    userJson.Add("dataSets", new JObject {{ convertProjectId, new JArray { convertDataSetId } } });
                     await blob.UploadGenericObjectAsync(userJson);
                 }
                 else
                 {
-                    var dataSetArray = JsonUtils.GetJToken(projectId.ToString(), dataSets) as JArray;
+                    var dataSetArray = JsonUtils.GetJToken(convertProjectId, dataSets) as JArray;
                     if (Object.ReferenceEquals(dataSetArray, null))
                     {
-                        dataSets.Add(projectId.ToString(), new JArray() { dataSetId });
+                        dataSets.Add(convertProjectId, new JArray() { convertDataSetId });
                         await blob.UploadGenericObjectAsync(userJson);
                     }
                     else
                     {
-                        if (!Json.ContainsKey(dataSetId.ToString(),dataSetArray))
+                        if (!Json.ContainsKey(convertDataSetId, dataSetArray))
                         {
-                            dataSetArray.Add(dataSetId);
+                            dataSetArray.Add(convertDataSetId);
                             await blob.UploadGenericObjectAsync(userJson);
                         }
                     }
                 }
                 HttpContext.Session.Remove($"user_{userId}_tasks_list");
-                HttpContext.Session.Remove($"user_{userId}_task_{dataSetId}_list");
-                HttpContext.Session.Remove($"user_{userId}_task_{dataSetId}_permission");
+                HttpContext.Session.Remove($"user_{userId}_task_{convertDataSetId}_list");
+                HttpContext.Session.Remove($"user_{userId}_task_{convertDataSetId}_permission");
             }
             return Ok(new Response() {Msg = "ok"});
         }
@@ -379,13 +389,15 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/users/{userNumber}")]
         public async Task<IActionResult> CheckUserExists(Guid projectId, Guid dataSetId,int userNumber)
         {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, projectId.ToString()))
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
                 return Ok(new Response { Msg = "You don't have access!" });
             }
-            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)
@@ -393,7 +405,7 @@ namespace WebUI.Controllers
                 return Ok(new Response { Msg = "Cannot find userId!" });
             }
             var datasets = JsonUtils.GetJToken("dataSets", json) as JObject;
-            var datasetInfo = JsonUtils.GetJToken(dataSetId.ToString(), datasets) as JObject;
+            var datasetInfo = JsonUtils.GetJToken(convertDataSetId, datasets) as JObject;
             var userIdList = JsonUtils.GetJToken("users", datasetInfo) as JArray;
             if (userIdList != null)
             {

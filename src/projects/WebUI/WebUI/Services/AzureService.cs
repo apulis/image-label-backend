@@ -225,6 +225,16 @@ namespace WebUI.Services
             return null;
         }
 
+        public static async Task<bool> CheckUserIdExists(string userId)
+        {
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            if (json.ContainsKey(userId))
+            {
+                return true;
+            }
+            return false;
+        }
         public static async Task<string> FindUserId(string email)
         {
             var emailBlob = AzureService.GetBlob("cdn", "private", null, null, $"user", "email.json");
