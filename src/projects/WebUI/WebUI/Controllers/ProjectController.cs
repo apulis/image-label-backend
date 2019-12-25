@@ -45,7 +45,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Ok(new Response {Msg = "You don't have access!"});
+                return Forbid();
             }
             var accblob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var accjson = await accblob.DownloadGenericObjectAsync();
@@ -127,7 +127,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Ok(new Response { Msg = "You don't have access!" });
+                return Forbid();
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
@@ -173,7 +173,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Ok(new Response { Msg = "You don't have access!" });
+                return Forbid();
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
@@ -199,7 +199,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Ok(new Response { Msg = "You don't have access!" });
+                return Forbid();
             }
             List<JObject> managerList = new List<JObject>();
             var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
@@ -233,7 +233,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
             {
-                return Ok(new Response { Msg = "You don't have access!" });
+                return Forbid();
             }
             var userId =await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)
@@ -269,7 +269,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
             {
-                return Ok(new Response { Msg = "You don't have access!" });
+                return Forbid();
             }
             List<string> userIdList = new List<string>();
             foreach (var userNumber in userNumbers)
@@ -346,7 +346,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
             {
-                return Ok(new Response { Msg = "You don't have access!" });
+                return Forbid();
             }
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)
