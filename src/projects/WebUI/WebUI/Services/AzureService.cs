@@ -483,7 +483,7 @@ namespace WebUI.Services
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");
             var accJson = await accountBlob.DownloadGenericObjectAsync();
-            var datasetObj = JsonUtils.GetJToken("datasets", accJson) as JObject;
+            var datasetObj = JsonUtils.GetJToken("dataSets", accJson) as JObject;
             var infoObj = JsonUtils.GetJToken(datasetId, datasetObj) as JObject;
             return infoObj;
         }
