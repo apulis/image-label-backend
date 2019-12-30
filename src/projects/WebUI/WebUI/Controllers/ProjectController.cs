@@ -127,7 +127,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
@@ -173,7 +173,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
@@ -199,7 +199,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             List<JObject> managerList = new List<JObject>();
             var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
@@ -233,7 +233,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var userId =await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)
@@ -269,7 +269,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             List<string> userIdList = new List<string>();
             foreach (var userNumber in userNumbers)
@@ -346,7 +346,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             if (userId == null)

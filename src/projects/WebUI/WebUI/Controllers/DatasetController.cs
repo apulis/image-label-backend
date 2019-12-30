@@ -91,7 +91,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin"&&!await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -147,7 +147,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -206,7 +206,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
-                return Forbid();
+                return StatusCode(403);
             }
             List<JObject> userList = new List<JObject>();
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
@@ -249,7 +249,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -313,7 +313,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -395,7 +395,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
