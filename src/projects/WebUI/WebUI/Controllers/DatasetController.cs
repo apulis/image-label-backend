@@ -61,13 +61,18 @@ namespace WebUI.Controllers
                     foreach (var datasetId in datasets)
                     {
                         var infoObj =await AzureService.FindDatasetInfo(convertProjectId, datasetId.ToString());
-                        datasetList.Add(new DatasetViewModel
+                        if (infoObj!=null)
                         {
-                            dataSetId = datasetId.ToString(),
-                            Name = infoObj["name"].ToString(),
-                            Info = infoObj["info"].ToString(),
-                            Type = infoObj["type"].ToString(),
-                            Role = "user"});
+                            datasetList.Add(new DatasetViewModel
+                            {
+                                dataSetId = datasetId.ToString(),
+                                Name = infoObj["name"].ToString(),
+                                Info = infoObj["info"].ToString(),
+                                Type = infoObj["type"].ToString(),
+                                Role = "user"
+                            });
+                        }
+                        
                     }
                 }
             }

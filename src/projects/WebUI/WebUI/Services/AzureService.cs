@@ -6,6 +6,7 @@ using Common.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
@@ -526,6 +527,24 @@ namespace WebUI.Services
                 }
             }
             return accounts;
+        }
+
+        public static async Task<List<AddLabelViewModel>> UpdateLabelInfoToAzure(List<AddLabelViewModel> lables)
+        {
+            var blob = AzureService.GetBlob("cdn", "private", null, null, "categories", "meta.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var obj = JsonUtils.GetJToken("categories", json) as JArray;
+            foreach (var label in lables)
+            {
+                foreach (var one in obj)
+                {
+                    if (one==null)
+                    {
+
+                    }
+                }
+            }
+            return lables;
         }
     }
 }
