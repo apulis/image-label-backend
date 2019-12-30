@@ -69,7 +69,7 @@ namespace WebUI.Controllers
                                 Name = infoObj["name"].ToString(),
                                 Info = infoObj["info"].ToString(),
                                 Type = infoObj["type"].ToString(),
-                                Role = "user"
+                                Role = "labeler"
                             });
                         }
                         
