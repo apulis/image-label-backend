@@ -146,14 +146,15 @@ namespace WebUI.Controllers
         [HttpGet("{signinType}")]
         public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null,string state=null)
         {
+            var fontEndUrl = state == "development"?_configuration["FontEndUrlDevelopment"]: _configuration["FontEndUrl"];
             if (remoteError != null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}/login?error={remoteError}");
+                return Redirect($"{fontEndUrl}/login?error={remoteError}");
             }
             string tokenStr = getToken(signinType,code);
             if (tokenStr == null)
             {
-                return Redirect($"{_configuration["FontEndUrl"]}/login?error=get-token-failed");
+                return Redirect($"{fontEndUrl}/login?error=get-token-failed");
             }
             var json = JsonConvert.DeserializeObject<JObject> (tokenStr);
             string access_token = Json.GetJToken("access_token", json).ToString();
@@ -194,7 +195,7 @@ namespace WebUI.Controllers
                 var userId = await AzureService.CreateUserId(Input);
                 if (userId == null)
                 {
-                    return Redirect($"{_configuration["FontEndUrl"]}/login?error=create-userid-fail");
+                    return Redirect($"{fontEndUrl}/login?error=create-userid-fail");
                 }
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["SecurityKey"]));
                 var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -210,9 +211,9 @@ namespace WebUI.Controllers
                     signingCredentials: creds);
 
                 var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
-                return Redirect($"{_configuration["FontEndUrl"]}/?token={tokenGenerate}");
+                return Redirect($"{fontEndUrl}/?token={tokenGenerate}");
             }
-            return Redirect($"{_configuration["FontEndUrl"]}/login?error=get-message-fail");
+            return Redirect($"{fontEndUrl}/login?error=get-message-fail");
         }
 
         [HttpGet("bind/{signinType}")]
