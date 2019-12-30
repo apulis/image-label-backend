@@ -110,7 +110,7 @@ namespace WebUI.Controllers
             newObj.Add("name", dataSetViewModel.Name);
             newObj.Add("type", dataSetViewModel.Type);
             newObj.Add("info", dataSetViewModel.Info);
-            newObj.Add("labels", JToken.FromObject(dataSetViewModel.Labels));
+            newObj.Add("labels", JToken.FromObject(await AzureService.UpdateLabelInfoToAzure(dataSetViewModel.Labels)));
             if (json == null)
             {
                 var obj = new JObject();
@@ -170,7 +170,7 @@ namespace WebUI.Controllers
                 obj["name"] = dataSetViewModel.Name;
                 obj["info"] = dataSetViewModel.Info;
                 obj["type"] = dataSetViewModel.Type;
-                obj["labels"] = JToken.FromObject(dataSetViewModel.Labels);
+                obj["labels"] = JToken.FromObject(await AzureService.UpdateLabelInfoToAzure(dataSetViewModel.Labels));
                 await accountBlob.UploadGenericObjectAsync(json);
             }
             return Ok(new Response { Msg = "ok" });

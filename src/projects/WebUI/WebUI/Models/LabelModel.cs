@@ -7,8 +7,8 @@ namespace WebUI.Models
 {
     public class LabelModel
     {
-        public Guid id { get; set; }
-        public string name { get; set; }
-        public string supercategory { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Supercategory { get; set; }
     }
 }

@@ -72,6 +72,11 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
         </member>
+        <member name="M:WebUI.Controllers.LabelController.GetLabels">
+            <remarks>
+            返回所有的class
+            </remarks>
+        </member>
         <member name="M:WebUI.Controllers.LoginController.Get(System.String,System.String,System.String,System.String,System.String)">
             <remarks>
             登录接口，目前仅支持微信和微软登录

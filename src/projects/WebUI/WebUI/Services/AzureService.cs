@@ -531,17 +531,34 @@ namespace WebUI.Services
 
         public static async Task<List<AddLabelViewModel>> UpdateLabelInfoToAzure(List<AddLabelViewModel> lables)
         {
-            var blob = AzureService.GetBlob("cdn", "private", null, null, "categories", "meta.json");
+            var blob = GetBlob("cdn", "private", null, null, "categories", "meta.json");
             var json = await blob.DownloadGenericObjectAsync();
             var obj = JsonUtils.GetJToken("categories", json) as JArray;
+            bool isExists = false;
+            int max_id = 0;
+            foreach (var one in obj)
+            {
+                if (max_id < int.Parse(one["id"].ToString()))
+                {
+                    max_id = int.Parse(one["id"].ToString());
+                }
+            }
             foreach (var label in lables)
             {
+                isExists = false;
                 foreach (var one in obj)
                 {
-                    if (one==null)
+                    if (one["name"].ToString()==label.Name)
                     {
-
+                        isExists = true;
+                        break;
                     }
+                }
+                if (!isExists)
+                {
+                    max_id += 1;
+                    obj.Add(new LabelModel{Id = max_id, Name = label.Name,Supercategory = "customed"});
+                    label.Id = max_id;
                 }
             }
             return lables;
