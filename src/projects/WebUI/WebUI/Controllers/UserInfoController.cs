@@ -19,6 +19,9 @@ namespace WebUI.Controllers
     [ApiController]
     public class UserInfoController:ControllerBase
     {
+        /// <remarks>
+        /// 返回用户基本信息
+        /// </remarks>
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -33,6 +36,10 @@ namespace WebUI.Controllers
             obj.Add("isAdmin", role == "admin");
             return Ok(new Response().GetJObject("userInfo",JToken.FromObject(obj)));
         }
+        /// <remarks>
+        /// 返回用户number对应的用户唯一标识id
+        /// </remarks>
+        /// <param name="userNumber">用户唯一标识数字</param>
         [HttpGet("userId/{userNumber}")]
         public async Task<IActionResult> GetUserId(int userNumber)
         {

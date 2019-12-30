@@ -15,5 +15,7 @@ namespace WebUI.ViewModels
         public string Info { get; set; }
         [Required]
         public string Type { get; set; }
+        [Required]
+        public List<AddLabelViewModel> Labels { get; set; }
     }
 }

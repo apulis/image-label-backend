@@ -143,6 +143,11 @@ namespace WebUI.Controllers
             return null;
 
         }
+        /// <remarks>
+        /// 登录接口，目前仅支持微信和微软登录
+        /// state参数决定跳转到本地还是服务器
+        /// </remarks>
+        /// <param name="signinType">wechat or microsoft</param>
         [HttpGet("{signinType}")]
         public async Task<IActionResult> Get(string signinType,string returnUrl = null, string remoteError = null,string code = null,string state=null)
         {
@@ -215,7 +220,11 @@ namespace WebUI.Controllers
             }
             return Redirect($"{fontEndUrl}/login?error=get-message-fail");
         }
-
+        /// <remarks>
+        /// 绑定接口
+        /// state参数传递当前登录方式的openid，进行绑定
+        /// </remarks>
+        /// <param name="signinType">wechat or microsoft</param>
         [HttpGet("bind/{signinType}")]
         public async Task<IActionResult> Bind(string signinType, string returnUrl = null, string remoteError = null,string code = null, string state = null)
         {

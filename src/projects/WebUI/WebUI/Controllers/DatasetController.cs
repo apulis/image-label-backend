@@ -79,6 +79,7 @@ namespace WebUI.Controllers
         /// 如果成功，返回msg=ok,successful="true"
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
+        /// <param name="AddDatasetViewModel">字典，包含name\info\type\labels</param>
         [HttpPost]
         public async Task<IActionResult> AddDataset(Guid projectId,[FromBody]AddDatasetViewModel dataSetViewModel)
         {
@@ -104,6 +105,7 @@ namespace WebUI.Controllers
             newObj.Add("name", dataSetViewModel.Name);
             newObj.Add("type", dataSetViewModel.Type);
             newObj.Add("info", dataSetViewModel.Info);
+            newObj.Add("labels", JToken.FromObject(dataSetViewModel.Labels));
             if (json == null)
             {
                 var obj = new JObject();
@@ -129,6 +131,42 @@ namespace WebUI.Controllers
                         await accountBlob.UploadGenericObjectAsync(json);
                     }
                 }
+            }
+            return Ok(new Response { Msg = "ok" });
+        }
+        /// <remarks>
+        /// 修改一个特定的dataset
+        /// 如果成功，返回msg=ok,successful="true"
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataSetId的GUid</param>
+        /// <param name="dataSetViewModel">新的name\info\type\labels字段,json格式</param>
+        [HttpPatch("{dataSetId}")]
+        public async Task<IActionResult> UpdateDataset(Guid projectId, Guid dataSetId, [FromBody]AddDatasetViewModel dataSetViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
+            }
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var currentUserId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(currentUserId);
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            {
+                return StatusCode(403);
+            }
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
+            var json = await accountBlob.DownloadGenericObjectAsync();
+            var allAccounts = JsonUtils.GetJToken("dataSets", json);
+            var obj = JsonUtils.GetJToken(convertDataSetId, allAccounts) as JObject;
+            if (obj != null)
+            {
+                obj["name"] = dataSetViewModel.Name;
+                obj["info"] = dataSetViewModel.Info;
+                obj["type"] = dataSetViewModel.Type;
+                obj["labels"] = JToken.FromObject(dataSetViewModel.Labels);
+                await accountBlob.UploadGenericObjectAsync(json);
             }
             return Ok(new Response { Msg = "ok" });
         }
