@@ -45,7 +45,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
-                return Forbid();
+                return StatusCode(403);
             }
             var accblob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var accjson = await accblob.DownloadGenericObjectAsync();

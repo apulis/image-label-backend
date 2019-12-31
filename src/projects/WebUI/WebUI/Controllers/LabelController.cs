@@ -20,7 +20,7 @@ namespace WebUI.Controllers
     public class LabelController:ControllerBase
     {
         /// <remarks>
-        /// 返回所有的class
+        /// 返回所有的label类别
         /// </remarks>
         [HttpGet]
         public async Task<IActionResult> GetLabels()

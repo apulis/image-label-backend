@@ -74,7 +74,7 @@
         </member>
         <member name="M:WebUI.Controllers.LabelController.GetLabels">
             <remarks>
-            返回所有的class
+            返回所有的label类别
             </remarks>
         </member>
         <member name="M:WebUI.Controllers.LoginController.Get(System.String,System.String,System.String,System.String,System.String)">
