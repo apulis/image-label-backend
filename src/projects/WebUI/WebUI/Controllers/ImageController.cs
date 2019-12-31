@@ -29,6 +29,7 @@ using WebUI.Services;
 namespace WebUI.Controllers
 {
     //[Authorize(Roles = "Admin,User")]
+    [ApiExplorerSettings(IgnoreApi = true)]
     [Route("api/[controller]")]
     [ApiController]
     [EnableCors("dev-use")]
@@ -59,12 +60,13 @@ namespace WebUI.Controllers
         }
 
         // get: api/image/5
-        [HttpGet("{task_id}")]
-        public async Task<IActionResult> Get(string task_id)
+        [HttpGet("{datasetId}")]
+        public async Task<IActionResult> Get(Guid dataSetId)
         {
             var userId = HttpContext.User.Identity.Name;
-            var content =await AzureService.FindUserOneTaskInfo(userId, HttpContext.Session, task_id);
-            return Content(Base64Ops.Base64Encode(content.JObjectToString()));
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var content =await AzureService.FindUserOneTaskInfo(userId, HttpContext.Session, convertDataSetId);
+            return Ok(new Response());
         }
 
         // GET: api/Image/5

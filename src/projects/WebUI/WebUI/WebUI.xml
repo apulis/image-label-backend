@@ -72,6 +72,28 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
         </member>
+        <member name="M:WebUI.Controllers.DatasetController.getTasks(System.Guid,System.Guid)">
+            <remarks>
+            获取数据集的可标注任务列表,包含已修改task+一个锁定的task
+            </remarks>
+            <param name="projectId">project的GUid</param>
+            <param name="dataSetId">dataset的GUid</param>
+        </member>
+        <member name="M:WebUI.Controllers.DatasetController.GetNextTask(System.Guid,System.Guid)">
+            <remarks>
+            获取下一个可标注任务
+            </remarks>
+            <param name="projectId">project的GUid</param>
+            <param name="dataSetId">dataset的GUid</param>
+        </member>
+        <member name="M:WebUI.Controllers.DatasetController.GetOneTask(System.Guid,System.Guid,System.String)">
+            <remarks>
+            获取详细标注信息annotations
+            </remarks>
+            <param name="projectId">project的GUid</param>
+            <param name="dataSetId">dataset的GUid</param>
+            <param name="taskId">task的id</param>
+        </member>
         <member name="M:WebUI.Controllers.LabelController.GetLabels">
             <remarks>
             返回所有的label类别

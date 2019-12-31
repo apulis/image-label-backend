@@ -563,5 +563,191 @@ namespace WebUI.Services
             }
             return lables;
         }
+
+        public static async Task<JObject> getDatasetTaskNext(string userId, string projectId, string dataSetId)
+        {
+            var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var lockObj = JsonUtils.GetJToken("lockLog", json) as JObject;
+            var projectLockObj = JsonUtils.GetJToken(projectId, lockObj) as JObject;
+            var datasetObj = JsonUtils.GetJToken(dataSetId, projectLockObj) as JObject;
+            if (datasetObj == null)
+            {
+                await AzureService.GenerateCommitJsonFile(projectId, dataSetId);
+                var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+                var taskJson = await taskBlob.DownloadGenericObjectAsync();
+                var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
+                if (projectObj != null)
+                {
+                    foreach (var pair in projectObj)
+                    {
+                        var info = pair.Value as JObject;
+                        if (info["status"].ToString() == "normal")
+                        {
+                            info["status"] = "lock";
+                            info["userId"] = userId;
+                            JObject obj = new JObject()
+                            {
+                                {"id",pair.Key },
+                                {"createdTime",TimeOps.GetCurrentTimeStamp()},
+                                {"updateTime",null }
+                            };
+                            if (lockObj == null)
+                            {
+                                json.Add("lockLog", new JObject() {{projectId, new JObject() {{dataSetId, obj}}}});
+                                await blob.UploadGenericObjectAsync(json);
+                            }
+                            else
+                            {
+                                if (projectLockObj == null)
+                                {
+                                    lockObj.Add(projectId, new JObject() {{dataSetId, obj}});
+                                    await blob.UploadGenericObjectAsync(json);
+                                }
+                                else
+                                {
+                                    projectLockObj.Add(dataSetId, obj);
+                                    await blob.UploadGenericObjectAsync(json);
+                                }
+                            }
+                            await taskBlob.UploadGenericObjectAsync(taskJson);
+                            return obj;
+                        }
+                    }
+                }
+                return null;
+            }
+            return datasetObj;
+        }
+        public static async Task<List<JObject>> getDatasetTaskList(string userId, string projectId, string dataSetId)
+        {
+            List<JObject> taskList = new List<JObject>();
+            var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var commitObj = JsonUtils.GetJToken("commitLog", json) as JObject;
+            var projectObj = JsonUtils.GetJToken(projectId, commitObj) as JObject;
+            var datasetArray = JsonUtils.GetJToken(dataSetId, projectObj) as JArray;
+            if (datasetArray != null)
+            {
+                taskList = datasetArray.ToObject<List<JObject>>();
+            }
+            var datasetObj =await getDatasetTaskNext(userId,projectId,dataSetId);
+            if (datasetObj != null)
+            {
+                taskList.Add(datasetObj);
+            }
+            return taskList;
+        }
+
+        public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId)
+        {
+            var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+            var taskJson = await taskBlob.DownloadGenericObjectAsync();
+            var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
+            var taskObj = JsonUtils.GetJToken(taskId, projectObj) as JObject;
+            if (taskObj == null)
+            {
+                return false;
+            }
+            var status = JsonUtils.GetJToken("status", taskObj).ToString();
+            if (status == "lock")
+            {
+                taskObj["status"] = "commited";
+                await taskBlob.UploadGenericObjectAsync(taskJson);
+            }
+            var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var lockObj = JsonUtils.GetJToken("lockLog", json) as JObject;
+            var projectLockObj = JsonUtils.GetJToken(projectId, lockObj) as JObject;
+            var datasetObj = JsonUtils.GetJToken(dataSetId, projectLockObj) as JObject;
+
+            var commitObj = JsonUtils.GetJToken("commitLog", json) as JObject;
+            var projectCommitObj = JsonUtils.GetJToken(projectId, commitObj) as JObject;
+            var datasetCommitObj = JsonUtils.GetJToken(dataSetId, projectCommitObj) as JObject;
+            if (datasetObj != null)
+            {
+                if (datasetObj["id"].ToString() == taskId)
+                {
+                    projectLockObj[taskId] = null;
+                    var obj = new JObject()
+                    {
+                        {"createdTime", TimeOps.GetCurrentTimeStamp()},
+                        {"updateTime", TimeOps.GetCurrentTimeStamp()}
+                    };
+                    if (commitObj == null)
+                    {
+                        json.Add("commitLog", new JObject() {{projectId, new JObject() {{dataSetId, new JObject(){{taskId,obj}}}}}});
+                    }
+                    else
+                    {
+                        if (projectCommitObj == null)
+                        {
+                            commitObj.Add(projectId, new JObject() { { dataSetId, new JObject() { { taskId, obj } } } });
+                        }
+                        else
+                        {
+                            if (datasetCommitObj == null)
+                            {
+                                projectCommitObj.Add(dataSetId, new JObject() { { taskId, obj } });
+                            }
+                            else
+                            {
+                                if (!datasetCommitObj.ContainsKey(taskId))
+                                {
+                                    datasetCommitObj.Add(taskId,obj);
+                                }
+                                
+                            }
+                        }
+                    }
+                    await blob.UploadGenericObjectAsync(json);
+                }
+            }
+            else
+            {
+                if (datasetCommitObj == null)
+                {
+                    return false;
+                }
+                var obj = JsonUtils.GetJToken(taskId, datasetCommitObj) as JObject;
+                obj["updateTime"] = TimeOps.GetCurrentTimeStamp();
+                await blob.UploadGenericObjectAsync(json);
+            }
+            return true;
+        }
+
+        public static async Task<JObject> GenerateCommitJsonFile(string projectId, string dataSetId)
+        {
+            var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+            var taskJson = await taskBlob.DownloadGenericObjectAsync();
+            var lockObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
+            if (lockObj != null)
+            {
+                return null;
+            }
+            var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}", "list.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var obj = JsonUtils.GetJToken("ImgIDs", json) as JArray;
+            if (obj == null)
+            {
+                return null;
+            }
+            JObject idObj = new JObject();
+            foreach (var one in obj)
+            {
+                idObj.Add(one.ToString(),new JObject(){{"status","normal"},{"userId",null}});
+            }
+            if (taskJson == null)
+            {
+                await taskBlob.UploadGenericObjectAsync(new JObject(){{projectId, idObj } });
+            }
+            else
+            {
+                taskJson.Add(projectId, idObj);
+                await taskBlob.UploadGenericObjectAsync(taskJson);
+            }
+            return idObj;
+        }
+
     }
 }

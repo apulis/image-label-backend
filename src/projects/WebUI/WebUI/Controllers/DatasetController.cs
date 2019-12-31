@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Models;
@@ -101,7 +102,7 @@ namespace WebUI.Controllers
             }
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
-            var dataSetId = dataSetViewModel.dataSetId.ToString();
+            var dataSetId = dataSetViewModel.dataSetId.ToString().ToUpper();
             if (dataSetId == "00000000-0000-0000-0000-000000000000")
             {
                 dataSetId = Guid.NewGuid().ToString().ToUpper();
@@ -458,6 +459,77 @@ namespace WebUI.Controllers
                 }
             }
             return Ok(new Response { Msg = "ok" });
+        }
+        /// <remarks>
+        /// 获取数据集的可标注任务列表,包含已修改task+一个锁定的task
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        [HttpGet("{datasetId}/tasks")]
+        public async Task<IActionResult> getTasks(Guid projectId, Guid dataSetId)
+        {
+            var userId = HttpContext.User.Identity.Name;
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
+            return Ok(new Response().GetJObject("taskList", JToken.FromObject(taskList)));
+        }
+        /// <remarks>
+        /// 获取下一个可标注任务
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        [HttpGet("{datasetId}/tasks/next")]
+        public async Task<IActionResult> GetNextTask(Guid projectId, Guid dataSetId)
+        {
+            var userId = HttpContext.User.Identity.Name;
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId);
+            return Ok(new Response().GetJObject("next",JToken.FromObject(nextObj)));
+        }
+        /// <remarks>
+        /// 获取详细标注信息annotations
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="taskId">task的id</param>
+        [HttpGet("{datasetId}/tasks/annotations/{taskId}")]
+        public async Task<IActionResult> GetOneTask(Guid projectId, Guid dataSetId,string taskId)
+        {
+            var userId = HttpContext.User.Identity.Name;
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var projectObj = JsonUtils.GetJToken(convertProjectId, json) as JObject;
+            return Ok(new Response().GetJObject("annotations", projectObj==null?null:JToken.FromObject(projectObj)));
+        }
+        [HttpPost("{datasetId}/tasks/annotations/{taskId}")]
+        public async Task<IActionResult> Post(Guid projectId, Guid dataSetId, string taskId, [FromBody] JObject value)
+        {
+            var userId = HttpContext.User.Identity.Name;
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId);
+            if (json == null)
+            {
+                if (res)
+                {
+                    await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
+                }
+            }
+            else
+            {
+                if (res)
+                {
+                    json[convertProjectId] = value;
+                    await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
+                }
+            }
+            return Content(new Response {Msg = "ok"}.JObjectToString());
         }
     }
 }
