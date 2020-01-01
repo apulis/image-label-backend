@@ -94,6 +94,15 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="taskId">task的id</param>
         </member>
+        <member name="M:WebUI.Controllers.DatasetController.Post(System.Guid,System.Guid,System.String,Newtonsoft.Json.Linq.JObject)">
+            <remarks>
+            提交标注信息annotations
+            </remarks>
+            <param name="projectId">project的GUid</param>
+            <param name="dataSetId">dataset的GUid</param>
+            <param name="taskId">task的id</param>
+            <param name="value">标注信息，json格式</param>
+        </member>
         <member name="M:WebUI.Controllers.LabelController.GetLabels">
             <remarks>
             返回所有的label类别

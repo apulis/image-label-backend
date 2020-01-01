@@ -482,7 +482,8 @@ namespace WebUI.Controllers
                 var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
                 return Ok(new Response().GetJObject("taskList", JToken.FromObject(taskList)));
             }
-            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+            await AzureService.GenerateCommitJsonFile(convertProjectId, convertDataSetId);
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}", "commit.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
             var lockObj = JsonUtils.GetJToken(convertProjectId, taskJson) as JObject;
             List<JObject> adminTaskList = new List<JObject>();
