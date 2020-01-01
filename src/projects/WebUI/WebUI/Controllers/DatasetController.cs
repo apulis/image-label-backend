@@ -44,10 +44,24 @@ namespace WebUI.Controllers
                 {
                     foreach (var oneAccount in allAccounts)
                     {
+                        List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
+                        if (oneAccount.Value["labels"] != null)
+                        {
+                            foreach (var one in oneAccount.Value["labels"] as JArray)
+                            {
+                                labels.Add(new AddLabelViewModel()
+                                {
+                                    Id = int.Parse(one["id"].ToString()),
+                                    Name = one["name"].ToString(),
+                                    Type = one["type"].ToString()
+                                });
+                            }
+                        }
                         datasetList.Add(new DatasetViewModel
                         { dataSetId = oneAccount.Key, 
                             Name = oneAccount.Value["name"].ToString(),Info = oneAccount.Value["info"].ToString(),
-                            Type = oneAccount.Value["type"].ToString(),Role = "admin"
+                            Type = oneAccount.Value["type"].ToString(),Role = "admin",
+                            Labels = labels
                         });
                     }
                 }
@@ -64,13 +78,27 @@ namespace WebUI.Controllers
                         var infoObj =await AzureService.FindDatasetInfo(convertProjectId, datasetId.ToString());
                         if (infoObj!=null)
                         {
+                            List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
+                            if (infoObj["labels"] != null)
+                            {
+                                foreach (var one in infoObj["labels"] as JArray)
+                                {
+                                    labels.Add(new AddLabelViewModel()
+                                    {
+                                        Id = int.Parse(one["id"].ToString()),
+                                        Name = one["name"].ToString(),
+                                        Type = one["type"].ToString()
+                                    });
+                                }
+                            }
                             datasetList.Add(new DatasetViewModel
                             {
                                 dataSetId = datasetId.ToString(),
                                 Name = infoObj["name"].ToString(),
                                 Info = infoObj["info"].ToString(),
                                 Type = infoObj["type"].ToString(),
-                                Role = "labeler"
+                                Role = "labeler",
+                                Labels = labels
                             });
                         }
                     }

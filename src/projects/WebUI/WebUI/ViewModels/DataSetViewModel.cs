@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace WebUI.ViewModels
 {
@@ -12,5 +13,6 @@ namespace WebUI.ViewModels
         public string Info { get; set; }
         public string Type { get; set; }
         public string Role { get; set; }
+        public List<AddLabelViewModel> Labels { get; set; }
     }
 }
