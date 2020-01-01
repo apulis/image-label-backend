@@ -373,13 +373,13 @@ namespace WebUI.Services
             return new Response { Successful = "true", Msg = "ok", Data = content };
         }
 
-        public static async Task<bool> FindUserHasThisTask(string userId, ISession session, string taskId)
+        public static async Task<bool> FindUserHasThisTask(string userId, ISession session,string datasetId)
         {
             if (userId == null)
             {
                 return false;
             }
-            var result = SessionOps.GetSession<string>(session.Get($"user_{userId}_task_{taskId}_permission"));
+            var result = SessionOps.GetSession<string>(session.Get($"user_{userId}_task_{datasetId}_permission"));
             if (result != null)
             {
                 if (result == "true")
@@ -390,12 +390,12 @@ namespace WebUI.Services
             else
             {
                 Response tasks = await FindUserTasks(userId, session);
-                if (JsonUtils.GetJToken(taskId, tasks.Data) != null)
+                if (JsonUtils.GetJToken(datasetId, tasks.Data) != null)
                 {
-                    SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "true", session);
+                    SessionOps.SetSession($"user_{userId}_task_{datasetId}_permission", "true", session);
                     return true;
                 }
-                SessionOps.SetSession($"user_{userId}_task_{taskId}_permission", "false", session);
+                SessionOps.SetSession($"user_{userId}_task_{datasetId}_permission", "false", session);
             }
             return false;
         }
@@ -754,6 +754,20 @@ namespace WebUI.Services
             }
             return idObj;
         }
-
+        public static async Task<bool> CheckUserHasThisDataset(string userId, string projectId, string datasetId)
+        {
+            var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var projects = JsonUtils.GetJToken("dataSets", json);
+            var dataSets = JsonUtils.GetJToken(projectId, projects) as JArray;
+            if (dataSets != null)
+            {
+                if (Json.ContainsKey(datasetId, dataSets))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

@@ -471,6 +471,11 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
+            var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+            if (!res)
+            {
+                return StatusCode(403);
+            }
             var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
             return Ok(new Response().GetJObject("taskList", JToken.FromObject(taskList)));
         }
@@ -485,6 +490,11 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
+            var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+            if (!res)
+            {
+                return StatusCode(403);
+            }
             JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId);
             return Ok(new Response().GetJObject("next",JToken.FromObject(nextObj)));
         }
@@ -500,17 +510,34 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
+            var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+            if (!res)
+            {
+                return StatusCode(403);
+            }
             var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
             var projectObj = JsonUtils.GetJToken(convertProjectId, json) as JObject;
             return Ok(new Response().GetJObject("annotations", projectObj==null?null:JToken.FromObject(projectObj)));
         }
+        /// <remarks>
+        /// 提交标注信息annotations
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="taskId">task的id</param>
+        /// <param name="value">标注信息，json格式</param>
         [HttpPost("{datasetId}/tasks/annotations/{taskId}")]
         public async Task<IActionResult> Post(Guid projectId, Guid dataSetId, string taskId, [FromBody] JObject value)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
+            var has = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+            if (!has)
+            {
+                return StatusCode(403);
+            }
             var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
             var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId);
