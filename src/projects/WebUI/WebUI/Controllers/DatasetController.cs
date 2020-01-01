@@ -487,9 +487,12 @@ namespace WebUI.Controllers
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
             var lockObj = JsonUtils.GetJToken(convertProjectId, taskJson) as JObject;
             List<JObject> adminTaskList = new List<JObject>();
-            foreach (var one in lockObj)
+            if (lockObj != null)
             {
-                adminTaskList.Add(new JObject(){{"id",one.Key},{"status",one.Value["status"]},{"userId",one.Value["userId"]}});
+                foreach (var one in lockObj)
+                {
+                    adminTaskList.Add(new JObject() { { "id", one.Key }, { "status", one.Value["status"] }, { "userId", one.Value["userId"] } });
+                }
             }
             return Ok(new Response().GetJObject("taskList", JToken.FromObject(adminTaskList)));
         }
