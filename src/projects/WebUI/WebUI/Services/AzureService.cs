@@ -557,7 +557,7 @@ namespace WebUI.Services
                 if (!isExists)
                 {
                     max_id += 1;
-                    obj.Add(new LabelModel{Id = max_id, Name = label.Name,Supercategory = "customed"});
+                    obj.Add(new JObject(){{"id",max_id},{"name",label.Name},{"supercategory","customed"}});
                     label.Id = max_id;
                 }
             }
@@ -650,7 +650,7 @@ namespace WebUI.Services
                 return false;
             }
             var status = JsonUtils.GetJToken("status", taskObj).ToString();
-            if (status == "lock")
+            if (status != "commited")
             {
                 taskObj["status"] = "commited";
                 await taskBlob.UploadGenericObjectAsync(taskJson);
