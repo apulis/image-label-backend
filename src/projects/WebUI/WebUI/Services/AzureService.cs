@@ -626,10 +626,14 @@ namespace WebUI.Services
             var json = await blob.DownloadGenericObjectAsync();
             var commitObj = JsonUtils.GetJToken("commitLog", json) as JObject;
             var projectObj = JsonUtils.GetJToken(projectId, commitObj) as JObject;
-            var datasetArray = JsonUtils.GetJToken(dataSetId, projectObj) as JArray;
-            if (datasetArray != null)
+            var datasetListObj = JsonUtils.GetJToken(dataSetId, projectObj) as JObject;
+            if (datasetListObj != null)
             {
-                taskList = datasetArray.ToObject<List<JObject>>();
+                foreach (var one in datasetListObj)
+                {
+                    var value = one.Value as JObject;
+                    taskList.Add(new JObject(){{"id", one.Key},{"createTime", value["createTime"]},{"updateTime", value["updateTime"] }});
+                }
             }
             var datasetObj =await getDatasetTaskNext(userId,projectId,dataSetId);
             if (datasetObj != null)
@@ -653,6 +657,7 @@ namespace WebUI.Services
             if (status != "commited")
             {
                 taskObj["status"] = "commited";
+                taskObj["userId"] = userId;
                 await taskBlob.UploadGenericObjectAsync(taskJson);
             }
             var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
@@ -668,6 +673,7 @@ namespace WebUI.Services
             {
                 if (datasetObj["id"].ToString() == taskId)
                 {
+                    json.Remove("lockLog");
                     projectLockObj[taskId] = null;
                     var obj = new JObject()
                     {
