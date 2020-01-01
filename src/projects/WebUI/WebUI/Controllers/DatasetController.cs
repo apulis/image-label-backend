@@ -471,13 +471,26 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-            if (!res)
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
-                return StatusCode(403);
+                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+                if (!res)
+                {
+                    return StatusCode(403);
+                }
+                var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
+                return Ok(new Response().GetJObject("taskList", JToken.FromObject(taskList)));
             }
-            var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("taskList", JToken.FromObject(taskList)));
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+            var taskJson = await taskBlob.DownloadGenericObjectAsync();
+            var lockObj = JsonUtils.GetJToken(convertProjectId, taskJson) as JObject;
+            List<JObject> adminTaskList = new List<JObject>();
+            foreach (var one in lockObj)
+            {
+                adminTaskList.Add(new JObject(){{"id",one.Key},{"status",one.Value["status"]},{"userId",one.Value["userId"]}});
+            }
+            return Ok(new Response().GetJObject("taskList", JToken.FromObject(adminTaskList)));
         }
         /// <remarks>
         /// 获取下一个可标注任务
@@ -510,10 +523,14 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-            if (!res)
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
-                return StatusCode(403);
+                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+                if (!res)
+                {
+                    return StatusCode(403);
+                }
             }
             var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
@@ -533,10 +550,14 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var has = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-            if (!has)
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
-                return StatusCode(403);
+                var has = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+                if (!has)
+                {
+                    return StatusCode(403);
+                }
             }
             var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
