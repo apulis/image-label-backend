@@ -641,7 +641,7 @@ namespace WebUI.Services
                 return false;
             }
             var status = JsonUtils.GetJToken("status", taskObj).ToString();
-            if (status == "lock"&& taskObj["userId"].ToString()==userId)
+            if (status != "commited")
             {
                 taskObj["status"] = "commited";
                 taskObj["userId"] = userId;
