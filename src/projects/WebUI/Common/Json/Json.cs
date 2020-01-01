@@ -71,6 +71,19 @@ namespace Utils.Json
             return null;
         }
 
+        public static JToken GetJToken(string[] entrynamelist, JToken token)
+        {
+            var re = token;
+            foreach (var entryname in entrynamelist)
+            {
+                re = GetJToken(entryname, re);
+                if (re == null)
+                {
+                    return null;
+                }
+            }
+            return re;
+        }
 
         public static string GetString(string entryname, JToken token, string def = "")
         {
@@ -363,6 +376,68 @@ namespace Utils.Json
                 var name = token.ToString();
                 return String.Compare(name, entryname, true) == 0;
             }
+        }
+
+        public static bool AddValueToJObject(string[] entryNameList, JObject obj, JToken value)
+        {
+            int len = entryNameList.Length;
+            int index = 0;
+            JObject currenJObject = obj;
+            foreach (var entryName in entryNameList)
+            {
+                if (Json.GetJToken(entryName, currenJObject) == null)
+                {
+                    var i = len - 1;
+                    JToken newObj = value;
+                    while (i > index)
+                    {
+                        newObj = new JObject() { { entryNameList[i], newObj } };
+                        i -= 1;
+                    }
+                    currenJObject.Add(entryName, newObj);
+                    return true;
+                }
+                currenJObject = Json.GetJToken(entryName, currenJObject) as JObject;
+                index += 1;
+            }
+            return false;
+        }
+        public static bool AddValueToJArray(string[] entryNameList, JObject obj, string value)
+        {
+            int len = entryNameList.Length;
+            int index = 0;
+            var currenJObject = obj;
+            foreach (var entryName in entryNameList)
+            {
+                var currentObj = Json.GetJToken(entryName, currenJObject);
+                if (currentObj == null)
+                {
+                    var i = len - 1;
+                    JToken newObj = new JArray() { value };
+                    while (i > index)
+                    {
+                        newObj = new JObject() { { entryNameList[i], newObj } };
+                        i -= 1;
+                    }
+                    currenJObject.Add(entryName, newObj);
+                    return true;
+                }
+                if (index == len - 1)
+                {
+                    var array = currentObj as JArray;
+                    if (!Json.ContainsKey(value, array))
+                    {
+                        array.Add(value);
+                        return true;
+                    }
+                }
+                else
+                {
+                    currenJObject = currentObj as JObject;
+                }
+                index += 1;
+            }
+            return false;
         }
     }
 
