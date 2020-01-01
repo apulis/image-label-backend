@@ -548,7 +548,7 @@ namespace WebUI.Services
                 isExists = false;
                 foreach (var one in obj)
                 {
-                    if (one["name"].ToString()==label.Name)
+                    if (one["name"].ToString()==label.name)
                     {
                         isExists = true;
                         break;
@@ -557,8 +557,8 @@ namespace WebUI.Services
                 if (!isExists)
                 {
                     max_id += 1;
-                    obj.Add(new JObject(){{"id",max_id},{"name",label.Name},{"supercategory","customed"}});
-                    label.Id = max_id;
+                    obj.Add(new JObject(){{"id",max_id},{"name",label.name},{"supercategory","customed"}});
+                    label.id = max_id;
                 }
             }
             return lables;

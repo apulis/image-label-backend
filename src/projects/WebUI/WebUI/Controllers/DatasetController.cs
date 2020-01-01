@@ -51,9 +51,9 @@ namespace WebUI.Controllers
                             {
                                 labels.Add(new AddLabelViewModel()
                                 {
-                                    Id = int.Parse(one["id"].ToString()),
-                                    Name = one["name"].ToString(),
-                                    Type = one["type"].ToString()
+                                    id = int.Parse(one["id"].ToString()),
+                                    name = one["name"].ToString(),
+                                    type = one["type"].ToString()
                                 });
                             }
                         }
@@ -85,9 +85,9 @@ namespace WebUI.Controllers
                                 {
                                     labels.Add(new AddLabelViewModel()
                                     {
-                                        Id = int.Parse(one["id"].ToString()),
-                                        Name = one["name"].ToString(),
-                                        Type = one["type"].ToString()
+                                        id = int.Parse(one["id"].ToString()),
+                                        name = one["name"].ToString(),
+                                        type = one["type"].ToString()
                                     });
                                 }
                             }
