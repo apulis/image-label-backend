@@ -30,7 +30,9 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
+        /// <response code="200">返回value字符串</response>
         [HttpGet]
+        [ProducesResponseType(typeof(Response), 200)]
         public async Task<IActionResult> GetDatasets(Guid projectId,[FromQuery]int page,[FromQuery]int size)
         {
             var convertProjectId = projectId.ToString().ToUpper();
@@ -321,7 +323,7 @@ namespace WebUI.Controllers
                 }
             }
             var list = PageOps.GetPageRange(userList, page, size, userList.Count);
-            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list), "totalCount", userList.Count));
+            return Ok(new Response().GetJObject("users", JToken.FromObject(list), "totalCount", userList.Count));
         }
         /// <remarks>
         /// 为project下特定数据集删除指定的标注用户
@@ -525,7 +527,7 @@ namespace WebUI.Controllers
                 }
             }
             var list = PageOps.GetPageRange(adminTaskList, page, size, adminTaskList.Count);
-            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list), "totalCount", adminTaskList.Count));
+            return Ok(new Response().GetJObject("tasks", JToken.FromObject(list), "totalCount", adminTaskList.Count));
         }
         /// <remarks>
         /// 获取下一个可标注任务

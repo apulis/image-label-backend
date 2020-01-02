@@ -12,6 +12,7 @@
             <param name="projectId">project的GUid</param>
             <param name="page">当前第几页，从1开始递增</param>
             <param name="size">每页的数量</param>
+            <response code="200">返回value字符串</response>
         </member>
         <member name="M:WebUI.Controllers.DatasetController.AddDataset(System.Guid,WebUI.ViewModels.AddDatasetViewModel)">
             <remarks>

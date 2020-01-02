@@ -33,7 +33,7 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
             var list = PageOps.GetPageRange(accounts, page, size, accounts.Count);
-            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list), "totalCount", accounts.Count));
+            return Ok(new Response().GetJObject("projects", JToken.FromObject(list), "totalCount", accounts.Count));
         }
         /// <remarks>
         /// 删除一个project
