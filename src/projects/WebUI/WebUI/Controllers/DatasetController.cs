@@ -527,7 +527,7 @@ namespace WebUI.Controllers
                 }
             }
             var list = PageOps.GetPageRange(adminTaskList, page, size, adminTaskList.Count);
-            return Ok(new Response().GetJObject("tasks", JToken.FromObject(list), "totalCount", adminTaskList.Count));
+            return Ok(new Response().GetJObject("taskList", JToken.FromObject(list), "totalCount", adminTaskList.Count));
         }
         /// <remarks>
         /// 获取下一个可标注任务
