@@ -30,10 +30,8 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
-        /// <response code="200">返回value字符串</response>
         [HttpGet]
-        [ProducesResponseType(typeof(Response), 200)]
-        public async Task<IActionResult> GetDatasets(Guid projectId,[FromQuery]int page,[FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<DatasetViewModel>>> GetDatasets(Guid projectId,[FromQuery]int page,[FromQuery]int size)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
@@ -119,7 +117,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="AddDatasetViewModel">字典，包含name\info\type\labels</param>
         [HttpPost]
-        public async Task<IActionResult> AddDataset(Guid projectId,[FromBody]AddDatasetViewModel dataSetViewModel)
+        public async Task<ActionResult<Response>> AddDataset(Guid projectId,[FromBody]AddDatasetViewModel dataSetViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -168,7 +166,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataSetId的GUid</param>
         [HttpGet("{dataSetId}")]
-        public async Task<IActionResult> getDatasetInfo(Guid projectId, Guid dataSetId)
+        public async Task<ActionResult<DatasetViewModel>> getDatasetInfo(Guid projectId, Guid dataSetId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -196,7 +194,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataSetId的GUid</param>
         /// <param name="dataSetViewModel">新的name\info\type\labels字段,json格式</param>
         [HttpPatch("{dataSetId}")]
-        public async Task<IActionResult> UpdateDataset(Guid projectId, Guid dataSetId, [FromBody]AddDatasetViewModel dataSetViewModel)
+        public async Task<ActionResult<Response>> UpdateDataset(Guid projectId, Guid dataSetId, [FromBody]AddDatasetViewModel dataSetViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -231,7 +229,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">将要删除dataset的GUid</param>
         [HttpDelete]
-        public async Task<IActionResult> RemoveDataSet(Guid projectId,[FromBody] Guid dataSetId)
+        public async Task<ActionResult<Response>> RemoveDataSet(Guid projectId,[FromBody] Guid dataSetId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -292,7 +290,7 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/users")]
-        public async Task<IActionResult> GetDataSetUsers(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<UserInfoViewModel>>> GetDataSetUsers(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -333,7 +331,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         /// <param name="userNumber">将要删除的用户唯一标识数字</param>
         [HttpDelete("{datasetId}/users")]
-        public async Task<IActionResult> RemoveUser(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
+        public async Task<ActionResult<Response>> RemoveUser(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -397,7 +395,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         /// <param name="userNumber">用户唯一标识数字</param>
         [HttpPost("{datasetId}/users")]
-        public async Task<IActionResult> AddUserToDataSet(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
+        public async Task<ActionResult<Response>> AddUserToDataSet(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -461,7 +459,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         /// <param name="userNumber">用户唯一标识数字</param>
         [HttpGet("{datasetId}/users/{userNumber}")]
-        public async Task<IActionResult> CheckUserExists(Guid projectId, Guid dataSetId,int userNumber)
+        public async Task<ActionResult<Response>> CheckUserExists(Guid projectId, Guid dataSetId,int userNumber)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -498,7 +496,7 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks")]
-        public async Task<IActionResult> getTasks(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<TaskViewModel>>> getTasks(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
@@ -535,7 +533,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/tasks/next/{taskId}")]
-        public async Task<IActionResult> GetNextTask(Guid projectId, Guid dataSetId,string taskId)
+        public async Task<ActionResult<TaskViewModel>> GetNextTask(Guid projectId, Guid dataSetId,string taskId)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
@@ -586,7 +584,7 @@ namespace WebUI.Controllers
         /// <param name="taskId">task的id</param>
         /// <param name="value">标注信息，json格式</param>
         [HttpPost("{datasetId}/tasks/annotations/{taskId}")]
-        public async Task<IActionResult> Post(Guid projectId, Guid dataSetId, string taskId, [FromBody] JObject value)
+        public async Task<ActionResult<Response>> Post(Guid projectId, Guid dataSetId, string taskId, [FromBody] JObject value)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();

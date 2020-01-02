@@ -23,7 +23,7 @@ namespace WebUI.Controllers
         /// 返回所有的label类别
         /// </remarks>
         [HttpGet]
-        public async Task<IActionResult> GetLabels()
+        public async Task<ActionResult<Response>> GetLabels()
         {
             var blob = AzureService.GetBlob("cdn", "private", null, null, "categories", "meta.json");
             var json = await blob.DownloadGenericObjectAsync();

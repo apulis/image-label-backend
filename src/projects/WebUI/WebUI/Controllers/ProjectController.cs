@@ -28,7 +28,7 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet]
-        public async Task<IActionResult> GetProjects([FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<ProjectViewModel>>> GetProjects([FromQuery]int page, [FromQuery]int size)
         {
             var userId = HttpContext.User.Identity.Name;
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
@@ -41,7 +41,7 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         [HttpDelete("{projectId}")]
-        public async Task<IActionResult> DeleteProject(Guid projectId)
+        public async Task<ActionResult<Response>> DeleteProject(Guid projectId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
@@ -120,7 +120,7 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="accountViewModel">需name和info字段</param>
         [HttpPost]
-        public async Task<IActionResult> AddProject([FromBody]AddProjectViewModel accountViewModel)
+        public async Task<ActionResult<Response>> AddProject([FromBody]AddProjectViewModel accountViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -165,7 +165,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="accountViewModel">新的name和info字段</param>
         [HttpPatch("{projectId}")]
-        public async Task<IActionResult> UpdateProject(Guid projectId, AddProjectViewModel accountViewModel)
+        public async Task<ActionResult<Response>> UpdateProject(Guid projectId, AddProjectViewModel accountViewModel)
         {
             if (!ModelState.IsValid)
             {
@@ -195,7 +195,7 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         [HttpGet("{projectId}/managers")]
-        public async Task<IActionResult> GetProjectManagers(Guid projectId)
+        public async Task<ActionResult<IEnumerable<UserInfoViewModel>>> GetProjectManagers(Guid projectId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
@@ -229,7 +229,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         ///<param name = "userNumber" > 用户唯一标识数字 </param>
         [HttpGet("{projectId}/managers/{userNumber}")]
-        public async Task<IActionResult> CheckProjectManagerExists(Guid projectId, int userNumber)
+        public async Task<ActionResult<Response>> CheckProjectManagerExists(Guid projectId, int userNumber)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
@@ -265,7 +265,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="userNumbers">用户的唯一标识数字列表</param>
         [HttpPost("{projectId}/managers")]
-        public async Task<IActionResult> AddProjectManager(Guid projectId,[FromBody]List<int> userNumbers)
+        public async Task<ActionResult<Response>> AddProjectManager(Guid projectId,[FromBody]List<int> userNumbers)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;
@@ -342,7 +342,7 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="userNumber">用户唯一标识数字</param>
         [HttpDelete("{projectId}/managers")]
-        public async Task<IActionResult> DeleteProjectManager(Guid projectId,[FromBody] int userNumber)
+        public async Task<ActionResult<Response>> DeleteProjectManager(Guid projectId,[FromBody] int userNumber)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Identity.Name;

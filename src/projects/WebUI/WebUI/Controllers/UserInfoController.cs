@@ -23,7 +23,7 @@ namespace WebUI.Controllers
         /// 返回用户基本信息
         /// </remarks>
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<ActionResult<UserInfoViewModel>> Get()
         {
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
@@ -41,7 +41,7 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="userNumber">用户唯一标识数字</param>
         [HttpGet("userId/{userNumber}")]
-        public async Task<IActionResult> GetUserId(int userNumber)
+        public async Task<ActionResult<Response>> GetUserId(int userNumber)
         {
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             return Ok(new Response().GetJObject("userId", JToken.FromObject(userId)));
