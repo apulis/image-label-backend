@@ -93,7 +93,7 @@
             <param name="page">当前第几页，从1开始递增</param>
             <param name="size">每页的数量</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetNextTask(System.Guid,System.Guid)">
+        <member name="M:WebUI.Controllers.DatasetController.GetNextTask(System.Guid,System.Guid,System.String)">
             <remarks>
             获取下一个可标注任务
             </remarks>

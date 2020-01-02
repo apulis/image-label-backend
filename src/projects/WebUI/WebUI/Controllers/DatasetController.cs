@@ -534,8 +534,8 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataset的GUid</param>
-        [HttpGet("{datasetId}/tasks/next")]
-        public async Task<IActionResult> GetNextTask(Guid projectId, Guid dataSetId)
+        [HttpGet("{datasetId}/tasks/next/{taskId}")]
+        public async Task<IActionResult> GetNextTask(Guid projectId, Guid dataSetId,string taskId)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
@@ -543,15 +543,14 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
-                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-                if (!res)
+                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                if (!has)
                 {
                     return StatusCode(403);
                 }
-                JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId);
-                return Ok(new Response().GetJObject("next", JToken.FromObject(nextObj)));
             }
-            return Ok(new Response().GetJObject("next",null));
+            JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId, taskId);
+            return Ok(new Response().GetJObject("next", JToken.FromObject(nextObj)));
         }
         /// <remarks>
         /// 获取详细标注信息annotations
@@ -568,8 +567,8 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
-                var res = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId,taskId);
-                if (!res)
+                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId,taskId);
+                if (!has)
                 {
                     return StatusCode(403);
                 }

@@ -564,13 +564,35 @@ namespace WebUI.Services
             return lables;
         }
 
-        public static async Task<JObject> getDatasetTaskNext(string userId, string projectId, string dataSetId)
+        public static async Task<JObject> getDatasetTaskNext(string userId, string projectId, string dataSetId,string taskId=null)
         {
             var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
             var json = await blob.DownloadGenericObjectAsync();
             var lockObj = JsonUtils.GetJToken("lockLog", json) as JObject;
             var projectLockObj = JsonUtils.GetJToken(projectId, lockObj) as JObject;
             var datasetObj = JsonUtils.GetJToken(dataSetId, projectLockObj) as JObject;
+            var role = await AzureService.FindUserRole(userId);
+            if (taskId != null)
+            {
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, projectId))
+                {
+                    var commitObj = JsonUtils.GetJToken("commitLog", json) as JObject;
+                    var commitLockObj = JsonUtils.GetJToken(projectId, commitObj) as JObject;
+                    var commitDatasetObj = JsonUtils.GetJToken(dataSetId, commitLockObj) as JObject;
+                    var taskObj = JsonUtils.GetJToken(taskId, commitDatasetObj) as JObject;
+                    if (taskObj == null)
+                    {
+                        return null;
+                    }
+                    var keysList = commitDatasetObj.Properties().Select(p => p.Name).ToList();
+                    var index = keysList.IndexOf(taskId);
+                    if (index != keysList.Count - 1)
+                    {
+                        var obj = Json.GetJToken(keysList[index + 1], commitDatasetObj) as JObject;
+                        return new JObject(){{"id", keysList[index + 1] },{ "createTime", obj["createTime"] },{ "updateTime",obj["updateTime"] } };
+                    }
+                }
+            }
             if (datasetObj == null)
             {
                 await AzureService.GenerateCommitJsonFile(projectId, dataSetId);
@@ -579,6 +601,16 @@ namespace WebUI.Services
                 var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
                 if (projectObj != null)
                 {
+                    if (role == "admin" || await AzureService.FindUserIsProjectManager(userId, projectId))
+                    {
+                        var keysList = projectObj.Properties().Select(p => p.Name).ToList();
+                        if (taskId == null)
+                        {
+                            return new JObject(){{"id", keysList[0] },{ "createTime",null },{ "updateTime",null } };
+                        }
+                        var index = keysList.IndexOf(taskId);
+                        return new JObject() { { "id", keysList[index+1] }, { "createTime", null }, { "updateTime", null } };
+                    }
                     foreach (var pair in projectObj)
                     {
                         var info = pair.Value as JObject;
@@ -739,7 +771,7 @@ namespace WebUI.Services
             var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
             var json = await blob.DownloadGenericObjectAsync();
             var lockId = JsonUtils.GetJToken(new string[]{"lockLog",projectId,datasetId,"id"}, json);
-            if (lockId.ToString() == taskId)
+            if (lockId!=null&&lockId.ToString() == taskId)
             {
                 return true;
             }
