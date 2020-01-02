@@ -158,6 +158,32 @@ namespace WebUI.Controllers
             return Ok(new Response { Msg = "ok" });
         }
         /// <remarks>
+        /// 查询一个特定的dataset详细信息
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataSetId的GUid</param>
+        [HttpGet("{dataSetId}")]
+        public async Task<IActionResult> getDatasetInfo(Guid projectId, Guid dataSetId)
+        {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            {
+                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+                if (!res)
+                {
+                    return StatusCode(403);
+                }
+            }
+            var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
+            var json = await accountBlob.DownloadGenericObjectAsync();
+            var allAccounts = JsonUtils.GetJToken("dataSets", json);
+            var obj = JsonUtils.GetJToken(convertDataSetId, allAccounts) as JObject;
+            return Ok(new Response().GetJObject("info", obj));
+        }
+        /// <remarks>
         /// 修改一个特定的dataset
         /// 如果成功，返回msg=ok,successful="true"
         /// </remarks>
