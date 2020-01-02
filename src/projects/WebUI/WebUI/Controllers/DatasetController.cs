@@ -28,8 +28,10 @@ namespace WebUI.Controllers
         /// 返回List,数据集列表
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
+        /// <param name="page">当前第几页，从1开始递增</param>
+        /// <param name="size">每页的数量</param>
         [HttpGet]
-        public async Task<IActionResult> GetDatasets(Guid projectId)
+        public async Task<IActionResult> GetDatasets(Guid projectId,[FromQuery]int page,[FromQuery]int size)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
@@ -104,7 +106,8 @@ namespace WebUI.Controllers
                     }
                 }
             }
-            return Ok(new Response().GetJObject("datasets", JToken.FromObject(datasetList)));
+            var list = PageOps.GetPageRange(datasetList, page, size, datasetList.Count);
+            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list),"totalCount", datasetList.Count));
         }
         /// <remarks>
         /// 为project添加数据集,需name、info和type字段，datasetId可选
@@ -284,8 +287,10 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="page">当前第几页，从1开始递增</param>
+        /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/users")]
-        public async Task<IActionResult> GetDataSetUsers(Guid projectId, Guid dataSetId)
+        public async Task<IActionResult> GetDataSetUsers(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -315,10 +320,8 @@ namespace WebUI.Controllers
                     userList.Add(userInfo);
                 }
             }
-
-            var a = JToken.FromObject(userList);
-            var b = new JArray(userList);
-            return Ok(new Response().GetJObject("users", JToken.FromObject(userList)));
+            var list = PageOps.GetPageRange(userList, page, size, userList.Count);
+            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list), "totalCount", userList.Count));
         }
         /// <remarks>
         /// 为project下特定数据集删除指定的标注用户
@@ -490,8 +493,10 @@ namespace WebUI.Controllers
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="page">当前第几页，从1开始递增</param>
+        /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks")]
-        public async Task<IActionResult> getTasks(Guid projectId, Guid dataSetId)
+        public async Task<IActionResult> getTasks(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
@@ -519,7 +524,8 @@ namespace WebUI.Controllers
                     adminTaskList.Add(new JObject(){{"id",one.Key}, {"status",one.Value["status"]}, { "userId", one.Value["userId"] } });
                 }
             }
-            return Ok(new Response().GetJObject("taskList", JToken.FromObject(adminTaskList)));
+            var list = PageOps.GetPageRange(adminTaskList, page, size, adminTaskList.Count);
+            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list), "totalCount", adminTaskList.Count));
         }
         /// <remarks>
         /// 获取下一个可标注任务
@@ -598,14 +604,14 @@ namespace WebUI.Controllers
             var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId);
             if (json == null)
             {
-                if (res)
+                if (res||role=="admin")
                 {
                     await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
                 }
             }
             else
             {
-                if (res)
+                if (res || role == "admin")
                 {
                     json[convertProjectId] = value;
                     await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });

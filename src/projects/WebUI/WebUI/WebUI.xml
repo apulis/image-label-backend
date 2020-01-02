@@ -4,7 +4,7 @@
         <name>WebUI</name>
     </assembly>
     <members>
-        <member name="M:WebUI.Controllers.DatasetController.GetDatasets(System.Guid)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDatasets(System.Guid,System.Int32,System.Int32)">
             <remarks>
             获取当前用户的projectId对应的project下的所属数据集
             返回List,数据集列表
@@ -44,7 +44,7 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">将要删除dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetUsers(System.Guid,System.Guid)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetUsers(System.Guid,System.Guid,System.Int32,System.Int32)">
             <remarks>
             获取project下特定数据集的标注用户列表
             返回用户信息列表
@@ -79,7 +79,7 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.getTasks(System.Guid,System.Guid)">
+        <member name="M:WebUI.Controllers.DatasetController.getTasks(System.Guid,System.Guid,System.Int32,System.Int32)">
             <remarks>
             获取数据集的可标注任务列表,包含已修改task+一个锁定的task
             </remarks>
@@ -129,7 +129,7 @@
             </remarks>
             <param name="signinType">wechat or microsoft</param>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.GetProjects">
+        <member name="M:WebUI.Controllers.ProjectController.GetProjects(System.Int32,System.Int32)">
             <remarks>
             获取当前用户的所属project列表
             返回List

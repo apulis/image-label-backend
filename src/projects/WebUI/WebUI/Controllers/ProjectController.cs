@@ -25,12 +25,15 @@ namespace WebUI.Controllers
         /// 获取当前用户的所属project列表
         /// 返回List
         /// </remarks>
+        /// <param name="page">当前第几页，从1开始递增</param>
+        /// <param name="size">每页的数量</param>
         [HttpGet]
-        public async Task<IActionResult> GetProjects()
+        public async Task<IActionResult> GetProjects([FromQuery]int page, [FromQuery]int size)
         {
             var userId = HttpContext.User.Identity.Name;
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
-            return Ok(new Response().GetJObject("projects", JToken.FromObject(accounts)));
+            var list = PageOps.GetPageRange(accounts, page, size, accounts.Count);
+            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list), "totalCount", accounts.Count));
         }
         /// <remarks>
         /// 删除一个project
