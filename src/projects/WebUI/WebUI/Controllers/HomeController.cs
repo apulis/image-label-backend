@@ -52,6 +52,7 @@ namespace WebUI.Controllers
             HttpContext.Session.Remove(Constants.JsontagRole);
 
         }
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             await GetRole();
