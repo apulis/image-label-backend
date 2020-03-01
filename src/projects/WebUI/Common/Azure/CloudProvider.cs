@@ -21,13 +21,14 @@ namespace WebUI.Azure
     };
 
     public class CloudProvider {
-        public const String All = "*"; 
-        public static String Azure = null; 
-        public static String GCE = null; 
-        public static String AWS = null; 
-        public const String Any = null; 
-        public static String Default = null; 
-        public String Name = null; 
+        public const String All = "*";
+        public static String Azure = null;
+        public static String GCE = null;
+        public static String AWS = null;
+        public static String LOCAL = null;
+        public const String Any = null;
+        public static String Default = null;
+        public String Name = null;
 
         public virtual String[] GetURLs( string storage, string path, string location )
         {
@@ -155,6 +156,15 @@ namespace WebUI.Azure
                         }
                     }
 #endif
+                    else if (providerName.IndexOf("local", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        //logger.LogInformation($"Enter local setup for {providerName}");
+                        provider = new NFSCloudProvider(oneConfigFile, logger);
+                        if (!Object.ReferenceEquals(provider, null))
+                        {
+                            CloudProvider.LOCAL = providerName;
+                        }
+                    }
                     if ( !String.IsNullOrEmpty(providerName) 
                         && !Object.ReferenceEquals(provider,null) 
                         && provider.Ready() )
