@@ -1157,7 +1157,7 @@ namespace WebUI.Services
             var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId,category_ids);
             if (res || role == "admin")
             {
-                await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
+                await blob.UploadGenericObjectAsync(value);
             }
         }
 
