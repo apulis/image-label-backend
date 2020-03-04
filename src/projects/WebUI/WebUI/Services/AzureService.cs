@@ -662,7 +662,7 @@ namespace WebUI.Services
             return taskList;
         }
 
-        public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId)
+        public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId,List<int> categoryIds)
         {
             var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
@@ -677,6 +677,7 @@ namespace WebUI.Services
             {
                 taskObj["status"] = "commited";
                 taskObj["userId"] = userId;
+                taskObj["categoryIds"] = categoryIds==null?null:JToken.FromObject(categoryIds);
                 await taskBlob.UploadGenericObjectAsync(taskJson);
             }
             var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
@@ -1126,31 +1127,37 @@ namespace WebUI.Services
 
         public static async Task<JObject> GetOneTask(string convertProjectId,string convertDataSetId, string taskId)
         {
-            var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
+            var blob = AzureService.GetBlob(null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
-            var projectObj = JsonUtils.GetJToken(convertProjectId, json) as JObject;
-            return projectObj;
+            return json;
         }
 
-        public static async Task PostOneTask(string convertProjectId, string convertDataSetId, string taskId,string userId,string role,JObject value)
+        public static List<int> GetCategoryIdsFromPostData(JObject value)
         {
-            var blob = AzureService.GetBlob(null, $"tasks/{convertDataSetId}/annotations", $"{taskId}.json");
-            var json = await blob.DownloadGenericObjectAsync();
-            var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId);
-            if (json == null)
+            List<int> labels=new List<int>();
+            if (!Object.ReferenceEquals(value, null))
             {
-                if (res || role == "admin")
+                var array = JsonUtils.GetJToken("annotations", value) as JArray;
+                foreach (var one in array)
                 {
-                    await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
+                    var obj = one as JObject;
+                    var category_id = JsonUtils.GetJToken("category_id", obj).ToString();
+                    if (!Object.ReferenceEquals(category_id, null))
+                    {
+                        labels.Add(int.Parse(category_id));
+                    }
                 }
             }
-            else
+            return labels;
+        }
+        public static async Task PostOneTask(string convertProjectId, string convertDataSetId, string taskId,string userId,string role,JObject value)
+        {
+            var blob = AzureService.GetBlob(null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
+            List<int> category_ids = GetCategoryIdsFromPostData(value);
+            var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId,category_ids);
+            if (res || role == "admin")
             {
-                if (res || role == "admin")
-                {
-                    json[convertProjectId] = value;
-                    await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
-                }
+                await blob.UploadGenericObjectAsync(new JObject() { { convertProjectId, value } });
             }
         }
 
@@ -1407,6 +1414,40 @@ namespace WebUI.Services
                     }
                 }
             }
+        }
+
+        public static async Task<JArray> GetDataSetLabels(string convertProjectId, string convertDataSetId)
+        {
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", $"membership.json");
+            var accJson = await blob.DownloadGenericObjectAsync();
+            var datasetsList = JsonUtils.GetJToken("dataSets", accJson) as JObject;
+            var datasetJObject = JsonUtils.GetJToken(convertDataSetId, datasetsList) as JObject;
+            var labels = JsonUtils.GetJToken("labels", datasetJObject) as JArray;
+            return labels;
+        }
+        public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids)
+        {
+            List<string> taskIds = new List<string>();
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}",$"commit.json");
+            var accJson = await blob.DownloadGenericObjectAsync();
+            var tasksList = JsonUtils.GetJToken(convertProjectId, accJson) as JObject;
+            if (!Object.ReferenceEquals(tasksList, null))
+            {
+                foreach (var pair in tasksList)
+                {
+                    var obj = pair.Value as JObject;
+                    var categoryIds = JsonUtils.GetJToken("categoryIds", obj) as JArray;
+                    if (categoryIds != null)
+                    {
+                        List<int> ids = categoryIds.ToObject<List<int>>();
+                        if (ids.All(b => category_ids.Any(a => a == b)))
+                        {
+                            taskIds.Add(pair.Key);
+                        }
+                    }
+                }
+            }
+            return taskIds;
         }
     }
 }

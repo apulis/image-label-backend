@@ -325,9 +325,12 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/tasks/labels")]
         [ProducesResponseType(typeof(List<LabelViewModel>), 200)]
-        public async Task<IActionResult> GetDataSetLabels(Guid projectId, Guid dataSetId)
+        public async Task<ActionResult<Response>> GetDataSetLabels(Guid projectId, Guid dataSetId)
         {
-            return Ok(new Response { Msg = "ok" }.JObjectToString());
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var labels = await AzureService.GetDataSetLabels(convertProjectId, convertDataSetId);
+            return Ok(new Response().GetJObject("annotations", labels??JToken.FromObject(labels)));
         }
         /// <remarks>
         /// 该数据集下的搜索对应label列表类别的图片
@@ -339,10 +342,14 @@ namespace WebUI.Controllers
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks/search")]
         [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
-        public async Task<IActionResult> GetDataSetByLabels(Guid projectId, Guid dataSetId, List<int> category_ids, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]List<int> category_ids, [FromQuery]int page, [FromQuery]int size)
         {
-
-            return Ok(new Response { Msg = "ok" }.JObjectToString());
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            List<string> taskIds =
+                await AzureService.GetDataSetByLabels(convertProjectId, convertDataSetId, category_ids);
+            var list = PageOps.GetPageRange(taskIds, page, size, taskIds.Count);
+            return Ok(new Response().GetJObject("taskIds", JToken.FromObject(list), "totalCount", taskIds.Count));
         }
     }
 }
