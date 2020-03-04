@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
-using Microsoft.AspNetCore.Mvc;
 
 namespace WebUI.Azure
 {
@@ -73,7 +69,6 @@ namespace WebUI.Azure
         {
             // can't get httpcontext for url.link, only solution is config
             return new Uri[]{ };
-
         }
         public override BlockBlob GetBlockBlobReference(string path)
         { 
@@ -81,23 +76,24 @@ namespace WebUI.Azure
             return new NFSBlockBlob(Path.Combine(_basePath, _directoryPath, path));
         }
 
-        public override async Task<IEnumerable<FileInfo>> ListBlobsSegmentedAsync()
+        public override async Task<IEnumerable<string>> ListBlobsSegmentedAsync()
         {
-            DirectoryInfo dir = new DirectoryInfo(Path.Combine(_basePath, _directoryPath));
-            return await ListCurrentDepthFile(dir,1);
+            //DirectoryInfo dir = new DirectoryInfo(Path.Combine(_basePath, _directoryPath));
+            string path = Path.Combine(_basePath, _directoryPath);
+            return await ListCurrentDepthFile(path, 1);
         }
 
-        public static async Task<IEnumerable<FileInfo>> ListCurrentDepthFile(DirectoryInfo dir,int depth)
+        public static async Task<IEnumerable<string>> ListCurrentDepthFile(string path,int depth)
         {
-            List<FileInfo> allFiles = new List<FileInfo>();
-            if (depth > 1)
+            List<string> allFiles = new List<string>();
+            if (depth > 0)
             {
-                FileInfo[] files = dir.GetFiles();
-                allFiles.AddRange(files);
-                DirectoryInfo[] directoryInfos = dir.GetDirectories();
-                foreach (var directoryInfo in directoryInfos)
+                //FileInfo[] files = dir.GetFiles();
+                allFiles.AddRange(Directory.EnumerateFiles(path));
+                //DirectoryInfo[] directoryInfos = dir.GetDirectories();
+                foreach (var oneDirectory in Directory.EnumerateDirectories(path))
                 {
-                    var curFiles = await ListCurrentDepthFile(directoryInfo,depth-1);
+                    var curFiles = await ListCurrentDepthFile(oneDirectory, depth-1);
                     allFiles.AddRange(curFiles);
                 }
                 return allFiles;

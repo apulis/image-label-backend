@@ -38,24 +38,33 @@ namespace WebUI.Controllers
             //{
             //    return Ok("BlobNotFound");
             //}
-            var container = CloudStorage.GetContainer("cdn", "private", null, "LOCAL");
-            var blob = container.GetBlockBlobReference(path);
-            var stream = new MemoryStream();
-            await blob.DownloadToStreamAsync(stream);
-            var type = Path.GetExtension(path);
-            string contentType;
-            if (type == ".json")
+            try
             {
-                contentType = "text/plain";
-            }else if (type == ".jpg")
-            {
-                contentType = "image/jpeg";
+                var container = CloudStorage.GetContainer("cdn", "private", null, "LOCAL");
+                var blob = container.GetBlockBlobReference(path);
+                var stream = new MemoryStream();
+                await blob.DownloadToStreamAsync(stream);
+                var type = Path.GetExtension(path);
+                string contentType;
+                if (type == ".json")
+                {
+                    contentType = "text/plain";
+                }
+                else if (type == ".jpg")
+                {
+                    contentType = "image/jpeg";
+                }
+                else
+                {
+                    contentType = "text/plain";
+                }
+                return File(stream, contentType);
             }
-            else
+            catch (Exception ex)
             {
-                contentType = "text/plain";
+                Console.WriteLine($"get path {path} exception: {ex}");
+                return Ok("BlobNotFound");
             }
-            return File(stream, contentType);
         }
     }
 }

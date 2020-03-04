@@ -33,7 +33,7 @@ namespace WebUI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [EnableCors("dev-use")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ImageController : ControllerBase
     {
         private readonly ILogger _logger;

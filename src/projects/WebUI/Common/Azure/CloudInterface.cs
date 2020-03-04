@@ -97,7 +97,7 @@ namespace WebUI.Azure
                 var typeName = this.GetType().FullName;
                 throw new Exception($"ListBlobsSegmentedAsync hasn't been implemented for BlobDirectory {typeName}"); 
             }
-        public virtual Task<IEnumerable<FileInfo>> ListBlobsSegmentedAsync()
+        public virtual Task<IEnumerable<string>> ListBlobsSegmentedAsync()
         {
             var typeName = this.GetType().FullName;
             throw new Exception($"ListBlobsSegmentedAsync hasn't been implemented for BlobDirectory {typeName}");

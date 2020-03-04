@@ -25,9 +25,7 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<ActionResult<Response>> GetLabels()
         {
-            var blob = AzureService.GetBlob("cdn", "private", null, null, "categories", "meta.json");
-            var json = await blob.DownloadGenericObjectAsync();
-            var obj = JsonUtils.GetJToken("categories", json) as JArray;
+            var obj = await AzureService.GetLabels();
             return Ok(new Response().GetJObject("categories", JToken.FromObject(obj)));
         }
     }
