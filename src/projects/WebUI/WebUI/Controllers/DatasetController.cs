@@ -318,5 +318,31 @@ namespace WebUI.Controllers
             await AzureService.PostOneTask(convertProjectId, convertDataSetId, taskId, userId, role, value);
             return Content(new Response {Msg = "ok"}.JObjectToString());
         }
+        /// <remarks>
+        /// 该数据集的所有labels类别
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        [HttpGet("{datasetId}/tasks/labels")]
+        [ProducesResponseType(typeof(List<LabelViewModel>), 200)]
+        public async Task<IActionResult> GetDataSetLabels(Guid projectId, Guid dataSetId)
+        {
+            return Ok(new Response { Msg = "ok" }.JObjectToString());
+        }
+        /// <remarks>
+        /// 该数据集下的搜索对应label列表类别的图片
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        /// <param name="category_ids">要搜索的category id列表</param>
+        /// <param name="page">当前第几页，从1开始递增</param>
+        /// <param name="size">每页的数量</param>
+        [HttpGet("{datasetId}/tasks/search")]
+        [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
+        public async Task<IActionResult> GetDataSetByLabels(Guid projectId, Guid dataSetId, List<int> category_ids, [FromQuery]int page, [FromQuery]int size)
+        {
+
+            return Ok(new Response { Msg = "ok" }.JObjectToString());
+        }
     }
 }
