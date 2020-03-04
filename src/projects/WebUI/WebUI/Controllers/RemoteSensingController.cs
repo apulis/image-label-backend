@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebUI.Controllers
 {
     // [Authorize(Roles = "Admin")]
-    [Authorize(Roles = "Admin,User")] // Allow either Admin or User role to access. 
+    //[Authorize(Roles = "Admin,User")] // Allow either Admin or User role to access. 
     public class RemoteSensingController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
