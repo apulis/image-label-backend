@@ -1440,7 +1440,7 @@ namespace WebUI.Services
                     if (categoryIds != null)
                     {
                         List<int> ids = categoryIds.ToObject<List<int>>();
-                        if (ids.All(b => category_ids.Any(a => a == b)))
+                        if (category_ids.All(b => ids.Any(a => a == b)))
                         {
                             taskIds.Add(pair.Key);
                         }
