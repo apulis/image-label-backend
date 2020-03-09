@@ -346,10 +346,15 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
+            List<JObject> annotationViewModels = new List<JObject>();
             List<string> taskIds =
                 await AzureService.GetDataSetByLabels(convertProjectId, convertDataSetId, category_ids);
             var list = PageOps.GetPageRange(taskIds, page, size, taskIds.Count);
-            return Ok(new Response().GetJObject("taskIds", JToken.FromObject(list), "totalCount", taskIds.Count));
+            foreach (var taskId in list)
+            {
+                annotationViewModels.Add(await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId));
+            }
+            return Ok(new Response().GetJObject("taskIds", JToken.FromObject(annotationViewModels), "totalCount", taskIds.Count));
         }
     }
 }
