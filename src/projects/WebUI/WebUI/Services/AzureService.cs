@@ -662,7 +662,7 @@ namespace WebUI.Services
             return taskList;
         }
 
-        public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId,List<int> categoryIds)
+        public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId,List<int> categoryIds,string role)
         {
             var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
@@ -673,7 +673,7 @@ namespace WebUI.Services
                 return false;
             }
             var status = JsonUtils.GetJToken("status", taskObj).ToString();
-            if (status != "commited")
+            if (status != "normal" || role=="admin")
             {
                 taskObj["status"] = "commited";
                 taskObj["userId"] = userId;
@@ -1154,7 +1154,7 @@ namespace WebUI.Services
         {
             var blob = AzureService.GetBlob(null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
             List<int> category_ids = GetCategoryIdsFromPostData(value);
-            var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId,category_ids);
+            var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId,category_ids, role);
             if (res || role == "admin")
             {
                 await blob.UploadGenericObjectAsync(value);
