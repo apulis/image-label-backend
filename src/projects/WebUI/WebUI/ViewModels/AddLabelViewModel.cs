@@ -13,5 +13,7 @@ namespace WebUI.ViewModels
         public string name { get; set; }
         [Required]
         public string type { get; set; }
+        [Required]
+        public string supercategory { get; set; }
     }
 }

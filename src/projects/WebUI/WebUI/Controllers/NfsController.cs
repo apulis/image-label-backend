@@ -56,14 +56,14 @@ namespace WebUI.Controllers
                 }
                 else
                 {
-                    contentType = "text/plain";
+                    contentType = "application/octet-stream";
                 }
                 return File(stream, contentType);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"get path {path} exception: {ex}");
-                return Ok("BlobNotFound");
+                return StatusCode(404);
             }
         }
     }

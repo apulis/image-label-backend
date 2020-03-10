@@ -23,7 +23,7 @@ namespace WebUI.Azure
         public override BlobContainer GetContainer(string storage, string path, string location)
         {
             string basePath = JsonUtils.GetJToken("nfs_mount_local_path", config).ToString();
-            return new NFSBlobContainer(this,basePath);
+            return new NFSBlobContainer(this, basePath);
         }
         public override bool Ready()
         {
@@ -36,18 +36,18 @@ namespace WebUI.Azure
         private readonly CloudProvider _provider;
         private readonly string _basePath;
 
-        internal NFSBlobContainer(CloudProvider provider,string basePath) : base(provider)
+        internal NFSBlobContainer(CloudProvider provider, string basePath) : base(provider)
         {
             _provider = provider;
             _basePath = basePath;
         }
         public override BlobDirectory GetDirectoryReference(string path)
         {
-            return new NFSBlobDirectory(Provider, path,_basePath);
+            return new NFSBlobDirectory(Provider, path, _basePath);
         }
         public override BlockBlob GetBlockBlobReference(string path)
         {
-            return new NFSBlockBlob(Path.Combine(_basePath,path));
+            return new NFSBlockBlob(Path.Combine(_basePath, path));
         }
 
     }
@@ -58,7 +58,7 @@ namespace WebUI.Azure
         private readonly string _directoryPath;
         private readonly string _basePath;
 
-        internal NFSBlobDirectory(CloudProvider provider, string directoryPath,string basePath) : base(provider)
+        internal NFSBlobDirectory(CloudProvider provider, string directoryPath, string basePath) : base(provider)
         {
             _provider = provider;
             _directoryPath = directoryPath;
@@ -68,11 +68,11 @@ namespace WebUI.Azure
         public override Uri[] StorageUri()
         {
             // can't get httpcontext for url.link, only solution is config
-            return new Uri[]{ };
+            return new Uri[] { };
         }
         public override BlockBlob GetBlockBlobReference(string path)
-        { 
-            
+        {
+
             return new NFSBlockBlob(Path.Combine(_basePath, _directoryPath, path));
         }
 
@@ -83,7 +83,7 @@ namespace WebUI.Azure
             return await ListCurrentDepthFile(path, 1);
         }
 
-        public static async Task<IEnumerable<string>> ListCurrentDepthFile(string path,int depth)
+        public static async Task<IEnumerable<string>> ListCurrentDepthFile(string path, int depth)
         {
             List<string> allFiles = new List<string>();
             if (depth > 0)
@@ -93,7 +93,7 @@ namespace WebUI.Azure
                 //DirectoryInfo[] directoryInfos = dir.GetDirectories();
                 foreach (var oneDirectory in Directory.EnumerateDirectories(path))
                 {
-                    var curFiles = await ListCurrentDepthFile(oneDirectory, depth-1);
+                    var curFiles = await ListCurrentDepthFile(oneDirectory, depth - 1);
                     allFiles.AddRange(curFiles);
                 }
                 return allFiles;

@@ -791,7 +791,7 @@ namespace WebUI.Services
             {
                 var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
                 var accJson = await accountBlob.DownloadGenericObjectAsync();
-                var allAccounts = JsonUtils.GetJToken("dataSets", accJson) as JObject;
+                var allAccounts = Json.GetJToken("dataSets", accJson) as JObject;
                 if (allAccounts != null)
                 {
                     foreach (var oneAccount in allAccounts)
@@ -805,7 +805,8 @@ namespace WebUI.Services
                                 {
                                     id = int.Parse(one["id"].ToString()),
                                     name = one["name"].ToString(),
-                                    type = one["type"].ToString()
+                                    type = one["type"].ToString(),
+                                    supercategory = Json.GetJToken("supercategory",one)==null?null: Json.GetJToken("supercategory", one).ToString(),
                                 });
                             }
                         }
@@ -843,7 +844,8 @@ namespace WebUI.Services
                                     {
                                         id = int.Parse(one["id"].ToString()),
                                         name = one["name"].ToString(),
-                                        type = one["type"].ToString()
+                                        type = one["type"].ToString(),
+                                        supercategory = one["supercategory"].ToString()
                                     });
                                 }
                             }
