@@ -465,6 +465,26 @@ namespace WebUI.Services
             }
             return null;
         }
+        public static async Task<bool> AddUserToAdmin(string userId)
+        {
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, "user", "role.json");
+            var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            var admins = JsonUtils.GetJToken("admin", taskJson) as JArray;
+            if (!Object.ReferenceEquals(admins, null))
+            {
+                if (Json.ContainsKey(userId, admins))
+                {
+                    return false;
+                }
+                admins.Add(userId);
+                await taskBlob.UploadGenericObjectAsync(taskJson);
+            }
+            else
+            {
+                await taskBlob.UploadGenericObjectAsync(new JObject() { { "admin", new JArray() { userId} } });
+            }
+            return true;
+        }
         public static async Task<bool> FindUserIsProjectManager(string userId, string projectId)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{projectId}", "membership.json");

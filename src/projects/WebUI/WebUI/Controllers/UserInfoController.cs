@@ -46,5 +46,22 @@ namespace WebUI.Controllers
             var userId = await AzureService.FindUserIdByNumber(userNumber);
             return Ok(new Response().GetJObject("userId", JToken.FromObject(userId)));
         }
+        /// <remarks>
+        /// 添加用户到管理员，需管理员才可请求成功
+        /// </remarks>
+        /// <param name="userNumber">用户唯一标识数字</param>
+        [HttpPost("AddUserToAdmin")]
+        public async Task<ActionResult<Response>> AddUserToAdmin([FromBody]int userNumber)
+        {
+            var identityId = await AzureService.FindUserIdByNumber(userNumber);
+            var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            bool ret = false;
+            if (role == "admin")
+            {
+                ret = await AzureService.AddUserToAdmin(identityId);
+            }
+            return Ok(new Response().GetJObject("result", ret));
+        }
     }
 }
