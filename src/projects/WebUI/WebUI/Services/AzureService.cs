@@ -1471,5 +1471,11 @@ namespace WebUI.Services
             }
             return taskIds;
         }
+        public static async Task<JObject> GetUserList()
+        {
+            var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
+            var userJson = await blob.DownloadGenericObjectAsync();
+            return userJson;
+        }
     }
 }

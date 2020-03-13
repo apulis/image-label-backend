@@ -20,7 +20,7 @@ namespace WebUI.Controllers
     public class UserInfoController:ControllerBase
     {
         /// <remarks>
-        /// 返回用户基本信息
+        /// 返回当前登录用户的基本信息
         /// </remarks>
         [HttpGet]
         public async Task<ActionResult<UserInfoViewModel>> Get()
@@ -62,6 +62,20 @@ namespace WebUI.Controllers
                 ret = await AzureService.AddUserToAdmin(identityId);
             }
             return Ok(new Response().GetJObject("result", ret));
+        }
+        /// <remarks>
+        /// 管理员获取用户列表
+        /// </remarks>
+        [HttpGet("GetUserList")]
+        public async Task<ActionResult<UserListViewModel>> GetUserList()
+        {
+            var userId = HttpContext.User.Identity.Name;
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin")
+            {
+                return StatusCode(403);
+            }
+            return Ok(new Response().GetJObject("users", JToken.FromObject(await AzureService.GetUserList())));
         }
     }
 }

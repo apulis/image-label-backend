@@ -220,7 +220,7 @@
         </member>
         <member name="M:WebUI.Controllers.UserInfoController.Get">
             <remarks>
-            返回用户基本信息
+            返回当前登录用户的基本信息
             </remarks>
         </member>
         <member name="M:WebUI.Controllers.UserInfoController.GetUserId(System.Int32)">
@@ -234,6 +234,11 @@
             添加用户到管理员，需管理员才可请求成功
             </remarks>
             <param name="userNumber">用户唯一标识数字</param>
+        </member>
+        <member name="M:WebUI.Controllers.UserInfoController.GetUserList">
+            <remarks>
+            管理员获取用户列表
+            </remarks>
         </member>
         <member name="M:WebUI.Services.CustomJwtTokenValicator.ValidateToken(System.String,Microsoft.IdentityModel.Tokens.TokenValidationParameters,Microsoft.IdentityModel.Tokens.SecurityToken@)">
             验证securityToken

@@ -4,6 +4,6 @@ namespace WebUI.ViewModels
 {
     public class UserListViewModel
     {
-        public List<string> Users { get; set; }
+        public List<UserViewModel> Users { get; set; }
     }
 }
