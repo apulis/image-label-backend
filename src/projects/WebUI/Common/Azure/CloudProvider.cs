@@ -27,7 +27,7 @@ namespace WebUI.Azure
         public static String AWS = null;
         public static String LOCAL = null;
         public const String Any = null;
-        public static String Default = null;
+        public static String Default = "LOCAL";
         public String Name = null;
 
         public virtual String[] GetURLs( string storage, string path, string location )
@@ -206,9 +206,13 @@ namespace WebUI.Azure
                 } else if (!String.IsNullOrEmpty(CloudProvider.GCE))
                 {
                     CloudProvider.Default = CloudProvider.GCE; 
-                } else 
+                } else if (!String.IsNullOrEmpty(CloudProvider.AWS))
                 {
                     CloudProvider.Default = CloudProvider.AWS;
+                }
+                else
+                {
+                    CloudProvider.Default = CloudProvider.LOCAL;
                 }
                 if ( String.IsNullOrEmpty(CloudProvider.Default))
                 {

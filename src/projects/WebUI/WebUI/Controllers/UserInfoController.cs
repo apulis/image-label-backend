@@ -36,6 +36,9 @@ namespace WebUI.Controllers
             obj.Add("isAdmin", role == "admin");
             return Ok(new Response().GetJObject("userInfo",JToken.FromObject(obj)));
         }
+        /// <summary>
+        /// Creates a TodoItem.
+        /// </summary>
         /// <remarks>
         /// 返回用户number对应的用户唯一标识id
         /// </remarks>
