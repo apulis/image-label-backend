@@ -224,6 +224,9 @@
             </remarks>
         </member>
         <member name="M:WebUI.Controllers.UserInfoController.GetUserId(System.Int32)">
+            <summary>
+            Creates a TodoItem.
+            </summary>
             <remarks>
             返回用户number对应的用户唯一标识id
             </remarks>

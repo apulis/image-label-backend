@@ -330,7 +330,7 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var labels = await AzureService.GetDataSetLabels(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("annotations", labels??JToken.FromObject(labels)));
+            return Ok(new Response().GetJObject("annotations", labels!=null?JToken.FromObject(labels):new JArray()));
         }
         /// <remarks>
         /// 该数据集下的搜索对应label列表类别的图片

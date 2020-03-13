@@ -27,7 +27,7 @@ namespace WebUI.Azure
         public static String AWS = null;
         public static String LOCAL = null;
         public const String Any = null;
-        public static String Default = "LOCAL";
+        public static String Default = null;
         public String Name = null;
 
         public virtual String[] GetURLs( string storage, string path, string location )

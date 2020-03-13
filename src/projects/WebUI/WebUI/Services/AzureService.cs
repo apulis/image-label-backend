@@ -230,9 +230,12 @@ namespace WebUI.Services
         {
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"user", "list.json");
             var json = await blob.DownloadGenericObjectAsync();
-            if (json.ContainsKey(userId))
+            if (!Object.ReferenceEquals(json, null))
             {
-                return true;
+                if (json.ContainsKey(userId))
+                {
+                    return true;
+                }
             }
             return false;
         }
