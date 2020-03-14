@@ -30,18 +30,18 @@ namespace WebUI.Controllers
         [HttpGet("{*path}")]
         public async Task<IActionResult> GetFile(string path)
         {
-            //var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
-            //var config = Json.Read(localConfigFile);
-            //string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
-            //string finalPath = Path.Combine(basePath, path);
-            //if (Directory.Exists(finalPath) || !System.IO.File.Exists(finalPath))
-            //{
-            //    return Ok("BlobNotFound");
-            //}
+            var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
+            var config = Json.Read(localConfigFile);
+            string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
+            string finalPath = Path.Combine(basePath, path);
+            if (!System.IO.File.Exists(finalPath))
+            {
+                return StatusCode(404,"file not found");
+            }
             try
             {
-                var container = CloudStorage.GetContainer("cdn", "private", null, "LOCAL");
-                var blob = container.GetBlockBlobReference(path);
+                var container = CloudStorage.GetContainer("cdn", "public", null, "LOCAL");
+                var blob = container.GetBlockBlobReference(path.Split("/",2)[1]);
                 var stream = new MemoryStream();
                 await blob.DownloadToStreamAsync(stream);
                 var type = Path.GetExtension(path);
