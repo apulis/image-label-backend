@@ -130,6 +130,10 @@ namespace WebUI.Azure
         }
         public override async Task DownloadToStreamAsync(Stream target)
         {
+            if (!File.Exists(_path))
+            {
+                return;
+            }
             using (var filestream = new FileStream(_path,
                 FileMode.Open, FileAccess.Read, FileShare.Read,
                 bufferSize: 16384, useAsync: true))
@@ -140,6 +144,7 @@ namespace WebUI.Azure
         }
         public override async Task UploadFromStreamAsync(Stream source)
         {
+            new DirectoryInfo(Path.GetDirectoryName(_path)).Create();
             using (var filestream = new FileStream(_path,
                 FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read,
                 bufferSize: 16384, useAsync: true))
@@ -149,6 +154,7 @@ namespace WebUI.Azure
         }
         public override async Task UploadFromStreamAsyncFailIfExist(Stream stream)
         {
+            new DirectoryInfo(Path.GetDirectoryName(_path)).Create();
             using (var filestream = new FileStream(_path,
                 FileMode.CreateNew, FileAccess.Write, FileShare.Read,
                 bufferSize: 16384, useAsync: true))
