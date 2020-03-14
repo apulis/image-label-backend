@@ -23,7 +23,7 @@ namespace WebUI.Azure
         public override BlobContainer GetContainer(string storage, string path, string location)
         {
             string basePath = JsonUtils.GetJToken("nfs_mount_local_path", config).ToString();
-            return new NFSBlobContainer(this, basePath);
+            return new NFSBlobContainer(this,Path.Combine(basePath, path));
         }
         public override bool Ready()
         {
