@@ -1152,7 +1152,7 @@ namespace WebUI.Services
 
         public static async Task<JObject> GetOneTask(string convertProjectId,string convertDataSetId, string taskId)
         {
-            var blob = AzureService.GetBlob(null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
+            var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
             return json;
         }
