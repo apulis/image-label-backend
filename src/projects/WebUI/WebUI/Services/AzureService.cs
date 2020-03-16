@@ -1177,7 +1177,7 @@ namespace WebUI.Services
         }
         public static async Task PostOneTask(string convertProjectId, string convertDataSetId, string taskId,string userId,string role,JObject value)
         {
-            var blob = AzureService.GetBlob(null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
+            var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
             List<int> category_ids = GetCategoryIdsFromPostData(value);
             var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId,category_ids, role);
             if (res || role == "admin")
