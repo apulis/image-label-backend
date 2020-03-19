@@ -621,8 +621,7 @@ namespace WebUI.Services
             {
                 await AzureService.GenerateCommitJsonFile(projectId, dataSetId);
                 var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
-                var taskJson = await taskBlob.DownloadGenericObjectAsync();
-                var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
+                var projectObj = await taskBlob.DownloadGenericObjectAsync() as JObject;
                 if (projectObj != null)
                 {
                     if (role == "admin" || await AzureService.FindUserIsProjectManager(userId, projectId))
@@ -689,8 +688,7 @@ namespace WebUI.Services
         public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId,List<int> categoryIds,string role)
         {
             var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
-            var taskJson = await taskBlob.DownloadGenericObjectAsync();
-            var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
+            var projectObj = await taskBlob.DownloadGenericObjectAsync() as JObject;
             var taskObj = JsonUtils.GetJToken(taskId, projectObj) as JObject;
             if (taskObj == null)
             {
@@ -702,7 +700,7 @@ namespace WebUI.Services
                 taskObj["status"] = "commited";
                 taskObj["userId"] = userId;
                 taskObj["categoryIds"] = categoryIds==null?null:JToken.FromObject(categoryIds);
-                await taskBlob.UploadGenericObjectAsync(taskJson);
+                await taskBlob.UploadGenericObjectAsync(projectObj);
             }
             var blob = GetBlob("cdn", "private", null, null, $"user/{userId}", "membership.json");
             var json = await blob.DownloadGenericObjectAsync();
@@ -742,9 +740,8 @@ namespace WebUI.Services
         public static async Task<JObject> GenerateCommitJsonFile(string projectId, string dataSetId)
         {
             var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
-            var taskJson = await taskBlob.DownloadGenericObjectAsync();
-            var lockObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
-            if (lockObj != null)
+            var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            if (taskJson != null)
             {
                 return null;
             }
@@ -1138,8 +1135,7 @@ namespace WebUI.Services
         {
             await AzureService.GenerateCommitJsonFile(convertProjectId, convertDataSetId);
             var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", "commit.json");
-            var taskJson = await taskBlob.DownloadGenericObjectAsync();
-            var lockObj = JsonUtils.GetJToken(convertProjectId, taskJson) as JObject;
+            var lockObj = await taskBlob.DownloadGenericObjectAsync() as JObject;
             List<JObject> adminTaskList = new List<JObject>();
             if (lockObj != null)
             {
