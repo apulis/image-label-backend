@@ -759,7 +759,7 @@ namespace WebUI.Services
             }
             if (taskJson == null)
             {
-                await taskBlob.UploadGenericObjectAsync(new JObject(){{projectId, idObj } });
+                await taskBlob.UploadGenericObjectAsync(idObj);
             }
             else
             {
