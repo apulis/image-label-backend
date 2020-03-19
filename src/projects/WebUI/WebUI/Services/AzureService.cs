@@ -1455,8 +1455,7 @@ namespace WebUI.Services
         {
             List<string> taskIds = new List<string>();
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}",$"commit.json");
-            var accJson = await blob.DownloadGenericObjectAsync();
-            var tasksList = JsonUtils.GetJToken(convertProjectId, accJson) as JObject;
+            var tasksList = await blob.DownloadGenericObjectAsync() as JObject;
             if (!Object.ReferenceEquals(tasksList, null))
             {
                 foreach (var pair in tasksList)
