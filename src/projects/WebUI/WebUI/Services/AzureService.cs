@@ -652,7 +652,7 @@ namespace WebUI.Services
                             {
                                 await blob.UploadGenericObjectAsync(json);
                             }
-                            await taskBlob.UploadGenericObjectAsync(taskJson);
+                            await taskBlob.UploadGenericObjectAsync(projectObj);
                             return obj;
                         }
                     }
