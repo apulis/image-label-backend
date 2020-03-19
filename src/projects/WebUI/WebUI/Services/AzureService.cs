@@ -405,6 +405,7 @@ namespace WebUI.Services
 
         public static async Task<int> GetNextTaskId(string taskId,string userId)
         {
+            //wait repair,wrong path
             var blob = GetBlob("cdn", "private", null, null, $"tasks/{taskId}", "commit.json");
             var json = await blob.DownloadGenericObjectAsync() as JObject;
             if (!Object.ReferenceEquals(json, null))
@@ -619,7 +620,7 @@ namespace WebUI.Services
             if (datasetObj == null)
             {
                 await AzureService.GenerateCommitJsonFile(projectId, dataSetId);
-                var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+                var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
                 var taskJson = await taskBlob.DownloadGenericObjectAsync();
                 var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
                 if (projectObj != null)
@@ -687,7 +688,7 @@ namespace WebUI.Services
 
         public static async Task<bool> setTaskStatusToCommited(string userId, string projectId, string dataSetId,string taskId,List<int> categoryIds,string role)
         {
-            var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+            var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
             var projectObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
             var taskObj = JsonUtils.GetJToken(taskId, projectObj) as JObject;
@@ -740,14 +741,14 @@ namespace WebUI.Services
 
         public static async Task<JObject> GenerateCommitJsonFile(string projectId, string dataSetId)
         {
-            var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}", "commit.json");
+            var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
             var lockObj = JsonUtils.GetJToken(projectId, taskJson) as JObject;
             if (lockObj != null)
             {
                 return null;
             }
-            var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}", "list.json");
+            var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}/{projectId}", "list.json");
             var json = await blob.DownloadGenericObjectAsync();
             var obj = JsonUtils.GetJToken("ImgIDs", json) as JArray;
             if (obj == null)
@@ -1136,7 +1137,7 @@ namespace WebUI.Services
         public static async Task<List<JObject>> getTasks(string convertProjectId, string convertDataSetId)
         {
             await AzureService.GenerateCommitJsonFile(convertProjectId, convertDataSetId);
-            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}", "commit.json");
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", "commit.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync();
             var lockObj = JsonUtils.GetJToken(convertProjectId, taskJson) as JObject;
             List<JObject> adminTaskList = new List<JObject>();
@@ -1152,7 +1153,7 @@ namespace WebUI.Services
 
         public static async Task<JObject> GetOneTask(string convertProjectId,string convertDataSetId, string taskId)
         {
-            var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
+            var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertDataSetId}/{convertProjectId}/images", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
             return json;
         }
@@ -1177,7 +1178,7 @@ namespace WebUI.Services
         }
         public static async Task PostOneTask(string convertProjectId, string convertDataSetId, string taskId,string userId,string role,JObject value)
         {
-            var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertProjectId}/{convertDataSetId}/images", $"{taskId}.json");
+            var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertDataSetId}/{convertProjectId}/images", $"{taskId}.json");
             List<int> category_ids = GetCategoryIdsFromPostData(value);
             var res = await AzureService.setTaskStatusToCommited(userId, convertProjectId, convertDataSetId, taskId,category_ids, role);
             if (res || role == "admin")
@@ -1453,7 +1454,7 @@ namespace WebUI.Services
         public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids)
         {
             List<string> taskIds = new List<string>();
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}",$"commit.json");
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}",$"commit.json");
             var accJson = await blob.DownloadGenericObjectAsync();
             var tasksList = JsonUtils.GetJToken(convertProjectId, accJson) as JObject;
             if (!Object.ReferenceEquals(tasksList, null))
@@ -1479,6 +1480,12 @@ namespace WebUI.Services
             var blob = GetBlob("cdn", "private", null, null, $"user", "list.json");
             var userJson = await blob.DownloadGenericObjectAsync();
             return userJson;
+        }
+        public static async Task<JObject> GetSecondDataSetAnnotation(string convertProjectId, string convertDataSetId, string taskId)
+        {
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"predict/{convertDataSetId}/{convertProjectId}/images", $"{taskId}.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            return json;
         }
     }
 }
