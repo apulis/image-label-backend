@@ -557,6 +557,10 @@ namespace WebUI.Services
             var blob = GetBlob("cdn", "private", null, null, "categories", "meta.json");
             var json = await blob.DownloadGenericObjectAsync();
             var obj = JsonUtils.GetJToken("categories", json) as JArray;
+            if (obj == null)
+            {
+                obj = new JArray();
+            }
             bool isExists = false;
             int max_id = 0;
             foreach (var one in obj)
@@ -581,6 +585,15 @@ namespace WebUI.Services
                 {
                     max_id += 1;
                     obj.Add(new JObject(){{"id",max_id},{"name",label.name},{"supercategory","customed"}});
+                    if (json == null)
+                    {
+                        await blob.UploadGenericObjectAsync(new JObject(){{ "categories",obj } });
+                    }
+                    else
+                    {
+                        await blob.UploadGenericObjectAsync(json);
+                    }
+                    
                     label.id = max_id;
                 }
             }
