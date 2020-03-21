@@ -146,7 +146,7 @@ namespace WebUI.Azure
         {
             new DirectoryInfo(Path.GetDirectoryName(_path)).Create();
             using (var filestream = new FileStream(_path,
-                FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read,
+                FileMode.Create, FileAccess.Write, FileShare.Read,
                 bufferSize: 16384, useAsync: true))
             {
                 await source.CopyToAsync(filestream);

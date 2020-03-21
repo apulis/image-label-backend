@@ -40,5 +40,13 @@ namespace Common.Utils
             obj.Add(key2, value2);
             return obj;
         }
+        public JObject GetJObject(string key, JToken value, string key2, JToken value2, string key3, JToken value3)
+        {
+            var obj = new JObject() { { "successful", Successful }, { "msg", Msg } };
+            obj.Add(key, value);
+            obj.Add(key2, value2);
+            obj.Add(key3, value3);
+            return obj;
+        }
     }
 }

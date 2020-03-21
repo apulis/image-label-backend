@@ -333,7 +333,7 @@ namespace WebUI.Controllers
             return Ok(new Response().GetJObject("annotations", labels!=null?JToken.FromObject(labels):new JArray()));
         }
         /// <remarks>
-        /// 该数据集下的搜索对应label列表类别的图片
+        /// 该数据集下的搜索对应label列表类别的图片人工标注信息和模型预测结果
         /// </remarks>
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataset的GUid</param>
@@ -347,14 +347,16 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             List<JObject> annotationViewModels = new List<JObject>();
+            List<JObject> predictAnnotationViewModels = new List<JObject>();
             List<string> taskIds =
                 await AzureService.GetDataSetByLabels(convertProjectId, convertDataSetId, category_ids);
             var list = PageOps.GetPageRange(taskIds, page, size, taskIds.Count);
             foreach (var taskId in list)
             {
                 annotationViewModels.Add(await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId));
+                predictAnnotationViewModels.Add(await AzureService.GetSecondDataSetAnnotation(convertProjectId, convertDataSetId, taskId));
             }
-            return Ok(new Response().GetJObject("taskIds", JToken.FromObject(annotationViewModels), "totalCount", taskIds.Count));
+            return Ok(new Response().GetJObject("taskIds", JToken.FromObject(annotationViewModels), "totalCount", taskIds.Count,"prediction",JToken.FromObject(predictAnnotationViewModels)));
         }
     }
 }
