@@ -585,7 +585,7 @@ namespace WebUI.Services
                 if (!isExists)
                 {
                     max_id += 1;
-                    obj.Add(new JObject(){{"id",max_id},{"name",label.name},{"supercategory","customed"}});
+                    obj.Add(new JObject(){{"id",max_id},{"name",label.name},{"supercategory", label.supercategory} });
                     if (json == null)
                     {
                         await blob.UploadGenericObjectAsync(new JObject(){{ "categories",obj } });
