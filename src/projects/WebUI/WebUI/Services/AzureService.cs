@@ -745,7 +745,7 @@ namespace WebUI.Services
             {
                 return null;
             }
-            var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}/{projectId}", "list.json");
+            var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}", "list.json");
             var json = await blob.DownloadGenericObjectAsync();
             var obj = JsonUtils.GetJToken("ImgIDs", json) as JArray;
             if (obj == null)
