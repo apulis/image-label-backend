@@ -471,8 +471,6 @@ namespace WebUI.Services
             var json = await blob.DownloadGenericObjectAsync() as JObject;
             var info = JsonUtils.GetJToken(userId, json) as JObject;
             var email = JsonUtils.GetJToken("email", info).ToString();
-            Console.Write(email);
-            Console.Write(json.ToString());
             if (email != null)
             {
                 if (email.EndsWith("@apulis.com"))
