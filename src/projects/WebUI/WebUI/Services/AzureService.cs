@@ -467,6 +467,17 @@ namespace WebUI.Services
                     }
                 }
             }
+            var blob = AzureService.GetBlob("cdn", "private", null, null, "user", "list.json");
+            var json = await blob.DownloadGenericObjectAsync() as JObject;
+            var info = JsonUtils.GetJToken(userId, json) as JObject;
+            var email = JsonUtils.GetJToken("email", info).ToString();
+            if (email != null)
+            {
+                if (email.EndsWith("@apulis.com"))
+                {
+                    return "admin";
+                }
+            }
             return null;
         }
         public static async Task<bool> AddUserToAdmin(string userId)
