@@ -342,14 +342,14 @@ namespace WebUI.Controllers
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks/search")]
         [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
-        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]List<int> category_ids, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]List<int> category_ids, [FromQuery]int page, [FromQuery]int size,[FromQuery] string image_id,[FromQuery] float iou_start,[FromQuery] float iou_end)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             List<JObject> annotationViewModels = new List<JObject>();
             List<JObject> predictAnnotationViewModels = new List<JObject>();
-            List<string> taskIds =
-                await AzureService.GetDataSetByLabels(convertProjectId, convertDataSetId, category_ids);
+            List<string> taskIds = await AzureService.GetDataSetByLabels(convertProjectId, convertDataSetId, category_ids,image_id);
+            //taskIds = await AzureService.FilterTasksByIOU(taskIds,iou_start,iou_end);
             var list = PageOps.GetPageRange(taskIds, page, size, taskIds.Count);
             foreach (var taskId in list)
             {

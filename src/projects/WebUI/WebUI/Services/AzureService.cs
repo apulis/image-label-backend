@@ -1460,7 +1460,7 @@ namespace WebUI.Services
             var labels = JsonUtils.GetJToken("labels", datasetJObject) as JArray;
             return labels;
         }
-        public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids)
+        public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids,string image_id)
         {
             List<string> taskIds = new List<string>();
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}",$"commit.json");
@@ -1469,6 +1469,13 @@ namespace WebUI.Services
             {
                 foreach (var pair in tasksList)
                 {
+                    if (image_id != null)
+                    {
+                        if (!pair.Key.Contains(image_id))
+                        {
+                            continue;
+                        }
+                    }
                     var obj = pair.Value as JObject;
                     var categoryIds = JsonUtils.GetJToken("categoryIds", obj) as JArray;
                     if (categoryIds != null)
@@ -1494,6 +1501,36 @@ namespace WebUI.Services
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"predict/{convertDataSetId}/{convertProjectId}/images", $"{taskId}.json");
             var json = await blob.DownloadGenericObjectAsync();
             return json;
+        }
+
+        public static async Task<List<string>> FilterTasksByIOU(List<string> taskIds, float ap_start,float ap_end,string projectId, string dataSetId)
+        {
+            List<string> newTaskIds = new List<String>();
+            var blob = GetBlob("cdn", "private", null, null, $"predict/{dataSetId}/{projectId}", "task.json");
+            var obj = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            if (!Object.ReferenceEquals(obj, null))
+            {
+                foreach (var one in taskIds)
+                {
+                    var oneObj = JsonUtils.GetJToken(one, obj) as JObject;
+                    if (oneObj != null)
+                    {
+                        float iou = float.Parse(JsonUtils.GetJToken("iou", obj));
+                        if (ap_start != nul&&ap_start > iou)
+                        {
+                            continue;
+                        }
+
+                        if (ap_end != null && ap_end < iou)
+                        {
+                            continue;
+                        }
+
+                        newTaskIds.Add(one);
+                    }
+                }
+            }
+            return newTaskIds.Add(one);
         }
     }
 }
