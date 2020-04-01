@@ -1518,16 +1518,16 @@ namespace WebUI.Services
         {
             List<string> newTaskIds = new List<String>();
             var blob = GetBlob("cdn", "private", null, null, $"predict/{dataSetId}/{projectId}", "task.json");
-            var obj = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            var obj = await blob.DownloadGenericObjectAsync() as JObject;
             if (!Object.ReferenceEquals(obj, null))
             {
-                foreach (var one in taskIds)
+                foreach (var oneId in taskIds)
                 {
-                    var oneObj = JsonUtils.GetJToken(one, obj) as JObject;
+                    var oneObj = JsonUtils.GetJToken(oneId, obj) as JObject;
                     if (oneObj != null)
                     {
-                        float iou = float.Parse(JsonUtils.GetJToken("iou", obj));
-                        if (ap_start != nul&&ap_start > iou)
+                        float iou = float.Parse((string)JsonUtils.GetJToken("iou", obj));
+                        if (ap_start != null &&ap_start > iou)
                         {
                             continue;
                         }
@@ -1536,12 +1536,11 @@ namespace WebUI.Services
                         {
                             continue;
                         }
-
-                        newTaskIds.Add(one);
+                        newTaskIds.Add(oneId);
                     }
                 }
             }
-            return newTaskIds.Add(one);
+            return newTaskIds;
         }
     }
 }
