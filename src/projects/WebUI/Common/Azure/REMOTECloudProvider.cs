@@ -87,7 +87,7 @@ namespace WebUI.Azure
         }
         public override async Task DeleteAsync(bool bCatchException = true)
         {
-            
+            await Requests.Delete(_path.ToString(), new MemoryStream());
         }
         public override async Task DownloadToStreamAsync(Stream target)
         {

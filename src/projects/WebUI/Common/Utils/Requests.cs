@@ -74,5 +74,27 @@ namespace Common.Utils
             }
             return result;
         }
+        public static async Task<string> Delete(string url, Stream sourceStream)
+        {
+            string result = "";
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.Method = "DELETE";
+            req.ContentType = "application/json";
+            req.ContentLength = sourceStream.Length;
+            using (Stream reqStream = req.GetRequestStream())
+            {
+                await sourceStream.CopyToAsync(reqStream);
+                reqStream.Close();
+            }
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+            Stream stream = resp.GetResponseStream();
+            //获取响应内容
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                result = reader.ReadToEnd();
+            }
+            return result;
+        }
     }
+
 }

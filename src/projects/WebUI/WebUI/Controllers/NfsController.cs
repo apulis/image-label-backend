@@ -25,19 +25,19 @@ namespace WebUI.Controllers
     public class NfsController : ControllerBase
     {
         /// <remarks>
-        /// 返回对应路径的文件
+        /// 返回对应路径的文件，公开访问接口
         /// </remarks>
         [HttpGet("{*path}")]
         public async Task<IActionResult> GetFile(string path)
         {
-            var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
-            var config = Json.Read(localConfigFile);
-            string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
-            string finalPath = Path.Combine(basePath,"public", path.Split("/", 2)[1]);
-            if (!System.IO.File.Exists(finalPath))
-            {
-                return StatusCode(404,"file not found");
-            }
+            //var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
+            //var config = Json.Read(localConfigFile);
+            //string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
+            //string finalPath = Path.Combine(basePath,"public", path.Split("/", 2)[1]);
+            //if (!System.IO.File.Exists(finalPath))
+            //{
+            //    return StatusCode(404,"file not found");
+            //}
             try
             {
                 var container = CloudStorage.GetContainer("cdn", "public", null, null);
@@ -50,23 +50,24 @@ namespace WebUI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"get path {path} exception: {ex}");
-                return StatusCode(404);
+                return StatusCode(404,ex);
             }
         }
         /// <remarks>
-        /// 返回对应路径的文件v2，加密数据文件传输接口
+        /// 返回对应路径的文件v2，需token认证
         /// </remarks>
         [HttpGet("/api/nfs2/{*path}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetFile2(string path)
         {
-            var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
-            var config = Json.Read(localConfigFile);
-            string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
-            string finalPath = Path.Combine(basePath, path);
-            if (!System.IO.File.Exists(finalPath))
-            {
-                return StatusCode(404, "file not found");
-            }
+            //var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
+            //var config = Json.Read(localConfigFile);
+            //string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
+            //string finalPath = Path.Combine(basePath, path);
+            //if (!System.IO.File.Exists(finalPath))
+            //{
+            //    return StatusCode(404, "file not found");
+            //}
             try
             {
                 var container = CloudStorage.GetContainer("cdn", path.Split("/", 2)[0], null, null);
@@ -79,13 +80,14 @@ namespace WebUI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"get path {path} exception: {ex}");
-                return StatusCode(404);
+                return StatusCode(404,ex);
             }
         }
         /// <remarks>
         /// 将数据写入对应路径的文件里
         /// </remarks>
         [HttpPost("/api/nfs2/{*path}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> WriteFile(string path,[FromBody] JObject value)
         {
             try
@@ -98,13 +100,14 @@ namespace WebUI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"write path {path} exception: {ex}");
-                return StatusCode(500);
+                return StatusCode(500,ex);
             }
         }
         /// <remarks>
         /// 删除文件
         /// </remarks>
         [HttpDelete("/api/nfs2/{*path}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> DeleteFile(string path)
         {
             try
@@ -117,7 +120,7 @@ namespace WebUI.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"delete path {path} exception: {ex}");
-                return StatusCode(500);
+                return StatusCode(500,ex);
             }
         }
     }

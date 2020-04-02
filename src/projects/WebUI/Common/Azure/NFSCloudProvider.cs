@@ -130,10 +130,10 @@ namespace WebUI.Azure
         }
         public override async Task DownloadToStreamAsync(Stream target)
         {
-            if (!File.Exists(_path))
-            {
-                return;
-            }
+            //if (!File.Exists(_path))
+            //{
+            //    return;
+            //}
             using (var filestream = new FileStream(_path,
                 FileMode.Open, FileAccess.Read, FileShare.Read,
                 bufferSize: 16384, useAsync: true))
