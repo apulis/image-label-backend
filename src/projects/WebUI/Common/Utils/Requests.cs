@@ -9,10 +9,10 @@ namespace Common.Utils
 {
     public class Requests
     {
-        public static async Task<Stream> GetStream(string _url, Dictionary<string, string> dic)
+        public static async Task<Stream> GetStream(string _url, Dictionary<string, string> headerDictionary)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_url);    //创建一个请求示例 
-            foreach (var one in dic)
+            foreach (var one in headerDictionary)
             {
                 request.Headers[one.Key] = one.Value;
             }
@@ -20,16 +20,16 @@ namespace Common.Utils
             Stream responseStream = response.GetResponseStream();
             return responseStream;
         }
-        public static string Post(string url, Dictionary<string, string> dic)
+        public static string Post(string url, Dictionary<string, string> bodyDictionary)
         {
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Method = "POST";
-            req.ContentType = "application/x-www-form-urlencoded";
+            req.ContentType = "application/json";
             #region 添加Post 参数
             StringBuilder builder = new StringBuilder();
             int i = 0;
-            foreach (var item in dic)
+            foreach (var item in bodyDictionary)
             {
                 if (i > 0)
                     builder.Append("&");
@@ -44,6 +44,27 @@ namespace Common.Utils
                 reqStream.Close();
             }
             #endregion
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+            Stream stream = resp.GetResponseStream();
+            //获取响应内容
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                result = reader.ReadToEnd();
+            }
+            return result;
+        }
+        public static async Task<string> Post(string url, Stream sourceStream)
+        {
+            string result = "";
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.Method = "POST";
+            req.ContentType = "application/json";
+            req.ContentLength = sourceStream.Length;
+            using (Stream reqStream = req.GetRequestStream())
+            {
+                await sourceStream.CopyToAsync(reqStream);
+                reqStream.Close();
+            }
             HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
             Stream stream = resp.GetResponseStream();
             //获取响应内容

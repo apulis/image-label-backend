@@ -54,7 +54,7 @@ namespace WebUI.Controllers
             }
         }
         /// <remarks>
-        /// 返回对应路径的文件v2，加密版数据文件传输接口
+        /// 返回对应路径的文件v2，加密数据文件传输接口
         /// </remarks>
         [HttpGet("/api/nfs2/{*path}")]
         public async Task<IActionResult> GetFile2(string path)
@@ -85,30 +85,39 @@ namespace WebUI.Controllers
         /// <remarks>
         /// 将数据写入对应路径的文件里
         /// </remarks>
-        [HttpPost("{*path}")]
-        public async Task<IActionResult> WriteFile(string path)
+        [HttpPost("/api/nfs2/{*path}")]
+        public async Task<IActionResult> WriteFile(string path,[FromBody] JObject value)
         {
-            var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
-            var config = Json.Read(localConfigFile);
-            string basePath = JsonUtils.GetString("nfs_mount_local_path", config);
-            string finalPath = Path.Combine(basePath, path);
-            if (!System.IO.File.Exists(finalPath))
-            {
-                return StatusCode(404, "file not found");
-            }
             try
             {
-                var container = CloudStorage.GetContainer("cdn", "public", null, null);
+                var container = CloudStorage.GetContainer("cdn", path.Split("/", 2)[0], null, null);
                 var blob = container.GetBlockBlobReference(path.Split("/", 2)[1]);
-                var stream = new MemoryStream();
-                await blob.DownloadToStreamAsync(stream);
-                var contentType = FileOps.GetFileContentType(path);
-                return File(stream, contentType);
+                await blob.UploadGenericObjectAsync(value);
+                return StatusCode(204);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"get path {path} exception: {ex}");
-                return StatusCode(404);
+                Console.WriteLine($"write path {path} exception: {ex}");
+                return StatusCode(500);
+            }
+        }
+        /// <remarks>
+        /// 删除文件
+        /// </remarks>
+        [HttpDelete("/api/nfs2/{*path}")]
+        public async Task<IActionResult> DeleteFile(string path)
+        {
+            try
+            {
+                var container = CloudStorage.GetContainer("cdn", path.Split("/", 2)[0], null, null);
+                var blob = container.GetBlockBlobReference(path.Split("/", 2)[1]);
+                await blob.DeleteAsync();
+                return StatusCode(200);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"delete path {path} exception: {ex}");
+                return StatusCode(500);
             }
         }
     }

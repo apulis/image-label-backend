@@ -69,8 +69,7 @@ namespace WebUI.Azure
 
         public override Uri[] StorageUri()
         {
-            // can't get httpcontext for url.link, only solution is config
-            return new Uri[] { };
+            return new Uri[] { new Uri(_directoryPath) };
         }
         public override BlockBlob GetBlockBlobReference(string path)
         {
@@ -98,7 +97,7 @@ namespace WebUI.Azure
         }
         public override async Task UploadFromStreamAsync(Stream source)
         {
-
+            await Requests.Post(_path.ToString(), source);
         }
         public override async Task UploadFromStreamAsyncFailIfExist(Stream stream)
         {
