@@ -303,8 +303,9 @@ namespace WebUI.Azure
                 var str = await DownloadTextAsync();
                 return JObject.Parse(str);
             }
-            catch
+            catch (Exception e)
             {
+                Console.Write(e);
                 return null;
             }
         }

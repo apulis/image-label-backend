@@ -25,6 +25,7 @@ namespace WebUI.Azure
         public static String Azure = null;
         public static String GCE = null;
         public static String AWS = null;
+        public static String REMOTE = null;
         public static String LOCAL = null;
         public const String Any = null;
         public static String Default = null;
@@ -165,6 +166,15 @@ namespace WebUI.Azure
                             CloudProvider.LOCAL = providerName;
                         }
                     }
+                    else if (providerName.IndexOf("remote", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        //logger.LogInformation($"Enter local setup for {providerName}");
+                        provider = new REMOTECloudProvider(oneConfigFile, logger);
+                        if (!Object.ReferenceEquals(provider, null))
+                        {
+                            CloudProvider.REMOTE = providerName;
+                        }
+                    }
                     if ( !String.IsNullOrEmpty(providerName) 
                         && !Object.ReferenceEquals(provider,null) 
                         && provider.Ready() )
@@ -209,6 +219,10 @@ namespace WebUI.Azure
                 } else if (!String.IsNullOrEmpty(CloudProvider.AWS))
                 {
                     CloudProvider.Default = CloudProvider.AWS;
+                }
+                else if (!String.IsNullOrEmpty(CloudProvider.REMOTE))
+                {
+                    CloudProvider.Default = CloudProvider.REMOTE;
                 }
                 else
                 {

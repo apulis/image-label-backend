@@ -2,6 +2,6 @@
   "cluster": "skypulis1",
   "region": "chinanorth2",
   "fqdn": "apulis-china-infra01.apulis.com",
-  "StorageProvider": "AZURE"
+  "StorageProvider": "REMOTE"
 }
   

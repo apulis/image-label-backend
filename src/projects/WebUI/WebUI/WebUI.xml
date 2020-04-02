@@ -123,7 +123,10 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetByLabels(System.Guid,System.Guid,System.Collections.Generic.List{System.Int32},System.Int32,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetByLabels(System.Guid,System.Guid,System.Collections.Generic.List{System.Int32},System.Int32,System.Int32,System.String)">
+            <summary>
+            explore接口，搜索数据集.
+            </summary>
             <remarks>
             该数据集下的搜索对应label列表类别的图片人工标注信息和模型预测结果
             </remarks>
@@ -132,6 +135,16 @@
             <param name="category_ids">要搜索的category id列表</param>
             <param name="page">当前第几页，从1开始递增</param>
             <param name="size">每页的数量</param>
+        </member>
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetLabel(System.Guid,System.Guid)">
+            <summary>
+            mAP数据接口
+            </summary>
+            <remarks>
+            返回该数据集下的模型预测结果的mAP数据获取接口
+            </remarks>
+            <param name="projectId">project的GUid</param>
+            <param name="dataSetId">dataset的GUid</param>
         </member>
         <member name="M:WebUI.Controllers.LabelController.GetLabels">
             <remarks>
@@ -155,6 +168,11 @@
         <member name="M:WebUI.Controllers.NfsController.GetFile(System.String)">
             <remarks>
             返回对应路径的文件
+            </remarks>
+        </member>
+        <member name="M:WebUI.Controllers.NfsController.WriteFile(System.String)">
+            <remarks>
+            将数据写入对应路径的文件里
             </remarks>
         </member>
         <member name="M:WebUI.Controllers.ProjectController.GetProjects(System.Int32,System.Int32)">

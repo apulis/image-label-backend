@@ -332,6 +332,9 @@ namespace WebUI.Controllers
             var labels = await AzureService.GetDataSetLabels(convertProjectId, convertDataSetId);
             return Ok(new Response().GetJObject("annotations", labels!=null?JToken.FromObject(labels):new JArray()));
         }
+        /// <summary>
+        /// explore接口，搜索数据集.
+        /// </summary>
         /// <remarks>
         /// 该数据集下的搜索对应label列表类别的图片人工标注信息和模型预测结果
         /// </remarks>
@@ -356,6 +359,23 @@ namespace WebUI.Controllers
                 predictAnnotationViewModels.Add(await AzureService.GetSecondDataSetAnnotation(convertProjectId, convertDataSetId, taskId));
             }
             return Ok(new Response().GetJObject("taskIds", JToken.FromObject(annotationViewModels), "totalCount", taskIds.Count,"prediction",JToken.FromObject(predictAnnotationViewModels)));
+        }
+        /// <summary>
+        /// mAP数据接口
+        /// </summary>
+        /// <remarks>
+        /// 返回该数据集下的模型预测结果的mAP数据获取接口
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        [HttpGet("{datasetId}/tasks/map")]
+        [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
+        public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId)
+        {
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var projectObj = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
+            return Ok(new Response().GetJObject("annotations", projectObj == null ? null : JToken.FromObject(projectObj)));
         }
     }
 }
