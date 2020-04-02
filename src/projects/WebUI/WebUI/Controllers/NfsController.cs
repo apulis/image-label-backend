@@ -56,7 +56,7 @@ namespace WebUI.Controllers
         /// <remarks>
         /// 返回对应路径的文件v2，加密版数据文件传输接口
         /// </remarks>
-        [HttpGet("api/nfs2/{*path}")]
+        [HttpGet("/api/nfs2/{*path}")]
         public async Task<IActionResult> GetFile2(string path)
         {
             var localConfigFile = WebUIConfig.GetConfigFile("storage/configLocal.json");
