@@ -13,7 +13,6 @@ using WebUI.Services;
 
 namespace WebUI.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [EnableCors("dev-use")]
     [Route("api/labels")]
     [ApiController]
