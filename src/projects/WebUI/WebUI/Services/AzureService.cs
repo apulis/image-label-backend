@@ -834,19 +834,22 @@ namespace WebUI.Services
             List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDatasetId}/{convertProjectId}", "category.json");
             var jsonStr = await blob.DownloadTextAsync();
-            var array = JArray.Parse(jsonStr);
-            if (array != null)
+            if (jsonStr != null)
             {
-                foreach (var one in array)
+                var array = JArray.Parse(jsonStr);
+                if (array != null)
                 {
-                    var a = Json.GetJToken("supercategory", one);
-                    labels.Add(new AddLabelViewModel()
+                    foreach (var one in array)
                     {
-                        id = int.Parse(one["id"].ToString()),
-                        name = Json.GetJToken("name", one) == null ? null : Json.GetJToken("name", one).ToString(),
-                        type = Json.GetJToken("type", one) == null ? null : Json.GetJToken("type", one).ToString(),
-                        supercategory = Json.GetJToken("supercategory", one) == null ? null : Json.GetJToken("supercategory", one).ToString(),
-                    });
+                        var a = Json.GetJToken("supercategory", one);
+                        labels.Add(new AddLabelViewModel()
+                        {
+                            id = int.Parse(one["id"].ToString()),
+                            name = Json.GetJToken("name", one) == null ? null : Json.GetJToken("name", one).ToString(),
+                            type = Json.GetJToken("type", one) == null ? null : Json.GetJToken("type", one).ToString(),
+                            supercategory = Json.GetJToken("supercategory", one) == null ? null : Json.GetJToken("supercategory", one).ToString(),
+                        });
+                    }
                 }
             }
             return labels;
