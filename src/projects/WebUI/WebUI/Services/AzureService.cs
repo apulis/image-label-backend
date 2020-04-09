@@ -834,7 +834,7 @@ namespace WebUI.Services
             List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDatasetId}/{convertProjectId}", "category.json");
             var jsonStr = await blob.DownloadTextAsync();
-            if (jsonStr != null)
+            if (!String.IsNullOrEmpty(jsonStr))
             {
                 var array = JArray.Parse(jsonStr);
                 if (array != null)
