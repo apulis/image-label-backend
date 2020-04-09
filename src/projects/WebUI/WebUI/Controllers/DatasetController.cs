@@ -38,7 +38,7 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
             var list = PageOps.GetPageRange(datasetList, page, size, datasetList.Count);
-            return Ok(new Response().GetJObject("datasets", JToken.FromObject(list),"totalCount", datasetList.Count));
+            return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
         }
         /// <remarks>
         /// 为project添加数据集,需name、info和type字段，datasetId可选
@@ -153,7 +153,7 @@ namespace WebUI.Controllers
             }
             var userList = await AzureService.GetDataSetUsers(convertProjectId, convertDataSetId);
             var list = PageOps.GetPageRange(userList, page, size, userList.Count);
-            return Ok(new Response().GetJObject("users", JToken.FromObject(list), "totalCount", userList.Count));
+            return Ok(new Response().GetJObject("users", list, "totalCount", userList.Count));
         }
         /// <remarks>
         /// 为project下特定数据集删除指定的标注用户
@@ -240,11 +240,11 @@ namespace WebUI.Controllers
                     return StatusCode(403);
                 }
                 var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
-                return Ok(new Response().GetJObject("taskList", JToken.FromObject(taskList)));
+                return Ok(new Response().GetJObject("taskList", taskList));
             }
             var adminTaskList = await AzureService.getTasks(convertProjectId, convertDataSetId);
             var list = PageOps.GetPageRange(adminTaskList, page, size, adminTaskList.Count);
-            return Ok(new Response().GetJObject("taskList", JToken.FromObject(list), "totalCount", adminTaskList.Count));
+            return Ok(new Response().GetJObject("taskList", list, "totalCount", adminTaskList.Count));
         }
         /// <remarks>
         /// 获取下一个可标注任务
@@ -267,7 +267,7 @@ namespace WebUI.Controllers
                 }
             }
             JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId, taskId);
-            return Ok(new Response().GetJObject("next", JToken.FromObject(nextObj)));
+            return Ok(new Response().GetJObject("next", nextObj));
         }
         /// <remarks>
         /// 获取详细标注信息annotations
@@ -291,7 +291,7 @@ namespace WebUI.Controllers
                 }
             }
             var projectObj = await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId);
-            return Ok(new Response().GetJObject("annotations", projectObj==null?null:JToken.FromObject(projectObj)));
+            return Ok(new Response().GetJObject("annotations", projectObj));
         }
         /// <remarks>
         /// 提交标注信息annotations
@@ -330,7 +330,7 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var labels = await AzureService.GetDataSetLabels(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("annotations", labels!=null?JToken.FromObject(labels):new JArray()));
+            return Ok(new Response().GetJObject("annotations", labels));
         }
         /// <summary>
         /// explore接口，搜索数据集.
@@ -358,7 +358,7 @@ namespace WebUI.Controllers
                 annotationViewModels.Add(await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId));
                 predictAnnotationViewModels.Add(await AzureService.GetSecondDataSetAnnotation(convertProjectId, convertDataSetId, taskId));
             }
-            return Ok(new Response().GetJObject("taskIds", JToken.FromObject(annotationViewModels), "totalCount", taskIds.Count,"prediction",JToken.FromObject(predictAnnotationViewModels)));
+            return Ok(new Response().GetJObject("taskIds", annotationViewModels, "totalCount", taskIds.Count,"prediction", predictAnnotationViewModels));
         }
         /// <summary>
         /// mAP数据接口
@@ -375,7 +375,7 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var projectObj = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("annotations", projectObj == null ? null : JToken.FromObject(projectObj)));
+            return Ok(new Response().GetJObject("annotations", projectObj));
         }
     }
 }

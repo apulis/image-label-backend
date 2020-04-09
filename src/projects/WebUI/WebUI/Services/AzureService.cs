@@ -843,8 +843,8 @@ namespace WebUI.Services
                     labels.Add(new AddLabelViewModel()
                     {
                         id = int.Parse(one["id"].ToString()),
-                        name = one["name"].ToString(),
-                        type = one["type"].ToString(),
+                        name = Json.GetJToken("name", one) == null ? null : Json.GetJToken("name", one).ToString(),
+                        type = Json.GetJToken("type", one) == null ? null : Json.GetJToken("type", one).ToString(),
                         supercategory = Json.GetJToken("supercategory", one) == null ? null : Json.GetJToken("supercategory", one).ToString(),
                     });
                 }

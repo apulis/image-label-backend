@@ -33,7 +33,7 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Identity.Name;
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
             var list = PageOps.GetPageRange(accounts, page, size, accounts.Count);
-            return Ok(new Response().GetJObject("projects", JToken.FromObject(list), "totalCount", accounts.Count));
+            return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));
         }
         /// <remarks>
         /// 删除一个project
@@ -113,7 +113,7 @@ namespace WebUI.Controllers
                 return StatusCode(403);
             }
             var managerList = await AzureService.GetProjectManagers(convertProjectId);
-            return Ok(new Response().GetJObject("managers", JToken.FromObject(managerList)));
+            return Ok(new Response().GetJObject("managers", managerList));
         }
         /// <remarks>
         /// 检测用户是否已经是该project的项目管理员

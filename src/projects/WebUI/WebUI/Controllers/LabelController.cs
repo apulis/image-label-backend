@@ -25,7 +25,7 @@ namespace WebUI.Controllers
         public async Task<ActionResult<Response>> GetLabels()
         {
             var obj = await AzureService.GetLabels();
-            return Ok(new Response().GetJObject("categories", JToken.FromObject(obj)));
+            return Ok(new Response().GetJObject("categories", obj));
         }
     }
 }

@@ -27,25 +27,25 @@ namespace Common.Utils
             return obj.ToString();
         }
 
-        public JObject GetJObject(string key,JToken value)
+        public JObject GetJObject(string key,dynamic value)
         {
             var obj = new JObject() {{"successful", Successful}, {"msg", Msg}};
-            obj.Add(key,value);
+            obj.Add(key, value!=null?JToken.FromObject(value):null);
             return obj;
         }
-        public JObject GetJObject(string key, JToken value,string key2,JToken value2)
+        public JObject GetJObject(string key, dynamic value,string key2, dynamic value2)
         {
             var obj = new JObject() { { "successful", Successful }, { "msg", Msg } };
-            obj.Add(key, value);
-            obj.Add(key2, value2);
+            obj.Add(key, value != null ? JToken.FromObject(value) : null);
+            obj.Add(key2, value2 != null ? JToken.FromObject(value2) : null);
             return obj;
         }
-        public JObject GetJObject(string key, JToken value, string key2, JToken value2, string key3, JToken value3)
+        public JObject GetJObject(string key, dynamic value, string key2, dynamic value2, string key3, dynamic value3)
         {
             var obj = new JObject() { { "successful", Successful }, { "msg", Msg } };
-            obj.Add(key, value);
-            obj.Add(key2, value2);
-            obj.Add(key3, value3);
+            obj.Add(key, value != null ? JToken.FromObject(value) : null);
+            obj.Add(key2, value2 != null ? JToken.FromObject(value2) : null);
+            obj.Add(key3, value3 != null ? JToken.FromObject(value3) : null);
             return obj;
         }
     }
