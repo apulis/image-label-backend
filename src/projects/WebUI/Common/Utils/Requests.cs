@@ -53,13 +53,17 @@ namespace Common.Utils
             }
             return result;
         }
-        public static async Task<string> Post(string url, Stream sourceStream)
+        public static async Task<string> Post(string url, Stream sourceStream, Dictionary<string, string> headerDictionary)
         {
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Method = "POST";
             req.ContentType = "application/json";
             req.ContentLength = sourceStream.Length;
+            foreach (var one in headerDictionary)
+            {
+                req.Headers[one.Key] = one.Value;
+            }
             using (Stream reqStream = req.GetRequestStream())
             {
                 await sourceStream.CopyToAsync(reqStream);
@@ -74,13 +78,17 @@ namespace Common.Utils
             }
             return result;
         }
-        public static async Task<string> Delete(string url, Stream sourceStream)
+        public static async Task<string> Delete(string url, Stream sourceStream, Dictionary<string, string> headerDictionary)
         {
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.Method = "DELETE";
             req.ContentType = "application/json";
             req.ContentLength = sourceStream.Length;
+            foreach (var one in headerDictionary)
+            {
+                req.Headers[one.Key] = one.Value;
+            }
             using (Stream reqStream = req.GetRequestStream())
             {
                 await sourceStream.CopyToAsync(reqStream);

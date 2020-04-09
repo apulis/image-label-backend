@@ -167,12 +167,12 @@
         </member>
         <member name="M:WebUI.Controllers.NfsController.GetFile(System.String)">
             <remarks>
-            返回对应路径的文件
+            返回对应路径的文件，公开访问接口
             </remarks>
         </member>
         <member name="M:WebUI.Controllers.NfsController.GetFile2(System.String)">
             <remarks>
-            返回对应路径的文件v2，加密数据文件传输接口
+            返回对应路径的文件v2，需token认证
             </remarks>
         </member>
         <member name="M:WebUI.Controllers.NfsController.WriteFile(System.String,Newtonsoft.Json.Linq.JObject)">

@@ -829,6 +829,27 @@ namespace WebUI.Services
             return false;
         }
 
+        public static async Task<List<AddLabelViewModel>> FindDatasetCategoryIds(string convertProjectId,string convertDatasetId)
+        {
+            List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertProjectId}/{convertDatasetId}", "category.json");
+            var jsonStr = await blob.DownloadTextAsync();
+            var array = JArray.Parse(jsonStr);
+            if (array != null)
+            {
+                foreach (var one in array)
+                {
+                    labels.Add(new AddLabelViewModel()
+                    {
+                        id = int.Parse(one["id"].ToString()),
+                        name = one["name"].ToString(),
+                        type = one["type"].ToString(),
+                        supercategory = Json.GetJToken("supercategory", one) == null ? null : Json.GetJToken("supercategory", one).ToString(),
+                    });
+                }
+            }
+            return labels;
+        }
         public static async Task<List<DatasetViewModel>> getDatasets(string userId, string convertProjectId,string role)
         {
             List<DatasetViewModel> datasetList = new List<DatasetViewModel>();
@@ -842,19 +863,7 @@ namespace WebUI.Services
                     foreach (var oneAccount in allAccounts)
                     {
                         List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
-                        if (oneAccount.Value["labels"] != null)
-                        {
-                            foreach (var one in oneAccount.Value["labels"] as JArray)
-                            {
-                                labels.Add(new AddLabelViewModel()
-                                {
-                                    id = int.Parse(one["id"].ToString()),
-                                    name = one["name"].ToString(),
-                                    type = one["type"].ToString(),
-                                    supercategory = Json.GetJToken("supercategory",one)==null?null: Json.GetJToken("supercategory", one).ToString(),
-                                });
-                            }
-                        }
+                        labels = await FindDatasetCategoryIds(convertProjectId, oneAccount.Key);
                         datasetList.Add(new DatasetViewModel
                         {
                             dataSetId = oneAccount.Key,
@@ -881,19 +890,7 @@ namespace WebUI.Services
                         if (infoObj != null)
                         {
                             List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
-                            if (infoObj["labels"] != null)
-                            {
-                                foreach (var one in infoObj["labels"] as JArray)
-                                {
-                                    labels.Add(new AddLabelViewModel()
-                                    {
-                                        id = int.Parse(one["id"].ToString()),
-                                        name = one["name"].ToString(),
-                                        type = one["type"].ToString(),
-                                        supercategory = one["supercategory"].ToString()
-                                    });
-                                }
-                            }
+                            labels = await FindDatasetCategoryIds(convertProjectId, datasetId.ToString());
                             datasetList.Add(new DatasetViewModel
                             {
                                 dataSetId = datasetId.ToString(),
@@ -910,6 +907,11 @@ namespace WebUI.Services
             return datasetList;
         }
 
+        public static async Task AddDatasetLabels(string convertProjectId,string convertDatasetId, List<AddLabelViewModel> labels)
+        {
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertProjectId}/{convertDatasetId}", "category.json");
+            await blob.UploadTextAsync(JToken.FromObject(labels).ToString());
+        }
         public static async Task AddDataset(string convertProjectId, AddDatasetViewModel dataSetViewModel)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
@@ -923,7 +925,6 @@ namespace WebUI.Services
             newObj.Add("name", dataSetViewModel.Name);
             newObj.Add("type", dataSetViewModel.Type);
             newObj.Add("info", dataSetViewModel.Info);
-            newObj.Add("labels", JToken.FromObject(await AzureService.UpdateLabelInfoToAzure(dataSetViewModel.Labels)));
             if (json == null)
             {
                 var obj = new JObject();
@@ -940,6 +941,7 @@ namespace WebUI.Services
                     await accountBlob.UploadGenericObjectAsync(json);
                 }
             }
+            await AddDatasetLabels(convertProjectId, dataSetId, dataSetViewModel.Labels);
         }
 
         public static async Task<JObject> getDatasetInfo(string convertProjectId,string convertDataSetId)
@@ -962,8 +964,8 @@ namespace WebUI.Services
                 obj["name"] = dataSetViewModel.Name;
                 obj["info"] = dataSetViewModel.Info;
                 obj["type"] = dataSetViewModel.Type;
-                obj["labels"] = JToken.FromObject(await AzureService.UpdateLabelInfoToAzure(dataSetViewModel.Labels));
                 await accountBlob.UploadGenericObjectAsync(json);
+                await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.Labels);
             }
         }
 
@@ -1462,14 +1464,11 @@ namespace WebUI.Services
             }
         }
 
-        public static async Task<JArray> GetDataSetLabels(string convertProjectId, string convertDataSetId)
+        public static async Task<JObject> GetDataSetLabels(string convertProjectId, string convertDataSetId)
         {
-            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", $"membership.json");
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", $"category.json");
             var accJson = await blob.DownloadGenericObjectAsync();
-            var datasetsList = JsonUtils.GetJToken("dataSets", accJson) as JObject;
-            var datasetJObject = JsonUtils.GetJToken(convertDataSetId, datasetsList) as JObject;
-            var labels = JsonUtils.GetJToken("labels", datasetJObject) as JArray;
-            return labels;
+            return accJson;
         }
         public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids,string image_id)
         {
