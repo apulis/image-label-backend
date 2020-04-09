@@ -44,6 +44,10 @@ namespace WebUI.Controllers
                 var blob = container.GetBlockBlobReference(path.Split("/",2)[1]);
                 var stream = new MemoryStream();
                 await blob.DownloadToStreamAsync(stream);
+                if (stream.Length == 0)
+                {
+                    return StatusCode(404, "file not found");
+                }
                 var contentType = FileOps.GetFileContentType(path);
                 return File(stream, contentType);
             }
@@ -74,6 +78,10 @@ namespace WebUI.Controllers
                 var blob = container.GetBlockBlobReference(path.Split("/", 2)[1]);
                 var stream = new MemoryStream();
                 await blob.DownloadToStreamAsync(stream);
+                if (stream.Length==0)
+                {
+                    return StatusCode(404, "file not found");
+                }
                 var contentType = FileOps.GetFileContentType(path);
                 return File(stream, contentType);
             }
