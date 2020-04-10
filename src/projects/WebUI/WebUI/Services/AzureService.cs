@@ -839,7 +839,6 @@ namespace WebUI.Services
             {
                 foreach (var one in array)
                 {
-                    var a = Json.GetJToken("supercategory", one);
                     labels.Add(new AddLabelViewModel()
                     {
                         id = int.Parse(one["id"].ToString()),
@@ -912,7 +911,7 @@ namespace WebUI.Services
         public static async Task AddDatasetLabels(string convertProjectId,string convertDatasetId, List<AddLabelViewModel> labels)
         {
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDatasetId}/{convertProjectId}", "category.json");
-            await blob.UploadGenericObjectAsync(new JObject(){{ "categories",JToken.FromObject(labels).ToString()}});
+            await blob.UploadGenericObjectAsync(new JObject(){{ "categories",JArray.FromObject(labels)}});
         }
         public static async Task AddDataset(string convertProjectId, AddDatasetViewModel dataSetViewModel)
         {
