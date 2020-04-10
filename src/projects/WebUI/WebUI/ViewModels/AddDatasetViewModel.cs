@@ -20,7 +20,7 @@ namespace WebUI.ViewModels
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (Labels!=null && Labels.Count <= 0)
+            if (Labels!=null && Labels.Count < 0)
             {
                 yield return new ValidationResult(
                     "list can't be empty.", new[] { "labels" });
