@@ -240,3 +240,4 @@ FakesAssemblies/
 *.userprefs
 
 .DS_Store
+.idea
