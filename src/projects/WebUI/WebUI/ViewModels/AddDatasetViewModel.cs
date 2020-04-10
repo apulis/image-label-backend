@@ -15,15 +15,15 @@ namespace WebUI.ViewModels
         public string Info { get; set; }
         [Required]
         public string Type { get; set; }
-        [Required]
+
         public List<AddLabelViewModel> Labels { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (Labels.Count==0)
+            if (Labels!=null && Labels.Count <= 0)
             {
                 yield return new ValidationResult(
-                    "list can't be empty.",new[] { "labels" });
+                    "list can't be empty.", new[] { "labels" });
             }
         }
     }

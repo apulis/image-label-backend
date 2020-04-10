@@ -945,7 +945,12 @@ namespace WebUI.Services
                     await accountBlob.UploadGenericObjectAsync(json);
                 }
             }
-            await AddDatasetLabels(convertProjectId, dataSetId, dataSetViewModel.Labels);
+
+            if (dataSetViewModel.Labels != null)
+            {
+                await AddDatasetLabels(convertProjectId, dataSetId, dataSetViewModel.Labels);
+            }
+            
         }
 
         public static async Task<JObject> getDatasetInfo(string convertProjectId,string convertDataSetId)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using Common.Utils;
 using Microsoft.Extensions.Logging;
@@ -100,10 +101,22 @@ namespace WebUI.Azure
         }
         public override async Task DownloadToStreamAsync(Stream target)
         {
-            Dictionary<string, string> headerDictionary = new Dictionary<string, string>(){["Authorization"]= $"Bearer { _token}" };
-            Stream fileStream =await Requests.GetStream(_path.ToString(), headerDictionary);
-            await fileStream.CopyToAsync(target);
-            target.Position = 0;
+            try
+            {
+                Dictionary<string, string> headerDictionary = new Dictionary<string, string>() { ["Authorization"] = $"Bearer { _token}" };
+                Stream fileStream = await Requests.GetStream(_path.ToString(), headerDictionary);
+                await fileStream.CopyToAsync(target);
+                target.Position = 0;
+            }
+            catch (WebException e)
+            {
+                if (e.Message.Contains("404"))
+                {
+                    return;
+                }
+                throw;
+            }
+            
         }
         public override async Task UploadFromStreamAsync(Stream source)
         {
