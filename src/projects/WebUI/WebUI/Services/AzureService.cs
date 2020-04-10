@@ -1474,7 +1474,7 @@ namespace WebUI.Services
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", $"category.json");
             var accJson = await blob.DownloadTextAsync();
             var a = String.IsNullOrEmpty(accJson);
-            return String.IsNullOrEmpty(accJson)?JArray.Parse(accJson):null;
+            return !String.IsNullOrEmpty(accJson)?JArray.Parse(accJson):null;
         }
         public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids,string image_id)
         {
