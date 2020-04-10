@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
@@ -146,11 +144,7 @@ namespace WebUI.Azure
         }
         public override async Task UploadFromStreamAsync(Stream source)
         {
-            DirectorySecurity security = new DirectorySecurity();
-            SecurityIdentifier identity = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
-            FileSystemAccessRule accessRule = new FileSystemAccessRule(identity, FileSystemRights.FullControl, AccessControlType.Allow);
-            security.AddAccessRule(accessRule);
-            new DirectoryInfo(Path.GetDirectoryName(_path)).Create(security);
+            new DirectoryInfo(Path.GetDirectoryName(_path)).Create();
             using (var filestream = new FileStream(_path,
                 FileMode.Create, FileAccess.Write, FileShare.Read,
                 bufferSize: 16384, useAsync: true))
