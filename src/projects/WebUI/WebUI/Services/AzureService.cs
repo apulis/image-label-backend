@@ -1549,11 +1549,12 @@ namespace WebUI.Services
             return newTaskIds;
         }
 
-        public static async Task<JObject> GetDatasetMap(string convertProjectId, string convertDataSetId)
+        public static async Task<JArray> GetDatasetMap(string convertProjectId, string convertDataSetId)
         {
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", $"map.json");
             var json = await blob.DownloadGenericObjectAsync();
-            return json;
+            var array = JsonUtils.GetJToken("map", json) as JArray;
+            return array;
         }
     }
 }

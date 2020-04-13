@@ -369,13 +369,13 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/tasks/map")]
-        [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
+        [ProducesResponseType(typeof(List<MapViewModel>), 200)]
         public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var projectObj = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("annotations", projectObj));
+            var array = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
+            return Ok(new Response().GetJObject(array));
         }
     }
 }
