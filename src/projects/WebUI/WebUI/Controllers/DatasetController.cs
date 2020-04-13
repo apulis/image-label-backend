@@ -370,12 +370,19 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/tasks/map")]
         [ProducesResponseType(typeof(List<MapViewModel>), 200)]
-        public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId)
+        public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var array = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject(array));
+            JArray newArray = new JArray();
+            foreach (var oneThr in array)
+            {
+                var oneThrObj = oneThr as JObject;
+                var oneThrData = oneThrObj["data"] as JArray;
+                newArray.Add(new JObject(){{ "iouThr", oneThrObj["iouThr"]},{"data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), page, size, oneThrData.Count)) } });
+            }
+            return Ok(new Response().GetJObject("data",newArray, "totalCount", array[0]["data"].Count()));
         }
     }
 }
