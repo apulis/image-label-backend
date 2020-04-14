@@ -1478,11 +1478,53 @@ namespace WebUI.Services
             var array = JsonUtils.GetJToken("categories", obj) as JArray;
             return array;
         }
-        public static async Task<List<string>> GetDataSetByLabels(string convertProjectId,string convertDataSetId, List<int> category_ids,string image_id)
+
+        public static async Task<JObject> SelectAnnoByIouRange(string convertProjectId, string convertDataSetId,string taskId,float iou_start, float iou_end)
+        {
+            JObject obj = new JObject();
+            var json = await GetSecondDataSetAnnotation(convertProjectId, convertDataSetId, taskId);
+            if (iou_start == 0 && iou_end == 0)
+            {
+                return json;
+            }
+            var array = JsonUtils.GetJToken("annotations", json) as JArray;
+            var imagesArray = JsonUtils.GetJToken("images", json) as JArray;
+            JArray annoArray = new JArray();
+            if (array != null)
+            {
+                foreach (var one in array)
+                {
+                    var oneObj = one as JObject;
+                    var iou = JsonUtils.GetJToken("iou", oneObj);
+                    if (iou != null)
+                    {
+                        float iou_value = float.Parse(iou.ToString());
+                        if (iou_start != 0.0f && iou_value<iou_start)
+                        {
+                            continue;
+                        }
+                        if (iou_end != 0.0f && iou_value>iou_end)
+                        {
+                            continue;
+                        }
+                        annoArray.Add(oneObj);
+                    }
+                }
+            }
+
+            if (annoArray != null&& annoArray.Count != 0)
+            {
+                obj.Add("annotations",annoArray);
+                obj.Add("images", imagesArray);
+                return obj;
+            }
+            return null;
+        }
+        public static async Task<List<string>> GetDataSetBySearch(string convertProjectId,string convertDataSetId, List<int> category_ids,string image_id, float iou_start,float iou_end)
         {
             List<string> taskIds = new List<string>();
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}",$"commit.json");
-            var tasksList = await blob.DownloadGenericObjectAsync() as JObject;
+            var tasksList = await blob.DownloadGenericObjectAsync();
             if (!Object.ReferenceEquals(tasksList, null))
             {
                 foreach (var pair in tasksList)
@@ -1521,11 +1563,15 @@ namespace WebUI.Services
             return json;
         }
 
-        public static async Task<List<string>> FilterTasksByIOU(List<string> taskIds, float ap_start,float ap_end,string projectId, string dataSetId)
+        public static async Task<List<string>> FilterTasksByIOU(List<string> taskIds, float iou_start,float iou_end,string projectId, string dataSetId)
         {
             List<string> newTaskIds = new List<String>();
-            var blob = GetBlob("cdn", "private", null, null, $"predict/{dataSetId}/{projectId}", "task.json");
-            var obj = await blob.DownloadGenericObjectAsync() as JObject;
+            if (iou_start == 0 && iou_end == 0)
+            {
+                return taskIds;
+            }
+            var blob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "iou.json");
+            var obj = await blob.DownloadGenericObjectAsync();
             if (!Object.ReferenceEquals(obj, null))
             {
                 foreach (var oneId in taskIds)
@@ -1533,16 +1579,26 @@ namespace WebUI.Services
                     var oneObj = JsonUtils.GetJToken(oneId, obj) as JObject;
                     if (oneObj != null)
                     {
-                        float iou = float.Parse((string)JsonUtils.GetJToken("iou", obj));
-                        if (ap_start != null &&ap_start > iou)
+                        var iouArray = JsonUtils.GetJToken("iou", oneObj) as JArray;
+                        bool flag = false;
+                        foreach (var one_iou in iouArray)
                         {
-                            continue;
+                            float iou = float.Parse(one_iou.ToString());
+                            if (iou_start != 0 && iou_start > iou)
+                            {
+                                continue;
+                            }
+                            if (iou_end != 0 && iou_end < iou)
+                            {
+                                continue;
+                            }
+                            flag = true;
+                            break;
                         }
-                        if (ap_end != null && ap_end < iou)
+                        if (flag)
                         {
-                            continue;
+                            newTaskIds.Add(oneId);
                         }
-                        newTaskIds.Add(oneId);
                     }
                 }
             }

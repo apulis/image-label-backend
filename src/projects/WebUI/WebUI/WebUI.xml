@@ -123,7 +123,7 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetByLabels(System.Guid,System.Guid,System.Collections.Generic.List{System.Int32},System.Int32,System.Int32,System.String)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetByLabels(System.Guid,System.Guid,System.Collections.Generic.List{System.Int32},System.Int32,System.Int32,System.String,System.Single,System.Single)">
             <summary>
             explore接口，搜索数据集.
             </summary>

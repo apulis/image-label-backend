@@ -9,6 +9,7 @@ namespace WebUI.ViewModels
     {
         public float iouThr { get; set; }
         public List<MapDataViewModel> data { get; set; }
+        public float mean_AP { get; set; }
     }
 
     public class MapDataViewModel

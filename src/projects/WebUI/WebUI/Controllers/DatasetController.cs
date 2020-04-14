@@ -345,18 +345,19 @@ namespace WebUI.Controllers
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks/search")]
         [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
-        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]List<int> category_ids, [FromQuery]int page, [FromQuery]int size,[FromQuery] string image_id)
+        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]List<int> category_ids, [FromQuery]int page, [FromQuery]int size,[FromQuery] string image_id,[FromQuery] float iou_start, [FromQuery] float iou_end)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             List<JObject> annotationViewModels = new List<JObject>();
             List<JObject> predictAnnotationViewModels = new List<JObject>();
-            List<string> taskIds = await AzureService.GetDataSetByLabels(convertProjectId, convertDataSetId, category_ids,image_id);
+            List<string> taskIds = await AzureService.GetDataSetBySearch(convertProjectId, convertDataSetId, category_ids,image_id,iou_start,iou_end);
+            taskIds = await AzureService.FilterTasksByIOU(taskIds, iou_start, iou_end, convertProjectId, convertDataSetId);
             var list = PageOps.GetPageRange(taskIds, page, size, taskIds.Count);
             foreach (var taskId in list)
             {
                 annotationViewModels.Add(await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId));
-                predictAnnotationViewModels.Add(await AzureService.GetSecondDataSetAnnotation(convertProjectId, convertDataSetId, taskId));
+                predictAnnotationViewModels.Add(await AzureService.SelectAnnoByIouRange(convertProjectId, convertDataSetId, taskId,iou_start,iou_end));
             }
             return Ok(new Response().GetJObject("taskIds", annotationViewModels, "totalCount", taskIds.Count,"prediction", predictAnnotationViewModels));
         }
