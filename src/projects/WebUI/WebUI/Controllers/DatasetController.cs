@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Models;
+using WebUI.Parameters;
 using WebUI.Services;
 using WebUI.ViewModels;
 
@@ -31,13 +32,13 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DatasetViewModel>>> GetDatasets(Guid projectId,[FromQuery]int page,[FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<DatasetViewModel>>> GetDatasets(Guid projectId, [FromQuery]QueryStringParameters parameters)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var userId = HttpContext.User.Identity.Name;
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
-            var list = PageOps.GetPageRange(datasetList, page, size, datasetList.Count);
+            var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
             return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
         }
         /// <remarks>
@@ -141,7 +142,7 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/users")]
-        public async Task<ActionResult<IEnumerable<UserInfoViewModel>>> GetDataSetUsers(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<UserInfoViewModel>>> GetDataSetUsers(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -152,7 +153,7 @@ namespace WebUI.Controllers
                 return StatusCode(403);
             }
             var userList = await AzureService.GetDataSetUsers(convertProjectId, convertDataSetId);
-            var list = PageOps.GetPageRange(userList, page, size, userList.Count);
+            var list = PageOps.GetPageRange(userList, parameters.page, parameters.size, userList.Count);
             return Ok(new Response().GetJObject("users", list, "totalCount", userList.Count));
         }
         /// <remarks>
@@ -226,7 +227,7 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks")]
-        public async Task<ActionResult<IEnumerable<TaskViewModel>>> getTasks(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<TaskViewModel>>> getTasks(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
             var userId = HttpContext.User.Identity.Name;
             var convertProjectId = projectId.ToString().ToUpper();
@@ -243,7 +244,7 @@ namespace WebUI.Controllers
                 return Ok(new Response().GetJObject("taskList", taskList));
             }
             var adminTaskList = await AzureService.getTasks(convertProjectId, convertDataSetId);
-            var list = PageOps.GetPageRange(adminTaskList, page, size, adminTaskList.Count);
+            var list = PageOps.GetPageRange(adminTaskList, parameters.page, parameters.size, adminTaskList.Count);
             return Ok(new Response().GetJObject("taskList", list, "totalCount", adminTaskList.Count));
         }
         /// <remarks>
@@ -345,19 +346,19 @@ namespace WebUI.Controllers
         /// <param name="size">每页的数量</param>
         [HttpGet("{datasetId}/tasks/search")]
         [ProducesResponseType(typeof(List<AnnotationViewModel>), 200)]
-        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]List<int> category_ids, [FromQuery]int page, [FromQuery]int size,[FromQuery] string image_id,[FromQuery] float iou_start, [FromQuery] float iou_end)
+        public async Task<ActionResult<Response>> GetDataSetByLabels(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             List<JObject> annotationViewModels = new List<JObject>();
             List<JObject> predictAnnotationViewModels = new List<JObject>();
-            List<string> taskIds = await AzureService.GetDataSetBySearch(convertProjectId, convertDataSetId, category_ids,image_id,iou_start,iou_end);
-            taskIds = await AzureService.FilterTasksByIOU(taskIds, iou_start, iou_end, convertProjectId, convertDataSetId);
-            var list = PageOps.GetPageRange(taskIds, page, size, taskIds.Count);
+            List<string> taskIds = await AzureService.GetDataSetBySearch(convertProjectId, convertDataSetId, parameters);
+            taskIds = await AzureService.FilterTasksByIOU(taskIds, parameters, convertProjectId, convertDataSetId);
+            var list = PageOps.GetPageRange(taskIds, parameters.page, parameters.size, taskIds.Count);
             foreach (var taskId in list)
             {
                 annotationViewModels.Add(await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId));
-                predictAnnotationViewModels.Add(await AzureService.SelectAnnoByIouRange(convertProjectId, convertDataSetId, taskId,iou_start,iou_end));
+                predictAnnotationViewModels.Add(await AzureService.SelectAnnoByIouRange(convertProjectId, convertDataSetId, taskId, parameters));
             }
             return Ok(new Response().GetJObject("taskIds", annotationViewModels, "totalCount", taskIds.Count,"prediction", predictAnnotationViewModels));
         }
@@ -371,7 +372,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/tasks/map")]
         [ProducesResponseType(typeof(List<MapViewModel>), 200)]
-        public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId, [FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
@@ -381,7 +382,7 @@ namespace WebUI.Controllers
             {
                 var oneThrObj = oneThr as JObject;
                 var oneThrData = oneThrObj["data"] as JArray;
-                newArray.Add(new JObject(){{ "iouThr", oneThrObj["iouThr"]},{"data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), page, size, oneThrData.Count)) } });
+                newArray.Add(new JObject(){{ "iouThr", oneThrObj["iouThr"]},{"data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) } });
             }
             return Ok(new Response().GetJObject("data",newArray, "totalCount", array[0]["data"].Count()));
         }

@@ -12,6 +12,7 @@ using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Azure;
 using WebUI.Models;
+using WebUI.Parameters;
 using WebUI.ViewModels;
 
 namespace WebUI.Services
@@ -1479,11 +1480,11 @@ namespace WebUI.Services
             return array;
         }
 
-        public static async Task<JObject> SelectAnnoByIouRange(string convertProjectId, string convertDataSetId,string taskId,float iou_start, float iou_end)
+        public static async Task<JObject> SelectAnnoByIouRange(string convertProjectId, string convertDataSetId,string taskId,QueryStringParameters parameters)
         {
             JObject obj = new JObject();
             var json = await GetSecondDataSetAnnotation(convertProjectId, convertDataSetId, taskId);
-            if (iou_start == 0 && iou_end == 0)
+            if (parameters.iou_start == 0 && parameters.iou_end == 0)
             {
                 return json;
             }
@@ -1499,11 +1500,11 @@ namespace WebUI.Services
                     if (iou != null)
                     {
                         float iou_value = float.Parse(iou.ToString());
-                        if (iou_start != 0.0f && iou_value<iou_start)
+                        if (parameters.iou_start != 0.0f && iou_value< parameters.iou_start)
                         {
                             continue;
                         }
-                        if (iou_end != 0.0f && iou_value>iou_end)
+                        if (parameters.iou_end != 0.0f && iou_value> parameters.iou_end)
                         {
                             continue;
                         }
@@ -1520,7 +1521,7 @@ namespace WebUI.Services
             }
             return null;
         }
-        public static async Task<List<string>> GetDataSetBySearch(string convertProjectId,string convertDataSetId, List<int> category_ids,string image_id, float iou_start,float iou_end)
+        public static async Task<List<string>> GetDataSetBySearch(string convertProjectId,string convertDataSetId,QueryStringParameters parameters)
         {
             List<string> taskIds = new List<string>();
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}",$"commit.json");
@@ -1529,9 +1530,9 @@ namespace WebUI.Services
             {
                 foreach (var pair in tasksList)
                 {
-                    if (image_id != null)
+                    if (parameters.image_id != null)
                     {
-                        if (!pair.Key.Contains(image_id))
+                        if (!pair.Key.Contains(parameters.image_id))
                         {
                             continue;
                         }
@@ -1541,7 +1542,7 @@ namespace WebUI.Services
                     if (categoryIds != null)
                     {
                         List<int> ids = categoryIds.ToObject<List<int>>();
-                        if (category_ids.All(b => ids.Any(a => a == b)))
+                        if (parameters.category_ids.All(b => ids.Any(a => a == b)))
                         {
                             taskIds.Add(pair.Key);
                         }
@@ -1563,10 +1564,10 @@ namespace WebUI.Services
             return json;
         }
 
-        public static async Task<List<string>> FilterTasksByIOU(List<string> taskIds, float iou_start,float iou_end,string projectId, string dataSetId)
+        public static async Task<List<string>> FilterTasksByIOU(List<string> taskIds, QueryStringParameters parameters,string projectId, string dataSetId)
         {
             List<string> newTaskIds = new List<String>();
-            if (iou_start == 0 && iou_end == 0)
+            if (parameters.iou_start == 0 && parameters.iou_end == 0)
             {
                 return taskIds;
             }
@@ -1592,11 +1593,11 @@ namespace WebUI.Services
                         foreach (var one_iou in iouArray)
                         {
                             float iou = float.Parse(one_iou.ToString());
-                            if (iou_start != 0 && iou_start > iou)
+                            if (parameters.iou_start != 0 && parameters.iou_start > iou)
                             {
                                 continue;
                             }
-                            if (iou_end != 0 && iou_end < iou)
+                            if (parameters.iou_end != 0 && parameters.iou_end < iou)
                             {
                                 continue;
                             }
