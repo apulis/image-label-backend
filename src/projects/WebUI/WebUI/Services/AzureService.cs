@@ -1577,9 +1577,17 @@ namespace WebUI.Services
                 foreach (var oneId in taskIds)
                 {
                     var oneObj = JsonUtils.GetJToken(oneId, obj) as JObject;
+                    if (oneObj == null)
+                    {
+                        var a = JsonUtils.GetJToken(oneId, obj) as JObject;
+                    }
                     if (oneObj != null)
                     {
                         var iouArray = JsonUtils.GetJToken("iou", oneObj) as JArray;
+                        if (iouArray == null)
+                        {
+                            
+                        }
                         bool flag = false;
                         foreach (var one_iou in iouArray)
                         {

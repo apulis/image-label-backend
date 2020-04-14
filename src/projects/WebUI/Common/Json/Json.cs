@@ -27,10 +27,12 @@ namespace Utils.Json
                         JToken value = pair.Value;
                         if (name.Length <= entryname.Length && String.CompareOrdinal(name, entryname.Substring(0, name.Length)) == 0)
                         {
-                            if (entryname.Length > name.Length)
+                            if (entryname.Length > name.Length&& entryname.Substring(name.Length, 1) == "_")
+                            {
                                 return GetJToken(entryname.Substring(name.Length + 1), value);
-                            else
-                                return value;
+                            }
+                            return value;
+
                         }
                     }
                     return null;
