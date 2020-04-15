@@ -378,13 +378,17 @@ namespace WebUI.Controllers
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var array = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
             JArray newArray = new JArray();
-            foreach (var oneThr in array)
+            if (object.ReferenceEquals(array, null))
             {
-                var oneThrObj = oneThr as JObject;
-                var oneThrData = oneThrObj["data"] as JArray;
-                newArray.Add(new JObject(){{ "iouThr", oneThrObj["iouThr"]},{"data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) } });
+                foreach (var oneThr in array)
+                {
+                    var oneThrObj = oneThr as JObject;
+                    var oneThrData = oneThrObj["data"] as JArray;
+                    newArray.Add(new JObject() { { "iouThr", oneThrObj["iouThr"] }, { "data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) } });
+                }
             }
-            return Ok(new Response().GetJObject("data",newArray, "totalCount", array[0]["data"].Count()));
+            
+            return Ok(new Response().GetJObject("data",newArray, "totalCount", array!=null?array[0]["data"].Count():0));
         }
     }
 }
