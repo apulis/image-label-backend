@@ -383,8 +383,8 @@ namespace WebUI.Controllers
                 foreach (var oneThr in array)
                 {
                     var oneThrObj = oneThr as JObject;
-                    var oneThrData = oneThrObj["data"] as JArray;
-                    newArray.Add(new JObject() { { "iouThr", oneThrObj["iouThr"] }, { "data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) } });
+                    var oneThrData = Json.GetJToken("data", oneThrObj) as JArray;
+                    newArray.Add(new JObject() { { "iouThr", Json.GetJToken("iouThr", oneThrData) }, { "data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) },{"mean_ap", Json.GetJToken("mean_ap",oneThrData) } });
                 }
             }
             
