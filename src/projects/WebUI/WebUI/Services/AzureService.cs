@@ -1572,41 +1572,77 @@ namespace WebUI.Services
                 return taskIds;
             }
             var blob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "iou.json");
+            //var start = parameters.page > 0?(parameters.page - 1) * parameters.size:0;
+            //var target = start + parameters.size;
             var obj = await blob.DownloadGenericObjectAsync();
             if (!Object.ReferenceEquals(obj, null))
             {
                 foreach (var oneId in taskIds)
                 {
                     var oneObj = JsonUtils.GetJToken(oneId, obj) as JObject;
-                    if (oneObj == null)
-                    {
-                        var a = JsonUtils.GetJToken(oneId, obj) as JObject;
-                    }
                     if (oneObj != null)
                     {
-                        var iouArray = JsonUtils.GetJToken("iou", oneObj) as JArray;
-                        if (iouArray == null)
+                        if (parameters.category_ids.Count != 0)
                         {
-                            
-                        }
-                        bool flag = false;
-                        foreach (var one_iou in iouArray)
-                        {
-                            float iou = float.Parse(one_iou.ToString());
-                            if (parameters.iou_start != 0 && parameters.iou_start > iou)
+                            int index = 0;
+                            foreach (var category_id in parameters.category_ids)
                             {
-                                continue;
+                                var iouArray = JsonUtils.GetJToken(category_id.ToString(), oneObj) as JArray;
+                                bool flag = false;
+                                if (Object.ReferenceEquals(iouArray, null))
+                                {
+                                    continue;
+                                }
+                                foreach (var one_iou in iouArray)
+                                {
+                                    float iou = float.Parse(one_iou.ToString());
+                                    if (parameters.iou_start != 0 && parameters.iou_start > iou)
+                                    {
+                                        continue;
+                                    }
+                                    if (parameters.iou_end != 0 && parameters.iou_end < iou)
+                                    {
+                                        continue;
+                                    }
+                                    index += 1;
+                                    break;
+                                }
                             }
-                            if (parameters.iou_end != 0 && parameters.iou_end < iou)
+                            if (index== parameters.category_ids.Count)
                             {
-                                continue;
+                                newTaskIds.Add(oneId);
                             }
-                            flag = true;
-                            break;
                         }
-                        if (flag)
+                        else
                         {
-                            newTaskIds.Add(oneId);
+                            bool flag = false;
+                            foreach (var pair in oneObj)
+                            {
+                                var oneArray = pair.Value as JArray;
+                                foreach (var one_iou in oneArray)
+                                {
+                                    float iou = float.Parse(one_iou.ToString());
+                                    if (parameters.iou_start != 0 && parameters.iou_start > iou)
+                                    {
+                                        continue;
+                                    }
+                                    if (parameters.iou_end != 0 && parameters.iou_end < iou)
+                                    {
+                                        continue;
+                                    }
+                                    flag  = true;
+                                    break;
+                                }
+
+                                if (flag)
+                                {
+                                    break;
+                                }
+                            }
+                            if (flag)
+                            {
+                                newTaskIds.Add(oneId);
+                            }
                         }
                     }
                 }

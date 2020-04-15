@@ -4,7 +4,7 @@
         <name>WebUI</name>
     </assembly>
     <members>
-        <member name="M:WebUI.Controllers.DatasetController.GetDatasets(System.Guid,System.Int32,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDatasets(System.Guid,WebUI.Parameters.QueryStringParameters)">
             <remarks>
             获取当前用户的projectId对应的project下的所属数据集
             返回List,数据集列表
@@ -46,7 +46,7 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">将要删除dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetUsers(System.Guid,System.Guid,System.Int32,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetUsers(System.Guid,System.Guid,WebUI.Parameters.QueryStringParameters)">
             <remarks>
             获取project下特定数据集的标注用户列表
             返回用户信息列表
@@ -83,7 +83,7 @@
             <param name="dataSetId">dataset的GUid</param>
             <param name="userNumber">用户唯一标识数字</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.getTasks(System.Guid,System.Guid,System.Int32,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.getTasks(System.Guid,System.Guid,WebUI.Parameters.QueryStringParameters)">
             <remarks>
             获取数据集的可标注任务列表,包含已修改task+一个锁定的task
             </remarks>
@@ -123,7 +123,7 @@
             <param name="projectId">project的GUid</param>
             <param name="dataSetId">dataset的GUid</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetByLabels(System.Guid,System.Guid,System.Collections.Generic.List{System.Int32},System.Int32,System.Int32,System.String,System.Single,System.Single)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetByLabels(System.Guid,System.Guid,WebUI.Parameters.QueryStringParameters)">
             <summary>
             explore接口，搜索数据集.
             </summary>
@@ -136,7 +136,7 @@
             <param name="page">当前第几页，从1开始递增</param>
             <param name="size">每页的数量</param>
         </member>
-        <member name="M:WebUI.Controllers.DatasetController.GetDataSetLabel(System.Guid,System.Guid,System.Int32,System.Int32)">
+        <member name="M:WebUI.Controllers.DatasetController.GetDataSetMap(System.Guid,System.Guid,WebUI.Parameters.QueryStringParameters)">
             <summary>
             mAP数据接口
             </summary>

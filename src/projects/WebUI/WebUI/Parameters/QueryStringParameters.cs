@@ -18,7 +18,8 @@ namespace WebUI.Parameters
             get => _pageSize;
             set => _pageSize = (value > MaxPageSize) ? MaxPageSize : value;
         }
-        public List<int> category_ids { get; set; }
+        private List<int> _category_ids = new List<int>();
+        public List<int> category_ids { get=> _category_ids; set=> _category_ids=(value == null)?_category_ids:value; }
 
         public string image_id { get; set; }
         public float iou_start { get; set; }

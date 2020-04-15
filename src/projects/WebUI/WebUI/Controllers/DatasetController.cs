@@ -372,7 +372,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataset的GUid</param>
         [HttpGet("{datasetId}/tasks/map")]
         [ProducesResponseType(typeof(List<MapViewModel>), 200)]
-        public async Task<ActionResult<Response>> GetDataSetLabel(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
+        public async Task<ActionResult<Response>> GetDataSetMap(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
