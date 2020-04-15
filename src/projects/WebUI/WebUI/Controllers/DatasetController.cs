@@ -378,7 +378,7 @@ namespace WebUI.Controllers
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var array = await AzureService.GetDatasetMap(convertProjectId, convertDataSetId);
             JArray newArray = new JArray();
-            if (object.ReferenceEquals(array, null))
+            if (!object.ReferenceEquals(array, null))
             {
                 foreach (var oneThr in array)
                 {
