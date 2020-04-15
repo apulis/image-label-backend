@@ -384,7 +384,7 @@ namespace WebUI.Controllers
                 {
                     var oneThrObj = oneThr as JObject;
                     var oneThrData = Json.GetJToken("data", oneThrObj) as JArray;
-                    newArray.Add(new JObject() { { "iouThr", Json.GetJToken("iouThr", oneThrData) }, { "data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) },{"mean_ap", Json.GetJToken("mean_ap",oneThrData) } });
+                    newArray.Add(new JObject() { { "iouThr", Json.GetJToken("iouThr", oneThrObj) }, { "data", JToken.FromObject(PageOps.GetPageRange(oneThrData.ToList(), parameters.page, parameters.size, oneThrData.Count)) },{"mean_ap", Json.GetJToken("mean_ap", oneThrObj) } });
                 }
             }
             
