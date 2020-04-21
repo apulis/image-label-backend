@@ -1538,6 +1538,21 @@ namespace WebUI.Services
                         }
                     }
                     var obj = pair.Value as JObject;
+                    if (!string.IsNullOrWhiteSpace(parameters.level))
+                    {
+                        var level = JsonUtils.GetJToken("level", obj);
+                        if (!object.ReferenceEquals(level, null))
+                        {
+                            if (level.ToString().Trim() != parameters.level.Trim())
+                            {
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
                     var categoryIds = JsonUtils.GetJToken("categoryIds", obj) as JArray;
                     if (categoryIds != null)
                     {

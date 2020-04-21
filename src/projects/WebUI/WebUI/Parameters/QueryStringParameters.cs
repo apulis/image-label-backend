@@ -24,5 +24,7 @@ namespace WebUI.Parameters
         public string image_id { get; set; }
         public float iou_start { get; set; }
         public float iou_end { get; set; }
+
+        public string level { get; set; }
     }
 }
