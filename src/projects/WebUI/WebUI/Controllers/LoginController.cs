@@ -106,7 +106,7 @@ namespace WebUI.Controllers
             }
             catch(Exception e)
             {
-                logger.LogError(e.Message);
+                logger.LogError($"post error,reason : {e.Message}");
                 throw;
             }
         }
