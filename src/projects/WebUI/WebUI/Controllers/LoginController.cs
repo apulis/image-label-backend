@@ -105,10 +105,16 @@ namespace WebUI.Controllers
                 }
                 return result;
             }
-            catch(Exception e)
+            catch(WebException ex)
             {
-                logger.LogError($"post error,reason : {e.Message}");
-                throw;
+                HttpWebResponse response = (HttpWebResponse)ex.Response;
+                Stream errData = response.GetResponseStream();
+                using (StreamReader reader = new StreamReader(errData, Encoding.UTF8))
+                {
+                    string text = reader.ReadToEnd();
+                    logger.LogError($"post error,reason : {text}");
+                }
+                throw ex;
             }
         }
         private string getToken(string signinType,string code)
