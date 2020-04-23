@@ -68,7 +68,7 @@ namespace WebUI.Controllers
             string str = streamReader.ReadToEnd();
             return str;
         }
-        public static string Post(string url, Dictionary<string, string> dic)
+        public static string Post(string url, Dictionary<string, string> dic, ILogger logger)
         {
             string result = "";
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
@@ -92,14 +92,24 @@ namespace WebUI.Controllers
                 reqStream.Close();
             }
             #endregion
-            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-            Stream stream = resp.GetResponseStream();
-            //获取响应内容
-            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+
+            try
             {
-                result = reader.ReadToEnd();
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                Stream stream = resp.GetResponseStream();
+                //获取响应内容
+                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    result = reader.ReadToEnd();
+                }
+                return result;
             }
-            return result;
+            catch(Exception e)
+            {
+                logger.LogError(e.Message);
+                logger.LogError(req.GetResponse().ToString());
+                throw;
+            }
         }
         private string getToken(string signinType,string code)
         {
