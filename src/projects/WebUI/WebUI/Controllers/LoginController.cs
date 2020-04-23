@@ -128,7 +128,7 @@ namespace WebUI.Controllers
                 myDictionary.Add("code", code);
                 myDictionary.Add("grant_type", "authorization_code");
                 myDictionary.Add("redirect_uri", $"{_configuration["BackEndUrl"]}/api/login/microsoft");
-                return Post("https://login.microsoftonline.com/common/oauth2/token", myDictionary);
+                return Post("https://login.microsoftonline.com/common/oauth2/token", myDictionary,_logger);
             }
 
             return null;
