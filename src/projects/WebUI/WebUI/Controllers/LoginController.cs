@@ -95,7 +95,8 @@ namespace WebUI.Controllers
 
             try
             {
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                var re = req.GetResponse();
+                HttpWebResponse resp = re as HttpWebResponse;
                 Stream stream = resp.GetResponseStream();
                 //获取响应内容
                 using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
