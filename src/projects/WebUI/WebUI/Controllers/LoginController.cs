@@ -107,7 +107,6 @@ namespace WebUI.Controllers
             catch(Exception e)
             {
                 logger.LogError(e.Message);
-                logger.LogError(req.GetResponse().ToString());
                 throw;
             }
         }
