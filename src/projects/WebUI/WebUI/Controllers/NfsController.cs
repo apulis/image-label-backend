@@ -40,6 +40,10 @@ namespace WebUI.Controllers
             //}
             try
             {
+                if (!path.StartsWith("public"))
+                {
+                    return StatusCode(404, "file not found");
+                }
                 var container = CloudStorage.GetContainer("cdn", "public", null, null);
                 var blob = container.GetBlockBlobReference(path.Split("/",2)[1]);
                 var stream = new MemoryStream();
@@ -55,6 +59,29 @@ namespace WebUI.Controllers
             {
                 Console.WriteLine($"get path {path} exception: {ex}");
                 return StatusCode(404,ex);
+            }
+        }
+        /// <remarks>
+        /// 将数据写入对应路径的文件里
+        /// </remarks>
+        [HttpPost("/api/nfs/{*path}")]
+        public async Task<IActionResult> WriteFilePublic(string path,[FromBody] JObject value)
+        {
+            try
+            {
+                if (!path.StartsWith("public"))
+                {
+                    return StatusCode(404, "file not found");
+                }
+                var container = CloudStorage.GetContainer("cdn", "public", null, null);
+                var blob = container.GetBlockBlobReference(path.Split("/", 2)[1]);
+                await blob.UploadGenericObjectAsync(value);
+                return StatusCode(204);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"write path {path} exception: {ex}");
+                return StatusCode(500,ex);
             }
         }
         /// <remarks>
