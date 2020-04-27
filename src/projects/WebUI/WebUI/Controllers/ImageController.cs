@@ -473,6 +473,44 @@ namespace WebUI.Controllers
                 return Ok(new { error = errMsg});
             }
         }
+        [HttpPost("UploadGeoJson")]
+        [IgnoreAntiforgeryToken]
+        [AllowAnonymous]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadGeoJson([FromBody] JObject postdata)
+        {
+            var filename = JsonUtils.GetString("filename", postdata);
+            var data = JsonUtils.GetJToken("data", postdata);
+            if (Object.ReferenceEquals(data, null))
+            {
+                var msg = $"UploadJsons has an empty content";
+                _logger.LogInformation(msg);
+                return Ok(new { error = msg }); ;
+            }
 
+            var errMsg = "";
+            try
+            {
+                var tasks = new List<Task>();
+                var data64 = data.ToString().FromJSBase64();
+                var dataBytes = Convert.FromBase64String(data64);
+                var container = CloudStorage.GetContainer("cdn", "public", null, null);
+                var dataBlob = container.GetBlockBlobReference($"demo/bingmap/pinggu/{filename}");
+                tasks.Add(dataBlob.UploadFromByteArrayAsync(dataBytes, 0, dataBytes.Length));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                errMsg = ex.Message;
+            }
+            if (errMsg.Length == 0)
+            {
+                return Ok();
+            }
+            else
+            {
+                return Ok(new { error = errMsg });
+            }
+        }
     }
 }
