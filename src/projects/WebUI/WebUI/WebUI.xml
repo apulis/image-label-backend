@@ -166,24 +166,29 @@
             <param name="signinType">wechat or microsoft</param>
         </member>
         <member name="M:WebUI.Controllers.NfsController.GetFile(System.String)">
-            <remarks>
-            返回对应路径的文件，公开访问接口
-            </remarks>
+            <summary>
+            返回对应路径的文件，公开访问接口，无需认证
+            </summary>
+        </member>
+        <member name="M:WebUI.Controllers.NfsController.WriteFilePublic(System.String,Newtonsoft.Json.Linq.JObject)">
+            <summary>
+            将数据写入对应路径的文件里，公开接口
+            </summary>
         </member>
         <member name="M:WebUI.Controllers.NfsController.GetFile2(System.String)">
-            <remarks>
+            <summary>
             返回对应路径的文件v2，需token认证
-            </remarks>
+            </summary>
         </member>
         <member name="M:WebUI.Controllers.NfsController.WriteFile(System.String,Newtonsoft.Json.Linq.JObject)">
-            <remarks>
+            <summary>
             将数据写入对应路径的文件里
-            </remarks>
+            </summary>
         </member>
         <member name="M:WebUI.Controllers.NfsController.DeleteFile(System.String)">
-            <remarks>
-            删除文件
-            </remarks>
+            <summary>
+            删除文件接口，需认证
+            </summary>
         </member>
         <member name="M:WebUI.Controllers.ProjectController.GetProjects(System.Int32,System.Int32)">
             <remarks>

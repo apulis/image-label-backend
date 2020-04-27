@@ -16,6 +16,7 @@ using Utils.Json;
 using WebUI.Azure;
 using WebUI.Models;
 using WebUI.Services;
+using WebUI.ViewModels;
 
 namespace WebUI.Controllers
 {
@@ -24,9 +25,9 @@ namespace WebUI.Controllers
     [ApiController]
     public class NfsController : ControllerBase
     {
-        /// <remarks>
-        /// 返回对应路径的文件，公开访问接口
-        /// </remarks>
+        /// <summary>
+        /// 返回对应路径的文件，公开访问接口，无需认证
+        /// </summary>
         [HttpGet("{*path}")]
         public async Task<IActionResult> GetFile(string path)
         {
@@ -61,10 +62,11 @@ namespace WebUI.Controllers
                 return StatusCode(404,ex);
             }
         }
-        /// <remarks>
-        /// 将数据写入对应路径的文件里
-        /// </remarks>
+        /// <summary>
+        /// 将数据写入对应路径的文件里，公开接口
+        /// </summary>
         [HttpPost("/api/nfs/{*path}")]
+        [ProducesResponseType(typeof(JObject), 200)]
         public async Task<IActionResult> WriteFilePublic(string path,[FromBody] JObject value)
         {
             try
@@ -84,9 +86,9 @@ namespace WebUI.Controllers
                 return StatusCode(500,ex);
             }
         }
-        /// <remarks>
+        /// <summary>
         /// 返回对应路径的文件v2，需token认证
-        /// </remarks>
+        /// </summary>
         [HttpGet("/api/nfs2/{*path}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetFile2(string path)
@@ -118,9 +120,9 @@ namespace WebUI.Controllers
                 return StatusCode(404,ex);
             }
         }
-        /// <remarks>
+        /// <summary>
         /// 将数据写入对应路径的文件里
-        /// </remarks>
+        /// </summary>
         [HttpPost("/api/nfs2/{*path}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> WriteFile(string path,[FromBody] JObject value)
@@ -138,9 +140,9 @@ namespace WebUI.Controllers
                 return StatusCode(500,ex);
             }
         }
-        /// <remarks>
-        /// 删除文件
-        /// </remarks>
+        /// <summary>
+        /// 删除文件接口，需认证
+        /// </summary>
         [HttpDelete("/api/nfs2/{*path}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> DeleteFile(string path)
