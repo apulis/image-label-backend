@@ -29,7 +29,6 @@ using WebUI.Services;
 namespace WebUI.Controllers
 {
     //[Authorize(Roles = "Admin,User")]
-    [ApiExplorerSettings(IgnoreApi = true)]
     [Route("api/[controller]")]
     [ApiController]
     [EnableCors("dev-use")]
