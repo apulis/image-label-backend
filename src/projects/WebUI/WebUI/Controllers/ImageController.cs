@@ -479,6 +479,17 @@ namespace WebUI.Controllers
         public async Task<IActionResult> UploadGeoJson([FromBody] JObject postdata)
         {
             var filename = JsonUtils.GetString("filename", postdata);
+            var filePathArray = filename.Split("api/nfs/public/demo", 3);
+            string filePath;
+            if (filePathArray.Length == 3)
+            {
+                filePath = filePathArray[2];
+            }
+            else
+            {
+                filePath =Path.Combine("bingmap/pinggu/", filePathArray[0]);
+            }
+            
             var data = JsonUtils.GetJToken("data", postdata);
             if (Object.ReferenceEquals(data, null))
             {
@@ -494,7 +505,7 @@ namespace WebUI.Controllers
                 var data64 = data.ToString().FromJSBase64();
                 var dataBytes = Convert.FromBase64String(data64);
                 var container = CloudStorage.GetContainer("cdn", "public", null, null);
-                var dataBlob = container.GetBlockBlobReference($"demo/bingmap/pinggu/{filename}");
+                var dataBlob = container.GetBlockBlobReference(Path.Combine("demo",filePath));
                 tasks.Add(dataBlob.UploadFromByteArrayAsync(dataBytes, 0, dataBytes.Length));
                 await Task.WhenAll(tasks);
             }
