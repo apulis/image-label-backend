@@ -479,11 +479,11 @@ namespace WebUI.Controllers
         public async Task<IActionResult> UploadGeoJson([FromBody] JObject postdata)
         {
             var filename = JsonUtils.GetString("filename", postdata);
-            var filePathArray = filename.Split("api/nfs/public/demo", 3);
+            var filePathArray = filename.Split("api/nfs/public/demo/", 2);
             string filePath;
-            if (filePathArray.Length == 3)
+            if (filePathArray.Length == 2)
             {
-                filePath = filePathArray[2];
+                filePath = filePathArray[1];
             }
             else
             {
