@@ -476,51 +476,45 @@ namespace WebUI.Controllers
         [IgnoreAntiforgeryToken]
         [AllowAnonymous]
         [DisableRequestSizeLimit]
-        public async Task<IActionResult> UploadGeoJson([FromBody] JObject postdata)
+        public async Task<IActionResult> UploadGeoJson([FromBody] List<JObject> postdata)
         {
-            var filename = JsonUtils.GetString("filename", postdata);
-            var filePathArray = filename.Split("api/nfs/public/demo/", 2);
-            string filePath;
-            if (filePathArray.Length == 2)
-            {
-                filePath = filePathArray[1];
-            }
-            else
-            {
-                filePath =Path.Combine("bingmap/pinggu/", filePathArray[0]);
-            }
-            
-            var data = JsonUtils.GetJToken("data", postdata);
-            if (Object.ReferenceEquals(data, null))
-            {
-                var msg = $"UploadJsons has an empty content";
-                _logger.LogInformation(msg);
-                return Ok(new { error = msg }); ;
-            }
-
             var errMsg = "";
-            try
+            var tasks = new List<Task>();
+            var cnt = -1;
+            foreach (var oneData in postdata)
             {
-                var tasks = new List<Task>();
+                cnt += 1;
+                var filename = JsonUtils.GetString("filename", oneData);
+                var filePathArray = filename.Split("api/nfs/public/demo/", 2);
+                string filePath;
+                if (filePathArray.Length == 2)
+                {
+                    filePath = filePathArray[1];
+                }
+                else
+                {
+                    filePath = Path.Combine("bingmap/pinggu/", filePathArray[0]);
+                }
+                var data = JsonUtils.GetJToken("data", oneData);
+                if (Object.ReferenceEquals(data, null))
+                {
+                    var msg = $"Entry {cnt} is an empty JObject\n";
+                    _logger.LogInformation($"UploadJson is not valid, name = {filename}");
+                    errMsg += msg;
+                    continue;
+                }
                 var data64 = data.ToString().FromJSBase64();
                 var dataBytes = Convert.FromBase64String(data64);
                 var container = CloudStorage.GetContainer("cdn", "public", null, null);
-                var dataBlob = container.GetBlockBlobReference(Path.Combine("demo",filePath));
+                var dataBlob = container.GetBlockBlobReference(Path.Combine("demo", filePath));
                 tasks.Add(dataBlob.UploadFromByteArrayAsync(dataBytes, 0, dataBytes.Length));
-                await Task.WhenAll(tasks);
             }
-            catch (Exception ex)
-            {
-                errMsg = ex.Message;
-            }
+            await Task.WhenAll(tasks);
             if (errMsg.Length == 0)
             {
                 return Ok();
             }
-            else
-            {
-                return Ok(new { error = errMsg });
-            }
+            return Ok(new { error = errMsg });
         }
     }
 }
