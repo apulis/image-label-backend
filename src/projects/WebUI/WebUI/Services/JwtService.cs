@@ -19,7 +19,7 @@ namespace WebUI.Services
             var token = new JwtSecurityToken(
                 expires: DateTime.Now.AddDays(1),
                 signingCredentials: creds);
-            token.Payload["uid"] = userId;
+            token.Payload["uid"] = int.Parse(userId);
             var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);
             return tokenGenerate;
         }
