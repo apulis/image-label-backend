@@ -20,6 +20,19 @@ namespace Common.Utils
             Stream responseStream = response.GetResponseStream();
             return responseStream;
         }
+        public static async Task<string>  Get(string _url, Dictionary<string, string> headerDictionary)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(_url);    //创建一个请求示例 
+            foreach (var one in headerDictionary)
+            {
+                request.Headers[one.Key] = one.Value;
+            }
+            var response = await request.GetResponseAsync();  //获取响应，即发送请求
+            Stream responseStream = response.GetResponseStream();
+            StreamReader streamReader = new StreamReader(responseStream, Encoding.UTF8);
+            string str = streamReader.ReadToEnd();
+            return str;
+        }
         public static string Post(string url, Dictionary<string, string> bodyDictionary)
         {
             string result = "";

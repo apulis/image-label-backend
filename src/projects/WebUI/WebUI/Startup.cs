@@ -37,12 +37,13 @@ namespace WebUI
 {
     public class Startup
     {
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public static IConfiguration Configuration { get; set; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -102,12 +103,12 @@ namespace WebUI
                 .AddJwtBearer(options => {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = true,//是否验证Issuer
-                        ValidateAudience = true,//是否验证Audience
+                        ValidateIssuer = false,//是否验证Issuer
+                        ValidateAudience = false,//是否验证Audience
                         ValidateLifetime = true,//是否验证失效时间
                         ValidateIssuerSigningKey = true,//是否验证SecurityKey
-                        ValidAudience = "apulis-china-infra01.sigsus.cn",//Audience
-                        ValidIssuer = "apulis-china-infra01.sigsus.cn",//Issuer，这两项和前面签发jwt的设置一致
+                        //ValidAudience = "apulis-china-infra01.sigsus.cn",//Audience
+                        //ValidIssuer = "apulis-china-infra01.sigsus.cn",//Issuer，这两项和前面签发jwt的设置一致
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["SecurityKey"]))//拿到SecurityKey
                     };
                     options.SecurityTokenValidators.Clear();

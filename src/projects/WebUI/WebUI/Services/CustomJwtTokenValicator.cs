@@ -21,13 +21,13 @@ namespace WebUI.Services
         public ClaimsPrincipal ValidateToken(string securityToken, TokenValidationParameters validationParameters, out SecurityToken validatedToken)
         {
             ClaimsPrincipal principal = _jwtSecurityTokenHandler.ValidateToken(securityToken, validationParameters, out validatedToken);
-            string userId = principal.FindFirstValue(ClaimTypes.Name);
-            var task = AzureService.CheckUserIdExists(userId);
-            var result = task.Result;
-            if (userId == null|| !result)
-            {
-                throw new SecurityTokenInvalidSignatureException("userId is invalid");
-            }
+            string userId = principal.FindFirstValue("uid");
+            //var task = AzureService.CheckUserIdExists(userId);
+            //var result = task.Result;
+            //if (userId == null|| !result)
+            //{
+            //    throw new SecurityTokenInvalidSignatureException("userId is invalid");
+            //}
             return principal;
         }
     }

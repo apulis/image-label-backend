@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Common.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
@@ -450,8 +453,30 @@ namespace WebUI.Services
             await taskBlob.UploadGenericObjectAsync(taskJson);
         }
 
+        public static bool IsAdmin(JObject jObject)
+        {
+            if (!Object.ReferenceEquals(Json.GetJToken("currentRole", jObject), null))
+            {
+                JArray roleList = Json.GetJToken("currentRole", jObject) as JArray;
+                foreach (var one in roleList)
+                {
+                    if (one.ToString() == "System Admin")
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         public static async Task<string> FindUserRole(string userId)
         {
+            var configuration = Startup.Configuration;
+            string baseUrl = configuration["userDashboardUrl"];
+            string token = configuration["userDashboardToken"];
+            JObject resJObject = JObject.Parse(await Requests.Get(baseUrl + "/auth/currentUser",
+                new Dictionary<string, string>() { ["Authorization"] = $"Bearer {token}" }));
+            return AzureService.IsAdmin(resJObject) ? "admin" : "user";
+
             var taskBlob = AzureService.GetBlob("cdn", "private", null, null, "user", "role.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
             if (!Object.ReferenceEquals(taskJson, null))
