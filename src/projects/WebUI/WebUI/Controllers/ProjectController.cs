@@ -31,7 +31,7 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectViewModel>>> GetProjects([FromQuery]int page, [FromQuery]int size)
         {
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
             var list = PageOps.GetPageRange(accounts, page, size, accounts.Count);
             return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));

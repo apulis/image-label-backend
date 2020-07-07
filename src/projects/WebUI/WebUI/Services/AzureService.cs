@@ -472,7 +472,8 @@ namespace WebUI.Services
         {
             var configuration = Startup.Configuration;
             string baseUrl = configuration["userDashboardUrl"];
-            string token = configuration["userDashboardToken"];
+            //string token = configuration["userDashboardToken"];
+            string token = JwtService.GenerateToken(userId);
             JObject resJObject = JObject.Parse(await Requests.Get(baseUrl + "/auth/currentUser",
                 new Dictionary<string, string>() { ["Authorization"] = $"Bearer {token}" }));
             return AzureService.IsAdmin(resJObject) ? "admin" : "user";
