@@ -56,7 +56,7 @@ namespace WebUI.Controllers
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
             var convertProjectId = projectId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin"&&!await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
@@ -104,7 +104,7 @@ namespace WebUI.Controllers
             }
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
@@ -124,7 +124,7 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {

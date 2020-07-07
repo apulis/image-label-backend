@@ -68,10 +68,10 @@ namespace WebUI.Controllers
             }
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin")
-            {
-                return StatusCode(403);
-            }
+            //if (role != "admin")
+            //{
+            //    return StatusCode(403);
+            //}
             await AzureService.AddProject(accountViewModel);
             return Ok(new Response { Msg = "ok" });
         }
