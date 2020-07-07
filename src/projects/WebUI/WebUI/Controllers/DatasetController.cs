@@ -35,7 +35,7 @@ namespace WebUI.Controllers
         public async Task<ActionResult<IEnumerable<DatasetViewModel>>> GetDatasets(Guid projectId, [FromQuery]QueryStringParameters parameters)
         {
             var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
             var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
@@ -75,7 +75,7 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
@@ -146,7 +146,7 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
@@ -168,7 +168,7 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
@@ -189,7 +189,7 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
@@ -210,7 +210,7 @@ namespace WebUI.Controllers
         {
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Identity.Name;
+            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
             {
@@ -229,7 +229,7 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/tasks")]
         public async Task<ActionResult<IEnumerable<TaskViewModel>>> getTasks(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
@@ -255,7 +255,7 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/tasks/next/{taskId}")]
         public async Task<ActionResult<TaskViewModel>> GetNextTask(Guid projectId, Guid dataSetId,string taskId)
         {
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
@@ -279,7 +279,7 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/tasks/annotations/{taskId}")]
         public async Task<IActionResult> GetOneTask(Guid projectId, Guid dataSetId,string taskId)
         {
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
@@ -304,7 +304,7 @@ namespace WebUI.Controllers
         [HttpPost("{datasetId}/tasks/annotations/{taskId}")]
         public async Task<ActionResult<Response>> Post(Guid projectId, Guid dataSetId, string taskId, [FromBody] JObject value)
         {
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);

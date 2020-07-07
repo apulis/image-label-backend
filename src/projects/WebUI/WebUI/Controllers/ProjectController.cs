@@ -45,7 +45,7 @@ namespace WebUI.Controllers
         public async Task<ActionResult<Response>> DeleteProject(Guid projectId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
@@ -66,7 +66,7 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response{Successful = "true",Msg=ModelState.Values.ToString(),Data= null });
             }
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
@@ -89,7 +89,7 @@ namespace WebUI.Controllers
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
             var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
@@ -107,7 +107,7 @@ namespace WebUI.Controllers
         public async Task<ActionResult<IEnumerable<UserInfoViewModel>>> GetProjectManagers(Guid projectId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Identity.Name;
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             if (role != "admin")
             {
