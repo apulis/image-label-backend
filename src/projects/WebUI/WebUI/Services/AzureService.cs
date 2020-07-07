@@ -938,7 +938,7 @@ namespace WebUI.Services
         public static async Task AddDatasetLabels(string convertProjectId,string convertDatasetId, List<AddLabelViewModel> labels)
         {
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDatasetId}/{convertProjectId}", "category.json");
-            await blob.UploadGenericObjectAsync(new JObject(){{ "categories",JArray.FromObject(labels)}});
+            await blob.UploadGenericObjectAsync(new JObject(){{ "categories", labels!=null?JArray.FromObject(labels):new JArray()}});
         }
         public static async Task AddDataset(string convertProjectId, AddDatasetViewModel dataSetViewModel)
         {
