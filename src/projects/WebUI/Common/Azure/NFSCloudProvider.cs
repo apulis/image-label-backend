@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -99,6 +100,13 @@ namespace WebUI.Azure
                 return allFiles;
             }
             return allFiles;
+        }
+        public override void LinkPath(string dataPath)
+        {
+            string path = Path.Combine(_basePath, _directoryPath);
+            ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"ln -s {dataPath} {path}", };
+            Process proc = new Process() { StartInfo = startInfo, };
+            proc.Start();
         }
     }
 

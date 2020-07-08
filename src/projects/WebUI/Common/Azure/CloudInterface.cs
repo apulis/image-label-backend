@@ -73,6 +73,12 @@ namespace WebUI.Azure
             return lst;
         }
 
+        public virtual void LinkPath(string path)
+        {
+            var typeName = this.GetType().FullName;
+            throw new Exception($"NewBlobContinuationToken hasn't been implemented for BlobDirectory {typeName}");
+        }
+
         public virtual String Name
         {
             get

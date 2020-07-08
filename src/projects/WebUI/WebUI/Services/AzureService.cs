@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -37,6 +38,12 @@ namespace WebUI.Services
             var dirPath = container.GetDirectoryReference(dirpath);
             var Blob = dirPath.GetBlockBlobReference(blobPath);
             return Blob;
+        }
+        public static BlobDirectory GetDirBlob(string storage, string path, string location, String provider, string dirpath)
+        {
+            var container = CloudStorage.GetContainer(storage, path, location, provider);
+            var dirPath = container.GetDirectoryReference(dirpath);
+            return dirPath;
         }
         public static async Task<List<string>> GetUserAccountIdList(string userId)
         {
@@ -789,6 +796,26 @@ namespace WebUI.Services
             return true;
         }
 
+        public static async Task GenerateListJsonFile(string projectId, string dataSetId)
+        {
+            var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}", "list.json");
+            var json = await blob.DownloadGenericObjectAsync();
+            var obj = JsonUtils.GetJToken("ImgIDs", json) as JArray;
+            if (obj != null)
+            {
+                return;
+            }
+            JObject listJObject = new JObject();
+            JArray idListArray = new JArray();
+            var dirBlob = GetDirBlob("cdn", "public", null, null, $"tasks/{dataSetId}/images");
+            IEnumerable<string> allFiles = await dirBlob.ListBlobsSegmentedAsync();
+            foreach (var oneFile in allFiles)
+            {
+                idListArray.Add(Path.GetFileNameWithoutExtension(oneFile));
+            }
+            listJObject.Add("ImgIDs",idListArray);
+            await blob.UploadGenericObjectAsync(listJObject);
+        }
         public static async Task<JObject> GenerateCommitJsonFile(string projectId, string dataSetId)
         {
             var taskBlob = GetBlob("cdn", "private", null, null, $"tasks/{dataSetId}/{projectId}", "commit.json");
@@ -954,6 +981,8 @@ namespace WebUI.Services
             newObj.Add("name", dataSetViewModel.Name);
             newObj.Add("type", dataSetViewModel.Type);
             newObj.Add("info", dataSetViewModel.Info);
+            newObj.Add("dataSetBindId", dataSetViewModel.dataSetBindId);
+            newObj.Add("dataSetPath", dataSetViewModel.dataSetPath);
             if (json == null)
             {
                 var obj = new JObject();
@@ -975,9 +1004,17 @@ namespace WebUI.Services
             {
                 await AddDatasetLabels(convertProjectId, dataSetId, dataSetViewModel.Labels);
             }
-            
-        }
 
+            await LinkDataset(dataSetViewModel.dataSetPath, dataSetId);
+
+        }
+        public static async Task LinkDataset(string dataPath, string convertDataSetId)
+        {
+            //$"tasks/{convertDataSetId}/images";
+            var dirBlob = GetDirBlob("cdn", "public", null, null, $"tasks/{convertDataSetId}/images");
+            dirBlob.LinkPath(dataPath);
+
+        }
         public static async Task<JObject> getDatasetInfo(string convertProjectId,string convertDataSetId)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
@@ -999,6 +1036,8 @@ namespace WebUI.Services
                 obj["name"] = dataSetViewModel.Name;
                 obj["info"] = dataSetViewModel.Info;
                 obj["type"] = dataSetViewModel.Type;
+                obj["dataSetBindId"] = dataSetViewModel.dataSetBindId;
+                obj["dataSetPath"] = dataSetViewModel.dataSetPath;
                 await accountBlob.UploadGenericObjectAsync(json);
                 await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.Labels);
             }
@@ -1191,9 +1230,9 @@ namespace WebUI.Services
             }
             return "";
         }
-
         public static async Task<List<JObject>> getTasks(string convertProjectId, string convertDataSetId)
         {
+            await GenerateListJsonFile(convertProjectId, convertDataSetId);
             await AzureService.GenerateCommitJsonFile(convertProjectId, convertDataSetId);
             var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", "commit.json");
             var lockObj = await taskBlob.DownloadGenericObjectAsync() as JObject;
