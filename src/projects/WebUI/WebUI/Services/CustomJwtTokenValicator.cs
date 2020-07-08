@@ -22,6 +22,10 @@ namespace WebUI.Services
         {
             ClaimsPrincipal principal = _jwtSecurityTokenHandler.ValidateToken(securityToken, validationParameters, out validatedToken);
             string userId = principal.FindFirstValue("uid");
+            if (userId == null)
+            {
+                throw new SecurityTokenInvalidSignatureException("userId is null");
+            }
             //var task = AzureService.CheckUserIdExists(userId);
             //var result = task.Result;
             //if (userId == null|| !result)

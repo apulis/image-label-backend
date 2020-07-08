@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -1318,11 +1319,11 @@ namespace WebUI.Services
             return null;
         }
 
-        public static async Task AddProject(AddProjectViewModel accountViewModel)
+        public static async Task<string> AddProject(AddProjectViewModel accountViewModel)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, "account", "index.json");
             var allAccounts = await accountBlob.DownloadGenericObjectAsync();
-
+            string projectId = Guid.NewGuid().ToString().ToUpper();
             if (allAccounts == null)
             {
                 var obj = new JObject();
@@ -1331,7 +1332,7 @@ namespace WebUI.Services
                     {"name", accountViewModel.Name },
                     {"info",accountViewModel.Info }
                 };
-                obj.Add(Guid.NewGuid().ToString().ToUpper(), accountObj);
+                obj.Add(projectId, accountObj);
                 await accountBlob.UploadGenericObjectAsync(obj);
             }
             else
@@ -1341,9 +1342,10 @@ namespace WebUI.Services
                     {"name", accountViewModel.Name },
                     {"info",accountViewModel.Info }
                 };
-                allAccounts.Add(Guid.NewGuid().ToString().ToUpper(), Obj);
+                allAccounts.Add(projectId, Obj);
                 await accountBlob.UploadGenericObjectAsync(allAccounts);
             }
+            return projectId;
         }
 
         public static async Task UpdateProject(string convertProjectId,AddProjectViewModel accountViewModel)
@@ -1435,6 +1437,62 @@ namespace WebUI.Services
                 }
 
             }
+            var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
+            var accJson = await blob.DownloadGenericObjectAsync();
+            if (accJson == null)
+            {
+                await blob.UploadGenericObjectAsync(new JObject() { { "admin", new JArray { userIdList } } });
+            }
+            else
+            {
+                var accountsList = JsonUtils.GetJToken("admin", accJson) as JArray;
+                if (accountsList == null)
+                {
+                    accJson.Add("admin", new JArray { userIdList });
+                }
+                else
+                {
+                    foreach (var one in userIdList)
+                    {
+                        if (!Json.ContainsKey(one, accountsList))
+                        {
+                            accountsList.Add(one);
+                        }
+                    }
+                }
+                await blob.UploadGenericObjectAsync(accJson);
+            }
+
+            return null;
+        }
+        public static async Task<string> AddProjectManagerByUserId(string convertProjectId, string userId)
+        {
+            List<string> userIdList = new List<string>();
+            userIdList.Add(userId);
+            var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", WebUIConfig.membershipFile);
+            var json = await configBlob.DownloadGenericObjectAsync();
+            var accounts = JsonUtils.GetJToken("accounts", json) as JArray;
+            if (json == null)
+            {
+                await configBlob.UploadGenericObjectAsync(new JObject { { "accounts", new JArray { convertProjectId } } });
+            }
+            else
+            {
+                if (accounts == null)
+                {
+                    json.Add("accounts", new JArray() { convertProjectId });
+                    await configBlob.UploadGenericObjectAsync(json);
+                }
+                else
+                {
+                    if (!Json.ContainsKey(convertProjectId, accounts))
+                    {
+                        accounts.Add(convertProjectId);
+                        await configBlob.UploadGenericObjectAsync(json);
+                    }
+                }
+            }
+
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", WebUIConfig.membershipFile);
             var accJson = await blob.DownloadGenericObjectAsync();
             if (accJson == null)

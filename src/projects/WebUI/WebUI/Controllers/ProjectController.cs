@@ -72,7 +72,8 @@ namespace WebUI.Controllers
             //{
             //    return StatusCode(403);
             //}
-            await AzureService.AddProject(accountViewModel);
+            string projectId = await AzureService.AddProject(accountViewModel);
+            await AzureService.AddProjectManagerByUserId(projectId, userId);
             return Ok(new Response { Msg = "ok" });
         }
         /// <remarks>
