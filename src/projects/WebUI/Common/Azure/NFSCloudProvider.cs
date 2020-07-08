@@ -104,12 +104,10 @@ namespace WebUI.Azure
         public override void LinkPath(string dataPath)
         {
             string path = Path.Combine(_basePath, _directoryPath);
-            DirectoryInfo directory = new DirectoryInfo(path);
-            if (directory.Exists)
-            {
-                System.Console.WriteLine($"{path} exists! deleting!");
-                directory.Delete(true);
-            }
+            ProcessStartInfo startInfo2 = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"-c \"rm -rf {path}\"", };
+            Process proc2 = new Process() { StartInfo = startInfo2 };
+            proc2.Start();
+
             new DirectoryInfo(Path.GetDirectoryName(path)).Create();
             ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"-c \"ln -s {dataPath} {path}\"", };
             Process proc = new Process() { StartInfo = startInfo};
