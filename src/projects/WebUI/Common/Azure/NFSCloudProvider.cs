@@ -104,7 +104,7 @@ namespace WebUI.Azure
         public override void LinkPath(string dataPath)
         {
             string path = Path.Combine(_basePath, _directoryPath);
-            ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"ln -s {dataPath} {path}", };
+            ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"-c \"ln -s {dataPath} {path}\"", };
             Process proc = new Process() { StartInfo = startInfo, };
             proc.Start();
         }
