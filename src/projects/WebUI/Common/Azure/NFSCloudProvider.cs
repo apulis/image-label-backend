@@ -107,7 +107,8 @@ namespace WebUI.Azure
             DirectoryInfo directory = new DirectoryInfo(path);
             if (directory.Exists)
             {
-                directory.Delete(false);
+                System.Console.WriteLine($"{path} exists! deleting!");
+                directory.Delete(true);
             }
             new DirectoryInfo(Path.GetDirectoryName(path)).Create();
             ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"-c \"ln -s {dataPath} {path}\"", };
