@@ -1040,6 +1040,7 @@ namespace WebUI.Services
                 obj["dataSetPath"] = dataSetViewModel.dataSetPath;
                 await accountBlob.UploadGenericObjectAsync(json);
                 await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.Labels);
+                await LinkDataset(dataSetViewModel.dataSetPath, convertDataSetId);
             }
         }
 
