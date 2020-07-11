@@ -927,7 +927,9 @@ namespace WebUI.Services
                             Info = oneAccount.Value["info"].ToString(),
                             Type = oneAccount.Value["type"].ToString(),
                             Role = "admin",
-                            Labels = labels
+                            Labels = labels,
+                            dataSetBindId = oneAccount.Value["dataSetBindId"].ToString(),
+                            dataSetPath = oneAccount.Value["dataSetPath"].ToString()
                         });
                     }
                 }
@@ -954,7 +956,9 @@ namespace WebUI.Services
                                 Info = infoObj["info"].ToString(),
                                 Type = infoObj["type"].ToString(),
                                 Role = "labeler",
-                                Labels = labels
+                                Labels = labels,
+                                dataSetBindId = infoObj["dataSetBindId"].ToString(),
+                                dataSetPath = infoObj["dataSetPath"].ToString()
                             });
                         }
                     }

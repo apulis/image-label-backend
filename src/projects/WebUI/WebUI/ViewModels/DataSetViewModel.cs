@@ -13,6 +13,8 @@ namespace WebUI.ViewModels
         public string Info { get; set; }
         public string Type { get; set; }
         public string Role { get; set; }
+        public string dataSetBindId { get; set; }
+        public string dataSetPath { get; set; }
         public List<AddLabelViewModel> Labels { get; set; }
     }
 }
