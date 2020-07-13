@@ -17,7 +17,6 @@ namespace WebUI.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["SecurityKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-                expires: DateTime.Now.AddDays(1),
                 signingCredentials: creds);
             token.Payload["uid"] = int.Parse(userId);
             var tokenGenerate = new JwtSecurityTokenHandler().WriteToken(token);

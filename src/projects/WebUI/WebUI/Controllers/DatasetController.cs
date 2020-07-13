@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Utils;
@@ -120,9 +121,11 @@ namespace WebUI.Controllers
         /// <param name="projectId">project的GUid</param>
         /// <param name="dataSetId">将要删除dataset的GUid</param>
         [HttpDelete]
-        public async Task<ActionResult<Response>> RemoveDataSet(Guid projectId,[FromBody] Guid dataSetId)
+        public async Task<ActionResult<Response>> RemoveDataSet(Guid projectId,[FromBody]Guid dataSetId)
         {
             var convertProjectId = projectId.ToString().ToUpper();
+            var reader = new StreamReader(Request.Body);
+            var body = reader.ReadToEnd();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(currentUserId);
