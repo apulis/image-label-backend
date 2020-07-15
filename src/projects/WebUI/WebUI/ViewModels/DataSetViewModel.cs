@@ -9,12 +9,14 @@ namespace WebUI.ViewModels
     public class DatasetViewModel
     {
         public string dataSetId { get; set; }
-        public string Name { get; set; }
-        public string Info { get; set; }
-        public string Type { get; set; }
-        public string Role { get; set; }
+        public string name { get; set; }
+        public string info { get; set; }
+        public string type { get; set; }
+        public string role { get; set; }
         public string dataSetBindId { get; set; }
         public string dataSetPath { get; set; }
-        public List<AddLabelViewModel> Labels { get; set; }
+        public string convertStatus { get; set; }
+        public string convertOutPath { get; set; }
+        public List<AddLabelViewModel> labels { get; set; }
     }
 }

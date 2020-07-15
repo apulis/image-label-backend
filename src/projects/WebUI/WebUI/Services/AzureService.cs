@@ -923,13 +923,15 @@ namespace WebUI.Services
                         datasetList.Add(new DatasetViewModel
                         {
                             dataSetId = oneAccount.Key,
-                            Name = oneAccount.Value["name"].ToString(),
-                            Info = oneAccount.Value["info"].ToString(),
-                            Type = oneAccount.Value["type"].ToString(),
-                            Role = "admin",
-                            Labels = labels,
+                            name = oneAccount.Value["name"].ToString(),
+                            info = oneAccount.Value["info"].ToString(),
+                            type = oneAccount.Value["type"].ToString(),
+                            role = "admin",
+                            labels = labels,
                             dataSetBindId = oneAccount.Value["dataSetBindId"].ToString(),
-                            dataSetPath = oneAccount.Value["dataSetPath"].ToString()
+                            dataSetPath = oneAccount.Value["dataSetPath"].ToString(),
+                            convertStatus = Json.GetJToken("convertStatus", oneAccount.Value) !=null?oneAccount.Value["convertStatus"].ToString():"",
+                            convertOutPath = Json.GetJToken("convertOutPath", oneAccount.Value) != null ? oneAccount.Value["convertOutPath"].ToString() : "",
                         });
                     }
                 }
@@ -952,13 +954,15 @@ namespace WebUI.Services
                             datasetList.Add(new DatasetViewModel
                             {
                                 dataSetId = datasetId.ToString(),
-                                Name = infoObj["name"].ToString(),
-                                Info = infoObj["info"].ToString(),
-                                Type = infoObj["type"].ToString(),
-                                Role = "labeler",
-                                Labels = labels,
+                                name = infoObj["name"].ToString(),
+                                info = infoObj["info"].ToString(),
+                                type = infoObj["type"].ToString(),
+                                role = "labeler",
+                                labels = labels,
                                 dataSetBindId = infoObj["dataSetBindId"].ToString(),
-                                dataSetPath = infoObj["dataSetPath"].ToString()
+                                dataSetPath = infoObj["dataSetPath"].ToString(),
+                                convertStatus = Json.GetJToken("convertStatus", infoObj) != null ? infoObj["convertStatus"].ToString() : "",
+                                convertOutPath = Json.GetJToken("convertOutPath", infoObj) != null ? infoObj["convertOutPath"].ToString() : "",
                             });
                         }
                     }
