@@ -688,10 +688,10 @@ namespace WebUI.Services
                         var keysList = projectObj.Properties().Select(p => p.Name).ToList();
                         if (taskId == null)
                         {
-                            return new JObject(){{"id", keysList[0] },{ "createTime",null },{ "updateTime",null } };
+                            return new JObject(){{"id", keysList[0] },{ "createTime",null },{ "updateTime",null },{"suffix",Json.GetJToken(keysList[0], projectObj)["suffix"] } };
                         }
                         var index = keysList.IndexOf(taskId);
-                        return new JObject() { { "id", keysList[index+1] }, { "createTime", null }, { "updateTime", null } };
+                        return new JObject() { { "id", keysList[index+1] }, { "createTime", null }, { "updateTime", null }, { "suffix", Json.GetJToken(keysList[index + 1], projectObj)["suffix"] } };
                     }
                     foreach (var pair in projectObj)
                     {
@@ -807,13 +807,16 @@ namespace WebUI.Services
             }
             JObject listJObject = new JObject();
             JArray idListArray = new JArray();
+            JArray suffixArray = new JArray();
             var dirBlob = GetDirBlob("cdn", "public", null, null, $"tasks/{dataSetId}/images");
             IEnumerable<string> allFiles = await dirBlob.ListBlobsSegmentedAsync();
             foreach (var oneFile in allFiles)
             {
                 idListArray.Add(Path.GetFileNameWithoutExtension(oneFile));
+                suffixArray.Add(Path.GetExtension(oneFile));
             }
             listJObject.Add("ImgIDs",idListArray);
+            listJObject.Add("suffixs", suffixArray);
             await blob.UploadGenericObjectAsync(listJObject);
         }
         public static async Task<JObject> GenerateCommitJsonFile(string projectId, string dataSetId)
@@ -827,14 +830,16 @@ namespace WebUI.Services
             var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}", "list.json");
             var json = await blob.DownloadGenericObjectAsync();
             var obj = JsonUtils.GetJToken("ImgIDs", json) as JArray;
+            var suffixArray = JsonUtils.GetJToken("suffixs", json) as JArray;
             if (obj == null)
             {
                 return null;
             }
             JObject idObj = new JObject();
+            var i = 0;
             foreach (var one in obj)
             {
-                idObj.Add(one.ToString(),new JObject(){{"status","normal"},{"userId",null}});
+                idObj.Add(one.ToString(),new JObject(){{"status","normal"},{"userId",null},{"suffix",suffixArray[i]} });
             }
             if (taskJson == null)
             {
@@ -1250,7 +1255,7 @@ namespace WebUI.Services
             {
                 foreach (var one in lockObj)
                 {
-                    adminTaskList.Add(new JObject() { { "id", one.Key }, { "status", one.Value["status"] }, { "userId", one.Value["userId"] } });
+                    adminTaskList.Add(new JObject() { { "id", one.Key }, { "status", one.Value["status"] }, { "userId", one.Value["userId"] },{"suffix",one.Value["suffix"]} });
                 }
             }
             return adminTaskList;
