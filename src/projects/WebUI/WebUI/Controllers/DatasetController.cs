@@ -39,6 +39,7 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
+            datasetList.Reverse();
             var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
             return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
         }
@@ -272,6 +273,24 @@ namespace WebUI.Controllers
             }
             JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId, taskId);
             return Ok(new Response().GetJObject("next", nextObj));
+        }
+        [HttpGet("{datasetId}/tasks/previous/{taskId}")]
+        public async Task<ActionResult<TaskViewModel>> GetPreviousTask(Guid projectId, Guid dataSetId, string taskId)
+        {
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+            var convertProjectId = projectId.ToString().ToUpper();
+            var convertDataSetId = dataSetId.ToString().ToUpper();
+            var role = await AzureService.FindUserRole(userId);
+            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            {
+                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                if (!has)
+                {
+                    return StatusCode(403);
+                }
+            }
+            JObject nextObj = await AzureService.getDatasetTaskPrevious(userId, convertProjectId, convertDataSetId, taskId);
+            return Ok(new Response().GetJObject("previous", nextObj));
         }
         /// <remarks>
         /// 获取详细标注信息annotations

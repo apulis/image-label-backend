@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
 using WebUI.Models;
+using WebUI.Parameters;
 using WebUI.Services;
 using WebUI.ViewModels;
 
@@ -33,8 +34,24 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
+            accounts.Reverse();
             var list = PageOps.GetPageRange(accounts, page, size, accounts.Count);
             return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));
+        }
+        [HttpGet("/api/listDatasets")]
+        public async Task<ActionResult<IEnumerable<DatasetViewModel>>> ListDatasets([FromQuery]QueryStringParameters parameters)
+        {
+            List<DatasetViewModel> datasetList = new List<DatasetViewModel>();
+            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+            List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
+            var role = await AzureService.FindUserRole(userId);
+            foreach (var one in accounts)
+            {
+                datasetList.AddRange(await AzureService.getDatasets(userId, one.ProjectId, role));
+            }
+            datasetList.Reverse();
+            var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
+            return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
         }
         /// <remarks>
         /// 删除一个project
