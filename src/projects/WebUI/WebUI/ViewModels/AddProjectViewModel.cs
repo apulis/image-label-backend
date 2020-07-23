@@ -12,5 +12,7 @@ namespace WebUI.ViewModels
         public string Name { get; set; }
         [Required]
         public string Info { get; set; }
+        [Required]
+        public string Creator { get; set; }
     }
 }

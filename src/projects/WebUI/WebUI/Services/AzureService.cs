@@ -1463,7 +1463,8 @@ namespace WebUI.Services
                 var accountObj = new JObject
                 {
                     {"name", accountViewModel.Name },
-                    {"info",accountViewModel.Info }
+                    {"info",accountViewModel.Info },
+                    {"creator",accountViewModel.Creator }
                 };
                 obj.Add(projectId, accountObj);
                 await accountBlob.UploadGenericObjectAsync(obj);
@@ -1473,7 +1474,8 @@ namespace WebUI.Services
                 var Obj = new JObject
                 {
                     {"name", accountViewModel.Name },
-                    {"info",accountViewModel.Info }
+                    {"info",accountViewModel.Info },
+                    {"creator",accountViewModel.Creator }
                 };
                 allAccounts.Add(projectId, Obj);
                 await accountBlob.UploadGenericObjectAsync(allAccounts);
