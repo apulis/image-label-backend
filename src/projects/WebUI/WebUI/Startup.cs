@@ -229,7 +229,7 @@ namespace WebUI
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             // https://stackoverflow.com/questions/43860128/asp-net-core-google-authentication/43878365
             var forwardedHeadersOptions = new ForwardedHeadersOptions
