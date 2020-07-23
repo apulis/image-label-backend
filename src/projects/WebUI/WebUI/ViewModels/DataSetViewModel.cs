@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -15,6 +16,7 @@ namespace WebUI.ViewModels
         public string role { get; set; }
         public string dataSetBindId { get; set; }
         public string dataSetPath { get; set; }
+        public bool isPrivate { get; set; }
         public string convertStatus { get; set; }
         public string convertOutPath { get; set; }
         public List<AddLabelViewModel> labels { get; set; }

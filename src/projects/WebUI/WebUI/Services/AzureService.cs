@@ -1012,6 +1012,7 @@ namespace WebUI.Services
                             labels = labels,
                             dataSetBindId = oneAccount.Value["dataSetBindId"].ToString(),
                             dataSetPath = oneAccount.Value["dataSetPath"].ToString(),
+                            isPrivate = oneAccount.Value["isPrivate"]!=null?oneAccount.Value["isPrivate"].ToObject<bool>():false,
                             convertStatus = Json.GetJToken("convertStatus", oneAccount.Value) !=null?oneAccount.Value["convertStatus"].ToString():"",
                             convertOutPath = Json.GetJToken("convertOutPath", oneAccount.Value) != null ? oneAccount.Value["convertOutPath"].ToString() : "",
                         });
@@ -1043,6 +1044,7 @@ namespace WebUI.Services
                                 labels = labels,
                                 dataSetBindId = infoObj["dataSetBindId"].ToString(),
                                 dataSetPath = infoObj["dataSetPath"].ToString(),
+                                isPrivate = infoObj["dataSetPath"]!=null?infoObj["dataSetPath"].ToObject<bool>():false,
                                 convertStatus = Json.GetJToken("convertStatus", infoObj) != null ? infoObj["convertStatus"].ToString() : "",
                                 convertOutPath = Json.GetJToken("convertOutPath", infoObj) != null ? infoObj["convertOutPath"].ToString() : "",
                             });
@@ -1073,6 +1075,7 @@ namespace WebUI.Services
             newObj.Add("info", dataSetViewModel.Info);
             newObj.Add("dataSetBindId", dataSetViewModel.dataSetBindId);
             newObj.Add("dataSetPath", dataSetViewModel.dataSetPath);
+            newObj.Add("isPrivate", dataSetViewModel.isPrivate);
             if (json == null)
             {
                 var obj = new JObject();
@@ -1126,11 +1129,11 @@ namespace WebUI.Services
                 obj["name"] = dataSetViewModel.Name;
                 obj["info"] = dataSetViewModel.Info;
                 obj["type"] = dataSetViewModel.Type;
-                obj["dataSetBindId"] = dataSetViewModel.dataSetBindId;
-                obj["dataSetPath"] = dataSetViewModel.dataSetPath;
+                //obj["dataSetBindId"] = dataSetViewModel.dataSetBindId;
+                //obj["dataSetPath"] = dataSetViewModel.dataSetPath;
                 await accountBlob.UploadGenericObjectAsync(json);
                 await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.Labels);
-                await LinkDataset(dataSetViewModel.dataSetPath, convertDataSetId);
+                //await LinkDataset(dataSetViewModel.dataSetPath, convertDataSetId);
             }
         }
 

@@ -19,6 +19,7 @@ namespace WebUI.ViewModels
         public string dataSetBindId { get; set; }
         [Required]
         public string dataSetPath { get; set; }
+        public bool isPrivate { get; set; }
 
         public List<AddLabelViewModel> Labels { get; set; }
 
