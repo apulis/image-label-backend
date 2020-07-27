@@ -1060,7 +1060,7 @@ namespace WebUI.Services
             var blob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDatasetId}/{convertProjectId}", "category.json");
             await blob.UploadGenericObjectAsync(new JObject(){{ "categories", labels!=null?JArray.FromObject(labels):new JArray()}});
         }
-        public static async Task AddDataset(string convertProjectId, AddDatasetViewModel dataSetViewModel)
+        public static async Task<string> AddDataset(string convertProjectId, AddDatasetViewModel dataSetViewModel)
         {
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
@@ -1099,6 +1099,7 @@ namespace WebUI.Services
             }
 
             await LinkDataset(dataSetViewModel.dataSetPath, dataSetId);
+            return dataSetId;
 
         }
         public static async Task LinkDataset(string dataPath, string convertDataSetId)
@@ -1137,8 +1138,9 @@ namespace WebUI.Services
             }
         }
 
-        public static async Task RemoveDataSet(string convertProjectId,string convertDataSetId)
+        public static async Task<string> RemoveDataSet(string convertProjectId,string convertDataSetId)
         {
+            string dataSetBindId = "";
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
@@ -1173,12 +1175,14 @@ namespace WebUI.Services
                                 }
                             }
                         }
+                        dataSetBindId = JsonUtils.GetJToken("dataSetBindId", obj).ToString();
                         AccountArray.Remove(oneclaim.Key);
                         await accountBlob.UploadGenericObjectAsync(json);
                         break;
                     }
                 }
             }
+            return dataSetBindId;
         }
 
         public static async Task<List<JObject>> GetDataSetUsers(string convertProjectId,string convertDataSetId)

@@ -40,6 +40,10 @@ namespace WebUI.Controllers
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
             datasetList.Reverse();
+            if (!string.IsNullOrWhiteSpace(parameters.name))
+            {
+                datasetList = datasetList.FindAll(p => p.name.Contains(parameters.name));
+            }
             var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
             return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
         }
@@ -64,8 +68,8 @@ namespace WebUI.Controllers
             {
                 return StatusCode(403);
             }
-            await AzureService.AddDataset(convertProjectId, dataSetViewModel);
-            return Ok(new Response { Msg = "ok" });
+            var datasetId = await AzureService.AddDataset(convertProjectId, dataSetViewModel);
+            return Ok(new Response().GetJObject("datasetId", datasetId));
         }
         /// <remarks>
         /// 查询一个特定的dataset详细信息
@@ -134,8 +138,8 @@ namespace WebUI.Controllers
             {
                 return StatusCode(403);
             }
-            await AzureService.RemoveDataSet(convertProjectId, convertDataSetId);
-            return Ok(new Response { Msg = "ok" });
+            var dataSetBindId = await AzureService.RemoveDataSet(convertProjectId, convertDataSetId);
+            return Ok(new Response().GetJObject("dataSetBindId", dataSetBindId));
         }
         /// <remarks>
         /// 获取project下特定数据集的标注用户列表

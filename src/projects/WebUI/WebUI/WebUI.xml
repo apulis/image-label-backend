@@ -190,7 +190,7 @@
             删除文件接口，需认证
             </summary>
         </member>
-        <member name="M:WebUI.Controllers.ProjectController.GetProjects(System.Int32,System.Int32)">
+        <member name="M:WebUI.Controllers.ProjectController.GetProjects(WebUI.Parameters.QueryStringParameters)">
             <remarks>
             获取当前用户的所属project列表
             返回List

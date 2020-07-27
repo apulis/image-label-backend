@@ -30,12 +30,16 @@ namespace WebUI.Controllers
         /// <param name="page">当前第几页，从1开始递增</param>
         /// <param name="size">每页的数量</param>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProjectViewModel>>> GetProjects([FromQuery]int page, [FromQuery]int size)
+        public async Task<ActionResult<IEnumerable<ProjectViewModel>>> GetProjects([FromQuery]QueryStringParameters parameters)
         {
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
             accounts.Reverse();
-            var list = PageOps.GetPageRange(accounts, page, size, accounts.Count);
+            if (!string.IsNullOrWhiteSpace(parameters.name))
+            {
+                accounts = accounts.FindAll(p => p.Name.Contains(parameters.name));
+            }
+            var list = PageOps.GetPageRange(accounts, parameters.page, parameters.size, accounts.Count);
             return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));
         }
         [HttpGet("/api/listDatasets")]
