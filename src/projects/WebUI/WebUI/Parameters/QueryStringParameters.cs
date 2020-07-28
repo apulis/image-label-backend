@@ -26,6 +26,9 @@ namespace WebUI.Parameters
         public float iou_end { get; set; }
 
         public string level { get; set; }
+        public string orderBy { get; set; }
+        public string order { get; set; }
         public string name { get; set; }
+
     }
 }

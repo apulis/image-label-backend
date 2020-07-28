@@ -34,11 +34,23 @@ namespace WebUI.Controllers
         {
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
-            accounts.Reverse();
+            if (!string.IsNullOrWhiteSpace(parameters.orderBy)&&parameters.orderBy=="name")
+            {
+                accounts = accounts.OrderBy(o => o.Name).ToList();
+                if (!string.IsNullOrWhiteSpace(parameters.order)&&parameters.order=="desc")
+                {
+                    accounts.Reverse();
+                }
+            }
+            else
+            {
+                accounts.Reverse();
+            }
             if (!string.IsNullOrWhiteSpace(parameters.name))
             {
                 accounts = accounts.FindAll(p => p.Name.Contains(parameters.name));
             }
+
             var list = PageOps.GetPageRange(accounts, parameters.page, parameters.size, accounts.Count);
             return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));
         }

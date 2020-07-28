@@ -39,7 +39,18 @@ namespace WebUI.Controllers
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
             List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
-            datasetList.Reverse();
+            if (!string.IsNullOrWhiteSpace(parameters.orderBy) && parameters.orderBy == "name")
+            {
+                datasetList = datasetList.OrderBy(o => o.name).ToList();
+                if (!string.IsNullOrWhiteSpace(parameters.order) && parameters.order == "desc")
+                {
+                    datasetList.Reverse();
+                }
+            }
+            else
+            {
+                datasetList.Reverse();
+            }
             if (!string.IsNullOrWhiteSpace(parameters.name))
             {
                 datasetList = datasetList.FindAll(p => p.name.Contains(parameters.name));
