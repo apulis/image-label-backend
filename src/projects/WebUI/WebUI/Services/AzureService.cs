@@ -691,7 +691,12 @@ namespace WebUI.Services
                             return new JObject(){{"id", keysList[0] },{ "createTime",null },{ "updateTime",null },{"suffix",Json.GetJToken(keysList[0], projectObj)["suffix"] } };
                         }
                         var index = keysList.IndexOf(taskId);
-                        return new JObject() { { "id", keysList[index+1] }, { "createTime", null }, { "updateTime", null }, { "suffix", Json.GetJToken(keysList[index + 1], projectObj)["suffix"] } };
+                        if (index != keysList.Count - 1)
+                        {
+                            return new JObject() { { "id", keysList[index + 1] }, { "createTime", null }, { "updateTime", null }, { "suffix", Json.GetJToken(keysList[index + 1], projectObj)["suffix"] } };
+                        }
+                        return null;
+
                     }
                     foreach (var pair in projectObj)
                     {
