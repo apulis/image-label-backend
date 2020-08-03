@@ -94,14 +94,14 @@ namespace WebUI.Controllers
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
-            {
-                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-                if (!res)
-                {
-                    return StatusCode(403);
-                }
-            }
+            //if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            //{
+            //    var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+            //    if (!res)
+            //    {
+            //        return StatusCode(403);
+            //    }
+            //}
             var obj = await AzureService.getDatasetInfo(convertProjectId, convertDataSetId);
             return Ok(new Response().GetJObject("info", obj));
         }
@@ -252,16 +252,16 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
-            {
-                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-                if (!res)
-                {
-                    return StatusCode(403);
-                }
-                var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
-                return Ok(new Response().GetJObject("taskList", taskList));
-            }
+            //if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            //{
+            //    var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+            //    if (!res)
+            //    {
+            //        return StatusCode(403);
+            //    }
+            //    var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
+            //    return Ok(new Response().GetJObject("taskList", taskList));
+            //}
             var adminTaskList = await AzureService.getTasks(convertProjectId, convertDataSetId);
             var list = PageOps.GetPageRange(adminTaskList, parameters.page, parameters.size, adminTaskList.Count);
             return Ok(new Response().GetJObject("taskList", list, "totalCount", adminTaskList.Count));
@@ -278,14 +278,14 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
-            {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
-                if (!has)
-                {
-                    return StatusCode(403);
-                }
-            }
+            //if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            //{
+            //    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+            //    if (!has)
+            //    {
+            //        return StatusCode(403);
+            //    }
+            //}
             JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId, taskId);
             return Ok(new Response().GetJObject("next", nextObj));
         }
@@ -296,14 +296,14 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
-            {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
-                if (!has)
-                {
-                    return StatusCode(403);
-                }
-            }
+            //if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            //{
+            //    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+            //    if (!has)
+            //    {
+            //        return StatusCode(403);
+            //    }
+            //}
             JObject nextObj = await AzureService.getDatasetTaskPrevious(userId, convertProjectId, convertDataSetId, taskId);
             return Ok(new Response().GetJObject("previous", nextObj));
         }
@@ -320,14 +320,14 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
-            {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId,taskId);
-                if (!has)
-                {
-                    return StatusCode(403);
-                }
-            }
+            //if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            //{
+            //    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId,taskId);
+            //    if (!has)
+            //    {
+            //        return StatusCode(403);
+            //    }
+            //}
             var projectObj = await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId);
             return Ok(new Response().GetJObject("annotations", projectObj));
         }
@@ -345,14 +345,14 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
-            {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId,taskId);
-                if (!has)
-                {
-                    return StatusCode(403);
-                }
-            }
+            //if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            //{
+            //    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId,taskId);
+            //    if (!has)
+            //    {
+            //        return StatusCode(403);
+            //    }
+            //}
             await AzureService.PostOneTask(convertProjectId, convertDataSetId, taskId, userId, role, value);
             return Content(new Response {Msg = "ok"}.JObjectToString());
         }

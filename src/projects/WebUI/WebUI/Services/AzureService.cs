@@ -461,7 +461,7 @@ namespace WebUI.Services
             await taskBlob.UploadGenericObjectAsync(taskJson);
         }
 
-        public static bool IsAdmin(JObject jObject)
+        public static string ParseRole(JObject jObject)
         {
             if (!Object.ReferenceEquals(Json.GetJToken("currentRole", jObject), null))
             {
@@ -470,11 +470,16 @@ namespace WebUI.Services
                 {
                     if (one.ToString() == "System Admin")
                     {
-                        return true;
+                        return "admin";
+                    }
+                    else if (one.ToString() == "LABELING_IMAGE")
+                    {
+                        return "labeler";
                     }
                 }
             }
-            return false;
+
+            return "user";
         }
         public static async Task<string> FindUserRole(string userId)
         {
@@ -484,7 +489,7 @@ namespace WebUI.Services
             string token = JwtService.GenerateToken(userId);
             JObject resJObject = JObject.Parse(await Requests.Get(baseUrl + "/auth/currentUser",
                 new Dictionary<string, string>() { ["Authorization"] = $"Bearer {token}" }));
-            return AzureService.IsAdmin(resJObject) ? "admin" : "user";
+            return AzureService.ParseRole(resJObject);
 
             var taskBlob = AzureService.GetBlob("cdn", "private", null, null, "user", "role.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
@@ -573,10 +578,9 @@ namespace WebUI.Services
                 foreach (var oneAccount in allAccounts)
                 {
                     var oneObj = oneAccount.Value as JObject;
-                    if (role == "admin")
+                    if (role == "admin" || true)
                     {
-                        accounts.Add(new ProjectViewModel
-                            { ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "admin" });
+                        accounts.Add(new ProjectViewModel{ ProjectId = oneAccount.Key, Name = oneObj["name"].ToString(), Info = oneObj["info"].ToString(), Role = "admin" });
                     }
                     else
                     {
@@ -1026,6 +1030,35 @@ namespace WebUI.Services
             }
             else
             {
+                var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
+                var accJson = await accountBlob.DownloadGenericObjectAsync();
+                var allAccounts = Json.GetJToken("dataSets", accJson) as JObject;
+                if (allAccounts != null)
+                {
+                    foreach (var oneAccount in allAccounts)
+                    {
+                        List<AddLabelViewModel> labels = new List<AddLabelViewModel>();
+                        labels = await FindDatasetCategoryIds(convertProjectId, oneAccount.Key);
+                        bool isPrivate = oneAccount.Value["isPrivate"] != null? oneAccount.Value["isPrivate"].ToObject<bool>(): false;
+                        if (!isPrivate)
+                        {
+                            datasetList.Add(new DatasetViewModel
+                            {
+                                dataSetId = oneAccount.Key,
+                                name = oneAccount.Value["name"].ToString(),
+                                info = oneAccount.Value["info"].ToString(),
+                                type = oneAccount.Value["type"].ToString(),
+                                role = "admin",
+                                labels = labels,
+                                dataSetBindId = oneAccount.Value["dataSetBindId"].ToString(),
+                                dataSetPath = oneAccount.Value["dataSetPath"].ToString(),
+                                isPrivate = isPrivate,
+                                convertStatus = Json.GetJToken("convertStatus", oneAccount.Value) != null ? oneAccount.Value["convertStatus"].ToString() : "",
+                                convertOutPath = Json.GetJToken("convertOutPath", oneAccount.Value) != null ? oneAccount.Value["convertOutPath"].ToString() : "",
+                            });
+                        }
+                    }
+                }
                 var configBlob = AzureService.GetBlob("cdn", "private", null, null, $"user/{userId}", WebUIConfig.membershipFile);
                 var json = await configBlob.DownloadGenericObjectAsync();
                 var accounts = JsonUtils.GetJToken("dataSets", json) as JObject;
@@ -1104,6 +1137,7 @@ namespace WebUI.Services
             }
 
             await LinkDataset(dataSetViewModel.dataSetPath, dataSetId);
+            await GenerateListJsonFile(convertProjectId, dataSetId);
             return dataSetId;
 
         }
