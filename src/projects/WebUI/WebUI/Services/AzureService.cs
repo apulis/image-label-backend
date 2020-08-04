@@ -468,7 +468,7 @@ namespace WebUI.Services
                 JArray roleList = Json.GetJToken("currentRole", jObject) as JArray;
                 foreach (var one in roleList)
                 {
-                    if (one.ToString() == "管理员")
+                    if (one.ToString() == "管理员" || one.ToString() == "System Admin")
                     {
                         return "admin";
                     }
