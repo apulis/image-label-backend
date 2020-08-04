@@ -1139,7 +1139,6 @@ namespace WebUI.Services
                 await AddDatasetLabels(convertProjectId, dataSetId, dataSetViewModel.Labels);
             }
             await LinkDataset(dataSetViewModel.dataSetPath, dataSetId);
-            System.Console.WriteLine("here");
             await GenerateListJsonFile(convertProjectId, dataSetId);
             return dataSetId;
         }
