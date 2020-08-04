@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -81,6 +82,10 @@ namespace WebUI.Azure
         public override BlockBlob GetBlockBlobReference(string path)
         {
             return new REMOTEBlockBlob(_baseUri.Combine(_directoryPath,path), _token);
+        }
+        public override void LinkPath(string dataPath)
+        {
+            var path = _baseUri.Combine(_directoryPath);
         }
     }
 

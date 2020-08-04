@@ -108,6 +108,7 @@ namespace WebUI.Azure
             ProcessStartInfo startInfo = new ProcessStartInfo() { FileName = "/bin/bash", Arguments = $"-c \"rm -rf {path} && ln -s {dataPath} {path}\"", };
             Process proc = new Process() { StartInfo = startInfo};
             proc.Start();
+            proc.WaitForExit();
         }
     }
 
