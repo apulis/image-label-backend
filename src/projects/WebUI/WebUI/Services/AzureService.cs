@@ -1154,7 +1154,11 @@ namespace WebUI.Services
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
             var obj = JsonUtils.GetJToken(convertDataSetId, allAccounts) as JObject;
-            obj["labels"] = JToken.FromObject(await FindDatasetCategoryIds(convertProjectId, convertDataSetId));
+            var labels = await FindDatasetCategoryIds(convertProjectId, convertDataSetId);
+            if (obj!=null)
+            {
+                obj["labels"] = labels.Count != 0 ? JToken.FromObject(labels) : null;
+            }
             return obj;
         }
 
