@@ -468,17 +468,20 @@ namespace WebUI.Services
                 JArray roleList = Json.GetJToken("currentRole", jObject) as JArray;
                 foreach (var one in roleList)
                 {
-                    if (one.ToString() == "System Admin")
+                    if (one.ToString() == "管理员")
                     {
                         return "admin";
                     }
-                    else if (one.ToString() == "LABELING_IMAGE")
+                }
+                JArray pmList = Json.GetJToken("permissionList", jObject) as JArray;
+                foreach (var one in pmList)
+                {
+                    if (one.ToString() == "LABELING_IMAGE")
                     {
                         return "labeler";
                     }
                 }
             }
-
             return "user";
         }
         public static async Task<string> FindUserRole(string userId)
