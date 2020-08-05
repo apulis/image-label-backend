@@ -850,7 +850,7 @@ namespace WebUI.Services
                 return false;
             }
             var status = JsonUtils.GetJToken("status", taskObj).ToString();
-            if (status != "normal" || role=="admin")
+            if (status != "normal" || role=="admin" || role=="labeler")
             {
                 taskObj["status"] = "commited";
                 taskObj["userId"] = userId;
