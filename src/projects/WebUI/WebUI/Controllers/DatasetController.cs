@@ -361,7 +361,6 @@ namespace WebUI.Controllers
                     return StatusCode(403);
                 }
             }
-            return StatusCode(403);
             await AzureService.PostOneTask(convertProjectId, convertDataSetId, taskId, userId, role, value);
             return Content(new Response {Msg = "ok"}.JObjectToString());
         }
