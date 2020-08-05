@@ -12,19 +12,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Serilog.Core;
 using Utils.Json;
 using WebUI.Azure;
 using WebUI.Models;
 using WebUI.Parameters;
 using WebUI.ViewModels;
+using Constants = WebUI.Models.Constants;
 
 namespace WebUI.Services
 {
     public class AzureService
     {
-
         public static BlockBlob GetBlob(string location,string dirpath,string blobPath)
         {
             var container = CloudStorage.GetContainer(location);
@@ -492,8 +494,9 @@ namespace WebUI.Services
             string token = JwtService.GenerateToken(userId);
             JObject resJObject = JObject.Parse(await Requests.Get(baseUrl + "/auth/currentUser",
                 new Dictionary<string, string>() { ["Authorization"] = $"Bearer {token}" }));
-            return AzureService.ParseRole(resJObject);
-
+            var role = AzureService.ParseRole(resJObject);
+            System.Console.WriteLine(role);
+            return role;
             var taskBlob = AzureService.GetBlob("cdn", "private", null, null, "user", "role.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
             if (!Object.ReferenceEquals(taskJson, null))
