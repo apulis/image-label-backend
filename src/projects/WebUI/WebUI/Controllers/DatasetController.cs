@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Utils.Json;
@@ -25,6 +26,11 @@ namespace WebUI.Controllers
     [ApiController]
     public class DatasetController:ControllerBase
     {
+        private readonly ILogger _logger;
+        public DatasetController(ILoggerFactory logger)
+        {
+            _logger = logger.CreateLogger("DatasetController");
+        }
         /// <remarks>
         /// 获取当前用户的projectId对应的project下的所属数据集
         /// 返回List,数据集列表
@@ -346,6 +352,7 @@ namespace WebUI.Controllers
             var convertProjectId = projectId.ToString().ToUpper();
             var convertDataSetId = dataSetId.ToString().ToUpper();
             var role = await AzureService.FindUserRole(userId);
+            _logger.LogInformation($"get role {role}");
             if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
             {
                 var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);

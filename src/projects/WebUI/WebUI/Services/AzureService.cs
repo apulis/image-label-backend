@@ -495,7 +495,6 @@ namespace WebUI.Services
             JObject resJObject = JObject.Parse(await Requests.Get(baseUrl + "/auth/currentUser",
                 new Dictionary<string, string>() { ["Authorization"] = $"Bearer {token}" }));
             var role = AzureService.ParseRole(resJObject);
-            System.Console.WriteLine(role);
             return role;
             var taskBlob = AzureService.GetBlob("cdn", "private", null, null, "user", "role.json");
             var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
