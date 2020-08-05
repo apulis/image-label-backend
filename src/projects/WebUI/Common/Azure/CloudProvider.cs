@@ -346,9 +346,10 @@ namespace WebUI.Azure
         public String StorageProvider = "";
         public static void Setup(ILogger logger)
         {
-
             var localConfigFile = WebUIConfig.GetConfigFile(WebUIConfig.LocalConfigFile);
+            var appConfigFile = WebUIConfig.GetAppsettingFile();
             var config = Json.Read(localConfigFile);
+            var appConfig = Json.Read(appConfigFile);
             Current.Location = JsonUtils.GetString("region", config);
             Current.Cluster = JsonUtils.GetString("cluster", config);
             Current.FQDN = JsonUtils.GetString("fqdn", config);
@@ -369,7 +370,15 @@ namespace WebUI.Azure
             {
                 Current.FQDN = "localhost";
             }
-            Current.StorageProvider = JsonUtils.GetString(Constant.JsontagStorageProvider, config);
+
+            if (JsonUtils.GetString(Constant.JsontagStorageProvider, appConfig)!="")
+            {
+                Current.StorageProvider = JsonUtils.GetString(Constant.JsontagStorageProvider, appConfig);
+            }
+            else
+            {
+                Current.StorageProvider = JsonUtils.GetString(Constant.JsontagStorageProvider, config);
+            }
             CloudProviderSetting.Current.Setup(logger);
         }
     }

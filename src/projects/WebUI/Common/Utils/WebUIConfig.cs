@@ -38,6 +38,11 @@ namespace WebUI.Models
             Console.WriteLine($"Config file ... ${file}");
             return file; 
         }
-
+        public static string GetAppsettingFile()
+        {
+            var file = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+            Console.WriteLine($"Config file ... ${file}");
+            return file;
+        }
     }
 }
