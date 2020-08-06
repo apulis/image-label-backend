@@ -87,6 +87,14 @@ namespace WebUI.Azure
         {
             var path = _baseUri.Combine(_directoryPath);
         }
+        public override async Task<IEnumerable<string>> ListBlobsSegmentedAsync()
+        {
+            //DirectoryInfo dir = new DirectoryInfo(Path.Combine(_basePath, _directoryPath));
+            var path = _baseUri.Combine(_directoryPath);
+            Dictionary<string, string> headerDictionary = new Dictionary<string, string>() { ["Authorization"] = $"Bearer { _token}" };
+            var s = await Requests.Put(path.ToString(), headerDictionary);
+            return new List<string>();
+        }
     }
 
     public class REMOTEBlockBlob : BlockBlob

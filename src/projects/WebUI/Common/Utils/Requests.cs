@@ -91,6 +91,24 @@ namespace Common.Utils
             }
             return result;
         }
+        public static async Task<string> Put(string url,Dictionary<string, string> headerDictionary)
+        {
+            string result = "";
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.Method = "PUT";
+            foreach (var one in headerDictionary)
+            {
+                req.Headers[one.Key] = one.Value;
+            }
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+            Stream stream = resp.GetResponseStream();
+            //获取响应内容
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                result = reader.ReadToEnd();
+            }
+            return result;
+        }
         public static async Task<string> Delete(string url, Stream sourceStream, Dictionary<string, string> headerDictionary)
         {
             string result = "";

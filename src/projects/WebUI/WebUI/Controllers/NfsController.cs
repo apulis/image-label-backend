@@ -160,5 +160,22 @@ namespace WebUI.Controllers
                 return StatusCode(500,ex);
             }
         }
+        [HttpPut("/api/nfs2/{*path}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> ListAllFile(string path)
+        {
+            try
+            {
+                var container = CloudStorage.GetContainer("cdn", path.Split("/", 2)[0], null, null);
+                var directory = container.GetDirectoryReference(path.Split("/", 2)[1]);
+                var files =await directory.ListBlobsSegmentedAsync();
+                return Ok(files);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"get path {path} exception: {ex}");
+                return StatusCode(404, ex);
+            }
+        }
     }
 }
