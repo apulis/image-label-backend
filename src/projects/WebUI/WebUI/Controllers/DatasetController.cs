@@ -119,7 +119,7 @@ namespace WebUI.Controllers
         /// <param name="dataSetId">dataSetId的GUid</param>
         /// <param name="dataSetViewModel">新的name\info\type\labels字段,json格式</param>
         [HttpPatch("{dataSetId}")]
-        public async Task<ActionResult<Response>> UpdateDataset(Guid projectId, Guid dataSetId, [FromBody]AddDatasetViewModel dataSetViewModel)
+        public async Task<ActionResult<Response>> UpdateDataset(Guid projectId, Guid dataSetId, [FromBody]DatasetViewModel dataSetViewModel)
         {
             if (!ModelState.IsValid)
             {

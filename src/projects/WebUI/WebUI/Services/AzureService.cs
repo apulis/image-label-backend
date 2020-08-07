@@ -1171,7 +1171,7 @@ namespace WebUI.Services
             return obj;
         }
 
-        public static async Task UpdateDataset(string convertProjectId,string convertDataSetId, AddDatasetViewModel dataSetViewModel)
+        public static async Task UpdateDataset(string convertProjectId,string convertDataSetId, DatasetViewModel dataSetViewModel)
         {
             var canUpdateFieldList = new List<string>(){"name","info","type", "convertStatus", "convertOutPath"};
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
@@ -1192,7 +1192,7 @@ namespace WebUI.Services
                     }
                 }
                 await accountBlob.UploadGenericObjectAsync(json);
-                await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.Labels);
+                await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.labels);
                 //await LinkDataset(dataSetViewModel.dataSetPath, convertDataSetId);
             }
         }
