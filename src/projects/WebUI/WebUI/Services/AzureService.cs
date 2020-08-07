@@ -936,6 +936,7 @@ namespace WebUI.Services
             foreach (var one in obj)
             {
                 idObj.Add(one.ToString(),new JObject(){{"status","normal"},{"userId",null},{"suffix",suffixArray[i]} });
+                i += 1;
             }
             if (taskJson == null)
             {

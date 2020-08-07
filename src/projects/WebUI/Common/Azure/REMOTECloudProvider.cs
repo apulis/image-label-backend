@@ -95,7 +95,7 @@ namespace WebUI.Azure
             var path = _baseUri.Combine(_directoryPath);
             Dictionary<string, string> headerDictionary = new Dictionary<string, string>() { ["Authorization"] = $"Bearer { _token}" };
             var s = await Requests.Put(path.ToString(), headerDictionary);
-            return new List<string>();
+            return JArray.Parse(s).ToObject<List<string>>();
         }
     }
 
