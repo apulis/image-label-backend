@@ -86,6 +86,8 @@ namespace WebUI.Azure
         public override void LinkPath(string dataPath)
         {
             var path = _baseUri.Combine(_directoryPath);
+            Dictionary<string, string> headerDictionary = new Dictionary<string, string>() { ["Authorization"] = $"Bearer { _token}" };
+            Requests.Patch(path.ToString()+ $"?linkPath={dataPath}", headerDictionary);
         }
         public override async Task<IEnumerable<string>> ListBlobsSegmentedAsync()
         {

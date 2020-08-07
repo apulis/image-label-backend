@@ -177,5 +177,22 @@ namespace WebUI.Controllers
                 return StatusCode(404, ex);
             }
         }
+        [HttpPatch("/api/nfs2/{*path}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> exec([FromRoute]string path,[FromQuery]string linkPath)
+        {
+            try
+            {
+                var container = CloudStorage.GetContainer("cdn", path.Split("/", 2)[0], null, null);
+                var directory = container.GetDirectoryReference(path.Split("/", 2)[1]);
+                directory.LinkPath(linkPath);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"get path {path} exception: {ex}");
+                return StatusCode(404, ex);
+            }
+        }
     }
 }
