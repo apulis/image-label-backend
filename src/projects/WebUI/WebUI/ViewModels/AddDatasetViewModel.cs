@@ -10,16 +10,18 @@ namespace WebUI.ViewModels
     {
         public Guid dataSetId { get; set; }
         [Required]
-        public string Name { get; set; }
+        public string name { get; set; }
         [Required]
-        public string Info { get; set; }
+        public string info { get; set; }
         [Required]
-        public string Type { get; set; }
+        public string type { get; set; }
         [Required]
         public string dataSetBindId { get; set; }
         [Required]
         public string dataSetPath { get; set; }
         public bool isPrivate { get; set; }
+        public string convertStatus { get; set; }
+        public string convertOutPath { get; set; }
 
         public List<AddLabelViewModel> Labels { get; set; }
 

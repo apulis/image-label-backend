@@ -1119,9 +1119,9 @@ namespace WebUI.Services
                 dataSetId = Guid.NewGuid().ToString().ToUpper();
             }
             var newObj = new JObject();
-            newObj.Add("name", dataSetViewModel.Name);
-            newObj.Add("type", dataSetViewModel.Type);
-            newObj.Add("info", dataSetViewModel.Info);
+            newObj.Add("name", dataSetViewModel.name);
+            newObj.Add("type", dataSetViewModel.type);
+            newObj.Add("info", dataSetViewModel.info);
             newObj.Add("dataSetBindId", dataSetViewModel.dataSetBindId);
             newObj.Add("dataSetPath", dataSetViewModel.dataSetPath);
             newObj.Add("isPrivate", dataSetViewModel.isPrivate);
@@ -1173,17 +1173,24 @@ namespace WebUI.Services
 
         public static async Task UpdateDataset(string convertProjectId,string convertDataSetId, AddDatasetViewModel dataSetViewModel)
         {
+            var canUpdateFieldList = new List<string>(){"name","info","type", "convertStatus", "convertOutPath"};
             var accountBlob = AzureService.GetBlob("cdn", "private", null, null, $"account/{convertProjectId}", "membership.json");
             var json = await accountBlob.DownloadGenericObjectAsync();
             var allAccounts = JsonUtils.GetJToken("dataSets", json);
             var obj = JsonUtils.GetJToken(convertDataSetId, allAccounts) as JObject;
             if (obj != null)
             {
-                obj["name"] = dataSetViewModel.Name;
-                obj["info"] = dataSetViewModel.Info;
-                obj["type"] = dataSetViewModel.Type;
-                //obj["dataSetBindId"] = dataSetViewModel.dataSetBindId;
-                //obj["dataSetPath"] = dataSetViewModel.dataSetPath;
+                foreach (var pinfo in dataSetViewModel.GetType().GetProperties())
+                {
+                    if (canUpdateFieldList.Contains(pinfo.Name))
+                    {
+                        var value = pinfo.GetValue(dataSetViewModel, null);
+                        if (value != null)
+                        {
+                            obj[pinfo.Name] = JToken.FromObject(value);
+                        }
+                    }
+                }
                 await accountBlob.UploadGenericObjectAsync(json);
                 await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.Labels);
                 //await LinkDataset(dataSetViewModel.dataSetPath, convertDataSetId);
