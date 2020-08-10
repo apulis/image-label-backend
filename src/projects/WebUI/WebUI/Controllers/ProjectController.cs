@@ -32,42 +32,57 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectViewModel>>> GetProjects([FromQuery]QueryStringParameters parameters)
         {
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
-            if (!string.IsNullOrWhiteSpace(parameters.orderBy)&&parameters.orderBy=="name")
+            try
             {
-                accounts = accounts.OrderBy(o => o.Name).ToList();
-                if (!string.IsNullOrWhiteSpace(parameters.order)&&parameters.order=="desc")
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
+                if (!string.IsNullOrWhiteSpace(parameters.orderBy) && parameters.orderBy == "name")
+                {
+                    accounts = accounts.OrderBy(o => o.Name).ToList();
+                    if (!string.IsNullOrWhiteSpace(parameters.order) && parameters.order == "desc")
+                    {
+                        accounts.Reverse();
+                    }
+                }
+                else
                 {
                     accounts.Reverse();
                 }
+                if (!string.IsNullOrWhiteSpace(parameters.name))
+                {
+                    accounts = accounts.FindAll(p => p.Name.Contains(parameters.name));
+                }
+
+                var list = PageOps.GetPageRange(accounts, parameters.page, parameters.size, accounts.Count);
+                return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));
             }
-            else
+            catch (Exception ex)
             {
-                accounts.Reverse();
-            }
-            if (!string.IsNullOrWhiteSpace(parameters.name))
-            {
-                accounts = accounts.FindAll(p => p.Name.Contains(parameters.name));
+                return StatusCode(500, ex.Message);
             }
 
-            var list = PageOps.GetPageRange(accounts, parameters.page, parameters.size, accounts.Count);
-            return Ok(new Response().GetJObject("projects", list, "totalCount", accounts.Count));
         }
         [HttpGet("/api/listDatasets")]
         public async Task<ActionResult<IEnumerable<DatasetViewModel>>> ListDatasets([FromQuery]QueryStringParameters parameters)
         {
-            List<DatasetViewModel> datasetList = new List<DatasetViewModel>();
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
-            var role = await AzureService.FindUserRole(userId);
-            foreach (var one in accounts)
+            try
             {
-                datasetList.AddRange(await AzureService.getDatasets(userId, one.ProjectId, role));
+                List<DatasetViewModel> datasetList = new List<DatasetViewModel>();
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                List<ProjectViewModel> accounts = await AzureService.FindUserRoleDetail(userId);
+                var role = await AzureService.FindUserRole(userId);
+                foreach (var one in accounts)
+                {
+                    datasetList.AddRange(await AzureService.getDatasets(userId, one.ProjectId, role));
+                }
+                datasetList.Reverse();
+                var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
+                return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
             }
-            datasetList.Reverse();
-            var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
-            return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 删除一个project
@@ -77,15 +92,22 @@ namespace WebUI.Controllers
         [HttpDelete("{projectId}")]
         public async Task<ActionResult<Response>> DeleteProject(Guid projectId)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin")
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin")
+                {
+                    return StatusCode(403);
+                }
+                var str = await AzureService.DeleteProject(convertProjectId, HttpContext.Session);
+                return Ok(new Response { Msg = str ?? "" });
             }
-            var str = await AzureService.DeleteProject(convertProjectId, HttpContext.Session);
-            return Ok(new Response { Msg = str??"" });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 添加一个project
@@ -99,15 +121,23 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response{Successful = "true",Msg=ModelState.Values.ToString(),Data= null });
             }
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(userId);
-            //if (role != "admin")
-            //{
-            //    return StatusCode(403);
-            //}
-            string projectId = await AzureService.AddProject(accountViewModel);
-            await AzureService.AddProjectManagerByUserId(projectId, userId);
-            return Ok(new Response { Msg = "ok" });
+
+            try
+            {
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(userId);
+                //if (role != "admin")
+                //{
+                //    return StatusCode(403);
+                //}
+                string projectId = await AzureService.AddProject(accountViewModel);
+                await AzureService.AddProjectManagerByUserId(projectId, userId);
+                return Ok(new Response { Msg = "ok" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 修改一个特定的project
@@ -122,15 +152,23 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
-            var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin")
+
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin")
+                {
+                    return StatusCode(403);
+                }
+                await AzureService.UpdateProject(convertProjectId, accountViewModel);
+                return Ok(new Response { Msg = "ok" });
             }
-            await AzureService.UpdateProject(convertProjectId, accountViewModel);
-            return Ok(new Response { Msg = "ok" });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 获取指定的project的项目管理员列表

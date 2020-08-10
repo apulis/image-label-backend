@@ -41,28 +41,38 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DatasetViewModel>>> GetDatasets(Guid projectId, [FromQuery]QueryStringParameters parameters)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(userId);
-            List<DatasetViewModel> datasetList =await AzureService.getDatasets(userId, convertProjectId, role);
-            if (!string.IsNullOrWhiteSpace(parameters.orderBy) && parameters.orderBy == "name")
+            try
             {
-                datasetList = datasetList.OrderBy(o => o.name).ToList();
-                if (!string.IsNullOrWhiteSpace(parameters.order) && parameters.order == "desc")
+                var convertProjectId = projectId.ToString().ToUpper();
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(userId);
+                List<DatasetViewModel> datasetList = await AzureService.getDatasets(userId, convertProjectId, role);
+                if (!string.IsNullOrWhiteSpace(parameters.orderBy) && parameters.orderBy == "name")
+                {
+                    datasetList = datasetList.OrderBy(o => o.name).ToList();
+                    if (!string.IsNullOrWhiteSpace(parameters.order) && parameters.order == "desc")
+                    {
+                        datasetList.Reverse();
+                    }
+                }
+                else
                 {
                     datasetList.Reverse();
                 }
+
+                if (!string.IsNullOrWhiteSpace(parameters.name))
+                {
+                    datasetList = datasetList.FindAll(p => p.name.Contains(parameters.name));
+                }
+
+                var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
+                return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
             }
-            else
+            catch (Exception ex)
             {
-                datasetList.Reverse();
+                return StatusCode(500, ex.Message);
             }
-            if (!string.IsNullOrWhiteSpace(parameters.name))
-            {
-                datasetList = datasetList.FindAll(p => p.name.Contains(parameters.name));
-            }
-            var list = PageOps.GetPageRange(datasetList, parameters.page, parameters.size, datasetList.Count);
-            return Ok(new Response().GetJObject("datasets", list, "totalCount", datasetList.Count));
+            
         }
         /// <remarks>
         /// 为project添加数据集,需name、info和type字段，datasetId可选
@@ -78,15 +88,23 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
-            var convertProjectId = projectId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin"&&!await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                var datasetId = await AzureService.AddDataset(convertProjectId, dataSetViewModel);
+                return Ok(new Response().GetJObject("datasetId", datasetId));
             }
-            var datasetId = await AzureService.AddDataset(convertProjectId, dataSetViewModel);
-            return Ok(new Response().GetJObject("datasetId", datasetId));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
         }
         /// <remarks>
         /// 查询一个特定的dataset详细信息
@@ -96,20 +114,27 @@ namespace WebUI.Controllers
         [HttpGet("{dataSetId}")]
         public async Task<ActionResult<DatasetViewModel>> getDatasetInfo(Guid projectId, Guid dataSetId)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            try
             {
-                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-                if (!res && role!="labeler")
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
                 {
-                    return StatusCode(403);
+                    var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+                    if (!res && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
                 }
+                var obj = await AzureService.getDatasetInfo(convertProjectId, convertDataSetId);
+                return Ok(new Response().GetJObject("info", obj));
             }
-            var obj = await AzureService.getDatasetInfo(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("info", obj));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 修改一个特定的dataset
@@ -125,16 +150,23 @@ namespace WebUI.Controllers
             {
                 return Ok(new Response { Successful = "true", Msg = ModelState.Values.ToString(), Data = null });
             }
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                await AzureService.UpdateDataset(convertProjectId, convertDataSetId, dataSetViewModel);
+                return Ok(new Response { Msg = "ok" });
             }
-            await AzureService.UpdateDataset(convertProjectId, convertDataSetId, dataSetViewModel);
-            return Ok(new Response { Msg = "ok" });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 为project删除数据集
@@ -145,18 +177,25 @@ namespace WebUI.Controllers
         [HttpDelete]
         public async Task<ActionResult<Response>> RemoveDataSet(Guid projectId,[FromBody]Guid dataSetId)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var reader = new StreamReader(Request.Body);
-            var body = reader.ReadToEnd();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var reader = new StreamReader(Request.Body);
+                var body = reader.ReadToEnd();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                var dataSetBindId = await AzureService.RemoveDataSet(convertProjectId, convertDataSetId);
+                return Ok(new Response().GetJObject("dataSetBindId", dataSetBindId));
             }
-            var dataSetBindId = await AzureService.RemoveDataSet(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("dataSetBindId", dataSetBindId));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 获取project下特定数据集的标注用户列表
@@ -169,17 +208,24 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/users")]
         public async Task<ActionResult<IEnumerable<UserInfoViewModel>>> GetDataSetUsers(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                var userList = await AzureService.GetDataSetUsers(convertProjectId, convertDataSetId);
+                var list = PageOps.GetPageRange(userList, parameters.page, parameters.size, userList.Count);
+                return Ok(new Response().GetJObject("users", list, "totalCount", userList.Count));
             }
-            var userList = await AzureService.GetDataSetUsers(convertProjectId, convertDataSetId);
-            var list = PageOps.GetPageRange(userList, parameters.page, parameters.size, userList.Count);
-            return Ok(new Response().GetJObject("users", list, "totalCount", userList.Count));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 为project下特定数据集删除指定的标注用户
@@ -191,16 +237,23 @@ namespace WebUI.Controllers
         [HttpDelete("{datasetId}/users")]
         public async Task<ActionResult<Response>> RemoveUser(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                await AzureService.RemoveUser(convertProjectId, convertDataSetId, HttpContext.Session, userNumber);
+                return Ok(new Response { Msg = "ok" });
             }
-            await AzureService.RemoveUser(convertProjectId, convertDataSetId, HttpContext.Session, userNumber);
-            return Ok(new Response { Msg = "ok" });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 为project下特定数据集添加指定number的标注用户
@@ -212,16 +265,23 @@ namespace WebUI.Controllers
         [HttpPost("{datasetId}/users")]
         public async Task<ActionResult<Response>> AddUserToDataSet(Guid projectId, Guid dataSetId,[FromBody]int userNumber)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                await AzureService.AddUserToDataSet(convertProjectId, convertDataSetId, userNumber, HttpContext.Session);
+                return Ok(new Response() { Msg = "ok" });
             }
-            await AzureService.AddUserToDataSet(convertProjectId, convertDataSetId, userNumber, HttpContext.Session);
-            return Ok(new Response() {Msg = "ok"});
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 检测指定number的标注用户是否已经存在于project下特定数据集
@@ -233,16 +293,23 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/users/{userNumber}")]
         public async Task<ActionResult<Response>> CheckUserExists(Guid projectId, Guid dataSetId,int userNumber)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var role = await AzureService.FindUserRole(currentUserId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+            try
             {
-                return StatusCode(403);
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var currentUserId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var role = await AzureService.FindUserRole(currentUserId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(currentUserId, convertProjectId))
+                {
+                    return StatusCode(403);
+                }
+                var str = await AzureService.CheckUserExists(convertProjectId, convertDataSetId, userNumber);
+                return Ok(new Response { Msg = str });
             }
-            var str = await AzureService.CheckUserExists(convertProjectId, convertDataSetId, userNumber);
-            return Ok(new Response { Msg = str });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 获取数据集的可标注任务列表,包含已修改task+一个锁定的task
@@ -254,24 +321,31 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/tasks")]
         public async Task<ActionResult<IEnumerable<TaskViewModel>>> getTasks(Guid projectId, Guid dataSetId, [FromQuery]QueryStringParameters parameters)
         {
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            try
             {
-                var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
-                if (!res && role!="labeler")
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
                 {
-                    return StatusCode(403);
+                    var res = await AzureService.CheckUserHasThisDataset(userId, convertProjectId, convertDataSetId);
+                    if (!res && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
+                    // for labels,get tasks from another func
+                    //var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
+                    //return Ok(new Response().GetJObject("taskList", taskList));
                 }
-                // for labels,get tasks from another func
-                //var taskList = await AzureService.getDatasetTaskList(userId, convertProjectId, convertDataSetId);
-                //return Ok(new Response().GetJObject("taskList", taskList));
+                var adminTaskList = await AzureService.getTasks(convertProjectId, convertDataSetId);
+                var list = PageOps.GetPageRange(adminTaskList, parameters.page, parameters.size, adminTaskList.Count);
+                return Ok(new Response().GetJObject("taskList", list, "totalCount", adminTaskList.Count));
             }
-            var adminTaskList = await AzureService.getTasks(convertProjectId, convertDataSetId);
-            var list = PageOps.GetPageRange(adminTaskList, parameters.page, parameters.size, adminTaskList.Count);
-            return Ok(new Response().GetJObject("taskList", list, "totalCount", adminTaskList.Count));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 获取下一个可标注任务
@@ -281,38 +355,52 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/tasks/next/{taskId}")]
         public async Task<ActionResult<TaskViewModel>> GetNextTask(Guid projectId, Guid dataSetId,string taskId)
         {
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            try
             {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
-                if (!has && role != "labeler")
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
                 {
-                    return StatusCode(403);
+                    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                    if (!has && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
                 }
+                JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId, taskId);
+                return Ok(new Response().GetJObject("next", nextObj));
             }
-            JObject nextObj = await AzureService.getDatasetTaskNext(userId, convertProjectId, convertDataSetId, taskId);
-            return Ok(new Response().GetJObject("next", nextObj));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         [HttpGet("{datasetId}/tasks/previous/{taskId}")]
         public async Task<ActionResult<TaskViewModel>> GetPreviousTask(Guid projectId, Guid dataSetId, string taskId)
         {
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            try
             {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
-                if (!has && role != "labeler")
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
                 {
-                    return StatusCode(403);
+                    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                    if (!has && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
                 }
+                JObject nextObj = await AzureService.getDatasetTaskPrevious(userId, convertProjectId, convertDataSetId, taskId);
+                return Ok(new Response().GetJObject("previous", nextObj));
             }
-            JObject nextObj = await AzureService.getDatasetTaskPrevious(userId, convertProjectId, convertDataSetId, taskId);
-            return Ok(new Response().GetJObject("previous", nextObj));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 获取详细标注信息annotations
@@ -323,20 +411,27 @@ namespace WebUI.Controllers
         [HttpGet("{datasetId}/tasks/annotations/{taskId}")]
         public async Task<IActionResult> GetOneTask(Guid projectId, Guid dataSetId,string taskId)
         {
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var role = await AzureService.FindUserRole(userId);
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            try
             {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
-                if (!has && role != "labeler")
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
                 {
-                    return StatusCode(403);
+                    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                    if (!has && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
                 }
+                var projectObj = await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId);
+                return Ok(new Response().GetJObject("annotations", projectObj));
             }
-            var projectObj = await AzureService.GetOneTask(convertProjectId, convertDataSetId, taskId);
-            return Ok(new Response().GetJObject("annotations", projectObj));
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 提交标注信息annotations
@@ -348,21 +443,28 @@ namespace WebUI.Controllers
         [HttpPost("{datasetId}/tasks/annotations/{taskId}")]
         public async Task<ActionResult<Response>> Post(Guid projectId, Guid dataSetId, string taskId, [FromBody] JObject value)
         {
-            var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var role = await AzureService.FindUserRole(userId);
-            _logger.LogInformation($"get role {role}");
-            if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+            try
             {
-                var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
-                if (!has && role != "labeler")
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var role = await AzureService.FindUserRole(userId);
+                _logger.LogInformation($"get role {role}");
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
                 {
-                    return StatusCode(403);
+                    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                    if (!has && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
                 }
+                await AzureService.PostOneTask(convertProjectId, convertDataSetId, taskId, userId, role, value);
+                return Content(new Response { Msg = "ok" }.JObjectToString());
             }
-            await AzureService.PostOneTask(convertProjectId, convertDataSetId, taskId, userId, role, value);
-            return Content(new Response {Msg = "ok"}.JObjectToString());
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <remarks>
         /// 该数据集的所有labels类别
@@ -373,10 +475,17 @@ namespace WebUI.Controllers
         [ProducesResponseType(typeof(List<LabelViewModel>), 200)]
         public async Task<ActionResult<Response>> GetDataSetLabels(Guid projectId, Guid dataSetId)
         {
-            var convertProjectId = projectId.ToString().ToUpper();
-            var convertDataSetId = dataSetId.ToString().ToUpper();
-            var labels = await AzureService.GetDataSetLabels(convertProjectId, convertDataSetId);
-            return Ok(new Response().GetJObject("annotations", labels));
+            try
+            {
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var labels = await AzureService.GetDataSetLabels(convertProjectId, convertDataSetId);
+                return Ok(new Response().GetJObject("annotations", labels));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
         /// <summary>
         /// explore接口，搜索数据集.
