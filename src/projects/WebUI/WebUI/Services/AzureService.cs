@@ -1192,7 +1192,10 @@ namespace WebUI.Services
                     }
                 }
                 await accountBlob.UploadGenericObjectAsync(json);
-                await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.labels);
+                if (dataSetViewModel.labels != null)
+                {
+                    await AddDatasetLabels(convertProjectId, convertDataSetId, dataSetViewModel.labels);
+                }
                 //await LinkDataset(dataSetViewModel.dataSetPath, convertDataSetId);
             }
         }
