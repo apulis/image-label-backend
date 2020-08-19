@@ -784,7 +784,7 @@ namespace WebUI.Services
                         var index = keysList.IndexOf(taskId);
                         if (index != 0)
                         {
-                            return new JObject() { { "id", keysList[index - 1] }, { "createTime", null }, { "updateTime", null }, { "suffix", Json.GetJToken(keysList[index + 1], projectObj)["suffix"] } };
+                            return new JObject() { { "id", keysList[index - 1] }, { "createTime", null }, { "updateTime", null }, { "suffix", Json.GetJToken(keysList[index - 1], projectObj)["suffix"] } };
                         }
                         return new JObject() { { "id", taskId }, { "createTime", null }, { "updateTime", null }, { "suffix", Json.GetJToken(taskId, projectObj)["suffix"] } };
                     }
@@ -799,7 +799,8 @@ namespace WebUI.Services
                             {
                                 {"id",pair.Key },
                                 {"createTime",TimeOps.GetCurrentTimeStamp()},
-                                {"updateTime",null }
+                                {"updateTime",null },
+                                { "suffix", Json.GetJToken(taskId, projectObj)["suffix"] }
                             };
                             var res = Json.AddValueToJObject(new string[] { "lockLog", projectId, dataSetId }, json, obj);
                             if (res)
