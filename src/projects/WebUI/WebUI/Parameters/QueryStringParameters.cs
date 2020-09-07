@@ -7,7 +7,7 @@ namespace WebUI.Parameters
 {
     public class QueryStringParameters
     {
-        private const int MaxPageSize = 100;
+        private const int MaxPageSize = 9999;
 
         private int _pageSize = 5;
 

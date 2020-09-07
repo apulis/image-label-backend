@@ -16,7 +16,7 @@ namespace WebUI.ViewModels
         [Required]
         public string type { get; set; }
         [Required]
-        public string dataSetBindId { get; set; }
+        public int dataSetBindId { get; set; }
         [Required]
         public string dataSetPath { get; set; }
         public bool isPrivate { get; set; }
