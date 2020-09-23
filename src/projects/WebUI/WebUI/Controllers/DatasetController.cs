@@ -377,6 +377,36 @@ namespace WebUI.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+        /// <remarks>
+        /// 获取taskId对应的后缀
+        /// </remarks>
+        /// <param name="projectId">project的GUid</param>
+        /// <param name="dataSetId">dataset的GUid</param>
+        [HttpGet("{datasetId}/tasks/suffix/{taskId}")]
+        public async Task<ActionResult<TaskViewModel>> GETTASKSUFFIX(Guid projectId, Guid dataSetId, string taskId)
+        {
+            try
+            {
+                var userId = HttpContext.User.Claims.First(c => c.Type == "uid").Value.ToString();
+                var convertProjectId = projectId.ToString().ToUpper();
+                var convertDataSetId = dataSetId.ToString().ToUpper();
+                var role = await AzureService.FindUserRole(userId);
+                if (role != "admin" && !await AzureService.FindUserIsProjectManager(userId, convertProjectId))
+                {
+                    var has = await AzureService.CheckLabelerHasThisTask(userId, convertProjectId, convertDataSetId, taskId);
+                    if (!has && role != "labeler")
+                    {
+                        return StatusCode(403);
+                    }
+                }
+                string suffix = await AzureService.getTaskSuffix(convertProjectId, convertDataSetId, taskId);
+                return Ok(new Response().GetJObject("suffix", suffix));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
         [HttpGet("{datasetId}/tasks/previous/{taskId}")]
         public async Task<ActionResult<TaskViewModel>> GetPreviousTask(Guid projectId, Guid dataSetId, string taskId)
         {

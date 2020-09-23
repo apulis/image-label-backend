@@ -1453,6 +1453,26 @@ namespace WebUI.Services
             return adminTaskList;
         }
 
+        public static async Task<string> getTaskSuffix(string convertProjectId, string convertDataSetId,string taskId)
+        {
+            await GenerateListJsonFile(convertProjectId, convertDataSetId);
+            await AzureService.GenerateCommitJsonFile(convertProjectId, convertDataSetId);
+            var taskBlob = AzureService.GetBlob("cdn", "private", null, null, $"tasks/{convertDataSetId}/{convertProjectId}", "commit.json");
+            var lockObj = await taskBlob.DownloadGenericObjectAsync() as JObject;
+            List<JObject> adminTaskList = new List<JObject>();
+            if (lockObj != null)
+            {
+                foreach (var one in lockObj)
+                {
+                    if (one.Key.ToString() == taskId)
+                    {
+                        return one.Value["suffix"].ToString();
+                    }
+                }
+            }
+            return ".jpg";
+        }
+
         public static async Task<JObject> GetOneTask(string convertProjectId,string convertDataSetId, string taskId)
         {
             var blob = AzureService.GetBlob("cdn", "private",null,null, $"tasks/{convertDataSetId}/{convertProjectId}/images", $"{taskId}.json");
