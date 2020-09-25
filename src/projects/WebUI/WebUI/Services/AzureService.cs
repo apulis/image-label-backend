@@ -922,7 +922,19 @@ namespace WebUI.Services
             var taskJson = await taskBlob.DownloadGenericObjectAsync() as JObject;
             if (taskJson != null)
             {
-                return null;
+                bool reset = false;
+                foreach (var one in taskJson)
+                {
+                    if (!one.Key.ToString().Contains("."))
+                    {
+                        reset = true;
+                        break;
+                    }
+                }
+                if (! reset)
+                {
+                    return null;
+                }
             }
             var blob = GetBlob("cdn", "public", null, null, $"tasks/{dataSetId}", "list.json");
             var json = await blob.DownloadGenericObjectAsync();
@@ -939,15 +951,7 @@ namespace WebUI.Services
                 idObj.Add(one.ToString()+ suffixArray[i], new JObject(){{"status","normal"},{"userId",null},{"suffix",suffixArray[i]} });
                 i += 1;
             }
-            if (taskJson == null)
-            {
-                await taskBlob.UploadGenericObjectAsync(idObj);
-            }
-            else
-            {
-                taskJson.Add(projectId, idObj);
-                await taskBlob.UploadGenericObjectAsync(taskJson);
-            }
+            await taskBlob.UploadGenericObjectAsync(idObj);
             return idObj;
         }
         public static async Task<bool> CheckUserHasThisDataset(string userId, string projectId, string datasetId)
