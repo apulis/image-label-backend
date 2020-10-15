@@ -190,7 +190,7 @@ namespace WebUI.Controllers
                     return StatusCode(403);
                 }
                 var dataSetBindId = await AzureService.RemoveDataSet(convertProjectId, convertDataSetId);
-                return Ok(new Response().GetJObject("dataSetBindId", dataSetBindId));
+                return Ok(new Response().GetJObject("dataSetBindId", int.Parse(dataSetBindId)));
             }
             catch (Exception ex)
             {
