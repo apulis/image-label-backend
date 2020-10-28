@@ -1,4 +1,4 @@
 {
-  "url": "http://219.133.167.42:30000/data-platform-backend/api/nfs2/",
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1aWQiOjMwMDAwLCJleHAiOjE5MDUxNTY5NTUuNzY4MTUyNX0.0OoenNXy9qz-U8OhLkqEEKT2tr9E6ysFD9jYzzi2dGI"
+  "url": "http://10.31.3.208/data-platform-backend/api/nfs2/",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjMwMDAxLCJ1c2VyTmFtZSI6ImFkbWluIiwiZXhwIjoxNjAyNzQ3MDU1LCJpYXQiOjE2MDI1NzQyNTV9.ryjC8z9PosZgrWcW0hlZ_RuGZdQ81nxUupnWb6XiMBo"
 }
